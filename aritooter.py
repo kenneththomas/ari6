@@ -1,4 +1,5 @@
 from mastodon import Mastodon
+import maricon
 
 '''
 Mastodon.create_app(
@@ -13,8 +14,8 @@ mastodon = Mastodon(
     api_base_url = 'https://mastodon.social'
 )
 mastodon.log_in(
-    'gunsniperz@gmail.com',
-    'trepidation',
+    maricon.mastouser,
+    maricon.mastopassword,
     to_file = 'ari5_usercred.secret'
 )
 
