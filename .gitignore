@@ -1,2 +1,3 @@
 maricon.py
 logs/
+*.secret
