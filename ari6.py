@@ -6,6 +6,7 @@ import lumberjack as l
 import mememgr
 import asyncio
 import aritooter
+import sentience
 
 
 client = discord.Client()
@@ -21,7 +22,7 @@ async def on_message(message):
 
     memes = mememgr.memes(message.content.lower())
     for meme in memes:
-        asyncio.sleep(3)
+        asyncio.sleep(1.5)
         await message.channel.send(meme)
 
     #darn tootin
@@ -30,6 +31,10 @@ async def on_message(message):
         tootlist = aritooter.tootcontrol(toot)
         for tootmsg in tootlist:
             await message.channel.send(tootmsg)
+
+    #sentience
+    if message.content == '!talk':
+        await message.channel.send(sentience.genmsg())
 
 @client.event
 async def on_ready():

@@ -1,2 +1,2 @@
 discord.py
-python-forecast.io
+markovify

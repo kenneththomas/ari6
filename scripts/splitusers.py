@@ -1,6 +1,7 @@
 import fixtools as ft
 
 logfile = open('../logs/a5lfix.log','r')
+allfile = open('../logs/everyone.log','w')
 
 log = logfile.readlines()
 
@@ -12,6 +13,7 @@ parsed = []
 for line in log:
     try:
         f = ft.parsefix(line)
+        allfile.write(f['58'])
     except:
         continue
     user = f['49']
