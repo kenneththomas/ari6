@@ -26,7 +26,6 @@ for user in userlist:
     a = open(userfile,'w')
     for line in parsed:
         if line['49'] == user:
-            print('match, writing')
             a.write(line['58'])
     a.close()
 
