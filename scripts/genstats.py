@@ -16,8 +16,11 @@ for message in a.readlines():
     # which user
     # which day
     # which hour
-    dt = (pd.to_datetime(f['52']))
-    new = [dt,f['49']]
+    try:
+       dt = (pd.to_datetime(f['52']))
+       new = [dt,f['49']]
+    except:
+       print(f)
     ll.append(new)
 
 df = pd.DataFrame(ll, columns=['Timestamp', 'User'])
