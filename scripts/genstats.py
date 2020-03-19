@@ -47,8 +47,8 @@ dates.to_csv('../stats/byday.csv')
 
 # populate date list
 for index, row in df.iterrows():
-    date = df['Timestamp'].dt.date
-    date = date.iloc[0]
+    date = row['Timestamp'].date()
+    print(date)
     if date not in datelist:
         datelist.append(date)
 
