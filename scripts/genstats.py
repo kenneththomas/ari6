@@ -24,7 +24,6 @@ for message in a.readlines():
     ll.append(new)
 
 df = pd.DataFrame(ll, columns=['Timestamp', 'User'])
-print(df)
 
 # count by user totals
 cbu = df['User'].value_counts(dropna=True)
@@ -48,22 +47,18 @@ dates.to_csv('../stats/byday.csv')
 # populate date list
 for index, row in df.iterrows():
     date = row['Timestamp'].date()
-    print(date)
     if date not in datelist:
         datelist.append(date)
 
 print(dates)
-print(datelist)
 
 for date in datelist:
     filename = '../stats/daily/{}.csv'.format(date)
     # create dataframe only matching this particular day
     df2 = (df['Timestamp'].dt.date == date)
     df3 = df.loc[df2]
-    print(df3)
     # now we need for each hour
     hourcount =  df3['Timestamp'].dt.hour.value_counts(dropna=True)
-    print(hourcount)
     hourcount.to_csv(filename)
 
 
