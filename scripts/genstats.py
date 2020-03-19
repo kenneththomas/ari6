@@ -58,7 +58,7 @@ for date in datelist:
     df2 = (df['Timestamp'].dt.date == date)
     df3 = df.loc[df2]
     # now we need for each hour
-    hourcount =  df3['Timestamp'].dt.hour.value_counts(dropna=True)
+    hourcount =  df3['Timestamp'].dt.hour.value_counts(dropna=True).sort_index()
     hourcount.to_csv(filename)
 
 
