@@ -56,8 +56,6 @@ for date in datelist:
         df4 = df3[df3['User'] == user]
         # split by hour
         hourcount = df4['Timestamp'].dt.hour.value_counts(dropna=True).sort_index()
-        print(user + str(date))
-        print(hourcount)
         hourraw = str(hourcount).replace(' ',',').splitlines()
         #remove junk at end
         hourraw.pop()
@@ -70,7 +68,7 @@ for date in datelist:
         for hour in hourraw:
             hour = hour.split(',')
             a = hour[0] # which hour
-            b = hour[4] # how many messages during this hour
+            b = hour[-1] # how many messages during this hour
             uhdict[str(a)] = str(b)
 
         newstring = user
@@ -81,14 +79,12 @@ for date in datelist:
             # to get a total for the day
             usermessagecount += int(x)
 
-        print(usermessagecount)
 
         #add total column for user
         newstring = newstring + ',' + str(usermessagecount)
 
         dexport.append(newstring)
 
-    print(dexport)
 
     # export
     dayfile = open(filename,'w')
