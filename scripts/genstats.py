@@ -39,7 +39,7 @@ cbu.to_csv('../stats/totals.csv')
 
 # count by day totals
 datelist = []
-dates = df['Timestamp'].dt.date.value_counts(dropna=True)
+dates = df['Timestamp'].dt.date.value_counts(dropna=True).sort_index()
 
 # export count by day
 dates.to_csv('../stats/byday.csv')
