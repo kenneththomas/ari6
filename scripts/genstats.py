@@ -112,18 +112,3 @@ for date in datelist:
         dayfile.write(line + '\n')
     dayfile.write(dailystring + '\n')
     dayfile.close()
-
-
-# count by user totals
-cbu = df['User'].value_counts(dropna=True)
-print(cbu)
-
-# export count by user
-cbu.to_csv('../stats/totals.csv')
-
-# count by day totals
-datelist = []
-dates = df['Timestamp'].dt.date.value_counts(dropna=True).sort_index()
-
-# export count by day
-dates.to_csv('../stats/byday.csv')
