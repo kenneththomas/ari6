@@ -37,8 +37,6 @@ def bannedwordsmgr(message, author):
                 print('BWM: removed {} from the banned words list'.format(removeword[2]))
                 bwm.message = 'Removed {} from the banned words list'.format(removeword[2])
             return bwm
-        else:
-            bwm.message = 'i am NOT allow'
 
     for bannedword in bannedwords:
         if bannedword in message:
