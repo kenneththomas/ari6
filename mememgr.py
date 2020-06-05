@@ -34,9 +34,10 @@ def memes(message):
     if message == 'all my friends are dead':
         mememessages.append('push me to the edge')
 
-    if 'wendy' in message:
-        if chance(5):
-            mememessages.append(wendy())
+    if 'how do you' in message:
+        if chance(4):
+            mememessages.append('very carefully!')
+
 
     if ' dn' in message:
         if message == 'whats dn' or message == 'what\'s dn':
