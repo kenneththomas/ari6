@@ -2,6 +2,7 @@ import sys
 import unittest
 
 sys.path.insert(0,'../')
+sys.path.insert(1,'/')
 import control as ct
 
 class admintests(unittest.TestCase):
