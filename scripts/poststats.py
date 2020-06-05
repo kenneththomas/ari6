@@ -15,7 +15,7 @@ for filename in all_files:
     df = pd.read_csv(filename, index_col=None, header=0)
     li.append(df)
 
-frame = pd.concat(li, axis=0, ignore_index=True)
+frame = pd.concat(li, axis=0, ignore_index=True).sort_values(by=['Date'])
 
 print(frame)
 

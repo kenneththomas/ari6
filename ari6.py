@@ -7,6 +7,7 @@ import mememgr
 import asyncio
 import aritooter
 import sentience
+import control as ct
 
 
 client = discord.Client()
@@ -19,6 +20,13 @@ async def on_message(message):
     # we do not want the bot to reply to itself
     if message.author == client.user:
         return
+
+    # banned words
+    bwm = ct.bannedwordsmgr(message.content.lower(),str(message.author))
+    if bwm.delete == True:
+        await message.delete(delay=1.5)
+    if bwm.message:
+        await message.channel.send(bwm.message)
 
     memes = mememgr.memes(message.content.lower())
     for meme in memes:
