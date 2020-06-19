@@ -1,0 +1,10 @@
+language: python
+python:
+  - "3.6"
+before_install:
+  - export PYTHONPATH=$PYTHONPATH:$(pwd)
+install:
+  - python setup.py install
+  - pip install .
+script:
+  - python test/ari6_test.py
