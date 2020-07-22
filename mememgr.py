@@ -75,3 +75,9 @@ def memes(message):
             mememessages.append(message[10:] + " " + message[10] + 'ory')
 
     return mememessages
+
+def cleanup_username(name):
+    if name.isalnum() == True:
+        return name
+    else:
+        return 'badname'

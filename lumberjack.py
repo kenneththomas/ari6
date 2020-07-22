@@ -1,4 +1,5 @@
 from datetime import datetime
+import mememgr
 
 #########
 # Logging model based off of FIX 4.2 Protocol
@@ -20,7 +21,7 @@ logfilename = 'logs/a5lfix.log'
 logfile = open(logfilename, 'a')
 
 def log(msg):
-    sender = str(msg.author.name)
+    sender = mememgr.cleanup_username(str(msg.author.name))
     message = str(msg.content)
     channel = str(msg.channel)
     timestamp = str(datetime.now())
