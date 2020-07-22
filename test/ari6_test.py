@@ -4,6 +4,7 @@ import unittest
 sys.path.insert(0,'../')
 sys.path.insert(0,'.')
 import control as ct
+import mememgr as mm
 
 class admintests(unittest.TestCase):
     def test_admin_succeed(self):
@@ -24,3 +25,12 @@ class bwmtests(unittest.TestCase):
         ct.bannedwords.append('gris')
         payload = ct.bannedwordsmgr('!bw list', 'bobby')
         self.assertTrue('gris' in payload.message)
+
+class mememgr_tests(unittest.TestCase):
+    def test_bad_name(self):
+        badname = 'carmelo anthony#7'
+        self.assertTrue(mm.cleanup_username(badname),'badname')
+
+    def test_good_name(self):
+        goodname = 'pete123'
+        self.assertTrue(mm.cleanup_username(goodname),'pete123')
