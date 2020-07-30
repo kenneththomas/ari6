@@ -2,6 +2,7 @@ import random
 from re import compile
 
 bgbscanner = compile(r'whos [a-z][a-z][a-z]$')
+repeatercache = []
 
 def chance(x):
     saychance = random.randint(1,x)
@@ -12,10 +13,30 @@ def chance(x):
         chancerespond = False
     return chancerespond
 
+def repeater(message):
+    global repeatercache
+    if message not in repeatercache:
+        repeatercache = []
+        repeatercache.append(message)
+        return False
+    else:
+        print('repeater: detected repeat message!')
+        repeatercache.append(message)
+        if len(repeatercache) > 3:
+            print('repeater: more than 3 repeated messages! {}'.format(message))
+            repeatercache = []
+            return True
+        else:
+            return False
+
+
 def memes(message):
 
     mememessages=[] #contains all messages that mememgr will return
 
+    if repeater(message):
+        mememessages.append(message)
+    
     if message == 'hi':
         if chance(6):
             mememessages.append('hi')
@@ -74,6 +95,8 @@ def memes(message):
         except ValueError:
             mememessages.append(message[10:] + " " + message[10] + 'ory')
 
+    
+
     return mememessages
 
 def cleanup_username(name):
@@ -81,3 +104,9 @@ def cleanup_username(name):
         return name
     else:
         return 'badname'
+
+def battlerap_cleanup(message):
+    # a lot of the messages end in '\' because i imported it from text battle rap. simply remove that
+    # might extend this to remove the CAPITAL LETTERS to EMPHASIZE RHYMES but i like that the way it is for now
+    message = message.strip('\\')
+    return message

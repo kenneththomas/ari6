@@ -29,8 +29,24 @@ class bwmtests(unittest.TestCase):
 class mememgr_tests(unittest.TestCase):
     def test_bad_name(self):
         badname = 'carmelo anthony#7'
-        self.assertTrue(mm.cleanup_username(badname),'badname')
+        self.assertEqual(mm.cleanup_username(badname),'badname')
 
     def test_good_name(self):
         goodname = 'pete123'
-        self.assertTrue(mm.cleanup_username(goodname),'pete123')
+        self.assertEqual(mm.cleanup_username(goodname),'pete123')
+
+    def test_repeat4x(self):
+        repeatresults = []
+        for i in range(0,4):
+            repeatresults.append(mm.memes('pete my meat'))
+        print(repeatresults)
+        self.assertEqual(repeatresults[3][0],'pete my meat')
+
+class sentience_tests(unittest.TestCase):
+    def test_battlerap_cleanup(self):
+        cleaned = mm.battlerap_cleanup('FATHER FIGURE BODYBUILDER\\')
+        print(cleaned)
+        self.assertFalse(cleaned.endswith('\\'))
+
+if __name__ == '__main__':
+    unittest.main()
