@@ -20,6 +20,11 @@ class bwmtests(unittest.TestCase):
         payload = ct.bannedwordsmgr('netorare', 'bobby')
         self.assertTrue(payload.delete)
 
+    def test_periodt(self):
+        # periodt is a banned word. payload should come back with delete=true
+        payload = ct.bannedwordsmgr('periodt', 'bobby')
+        self.assertTrue(payload.delete)
+
     def test_list(self):
         # add gris to the banned words list, and check bw list. gris should be there
         ct.bannedwords.append('gris')
