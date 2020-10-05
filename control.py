@@ -1,6 +1,6 @@
 #config
 adminlist=['breezyexcursion#9570']
-bannedwords = ['netorare']
+bannedwords = ['netorare','periodt']
 
 def admincheck(user):
     if user in adminlist:
