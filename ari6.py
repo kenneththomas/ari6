@@ -22,7 +22,7 @@ async def on_message(message):
         return
 
     # banned words
-    bwm = ct.bannedwordsmgr(message.content.lower(),str(message.author))
+    bwm = ct.controlmgr(message.content.lower(),str(message.author))
     if bwm.delete == True:
         await message.delete(delay=1.5)
     if bwm.message:
