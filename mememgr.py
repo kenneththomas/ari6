@@ -1,5 +1,6 @@
 import random
 from re import compile
+import control
 
 bgbscanner = compile(r'whos [a-z][a-z][a-z]$')
 repeatercache = []
@@ -25,6 +26,11 @@ def repeater(message):
         if len(repeatercache) > 3:
             print('repeater: more than 3 repeated messages! {}'.format(message))
             repeatercache = []
+            # defensive code against bari
+            for bannedword in control.bannedwords:
+                if bannedword in message:
+                    print('mememgr: not repeating because there is a banned word in the message')
+                    return False
             return True
         else:
             return False

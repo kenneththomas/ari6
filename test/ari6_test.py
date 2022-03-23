@@ -64,6 +64,13 @@ class mememgr_tests(unittest.TestCase):
         print(repeatresults)
         self.assertEqual(repeatresults[3][0],'pete my meat')
 
+    def test_repeat4x_banned(self):
+        repeatresults = []
+        for i in range(0,4):
+            repeatresults.append(mm.memes('netorare'))
+        print(repeatresults)
+        self.assertEqual(repeatresults[3],[])
+
 class sentience_tests(unittest.TestCase):
     def test_battlerap_cleanup(self):
         cleaned = mm.battlerap_cleanup('FATHER FIGURE BODYBUILDER\\')
