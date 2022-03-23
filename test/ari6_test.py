@@ -54,6 +54,10 @@ class bwmtests(unittest.TestCase):
         p1 = ct.controlmgr('{}'.format(ad),'Barinade88#3367')
         self.assertTrue(p1.delete)
 
+    def test_mml2(self):
+        p1 = ct.controlmgr('⣿','Barinade88#3367')
+        self.assertTrue(p1.delete)
+
 class mememgr_tests(unittest.TestCase):
     def test_bad_name(self):
         badname = 'carmelo anthony#7'

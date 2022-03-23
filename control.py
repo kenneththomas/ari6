@@ -14,17 +14,22 @@ def admincheck(user):
 
 class mml():
     def mmlcheck(author,message):
-        maxmessagelength = 200
+        ascii_nonsense = ['█','⣿','彡','.................','──────']
+        maxmessagelength = 500
         minuniquechars = 15
         if author in mml_userlist:
             charcount = len(message)
             uniquechar = len(set(message))
-            print(maxmessagelength)
-            if charcount > maxmessagelength and uniquechar < minuniquechars:
+            #if charcount > maxmessagelength and uniquechar < minuniquechars:
+            if charcount > maxmessagelength:
                 print('''control: mmlcheck deleting message from {}, message length = {} > max message length = {}
                 unique char = {} < min unique char = {}
                 '''.format(author,charcount,maxmessagelength,uniquechar,minuniquechars))
                 return False
+            for nonsense in ascii_nonsense:
+                if nonsense in message:
+                    print('control: deleting potential ascii art from user {}'.format(author))
+                    return False
         return True
 
 def controlmgr(message, author):
