@@ -5,8 +5,8 @@ import discord
 import lumberjack as l
 import mememgr
 import asyncio
-import aritooter
-import sentience
+#import aritooter
+#import sentience
 import control as ct
 
 
@@ -24,7 +24,7 @@ async def on_message(message):
     # banned words
     bwm = ct.controlmgr(message.content.lower(),str(message.author))
     if bwm.delete == True:
-        await message.delete(delay=1.5)
+        await message.delete(delay=1)
     if bwm.message:
         await message.channel.send(bwm.message)
 
@@ -33,6 +33,7 @@ async def on_message(message):
         asyncio.sleep(1.5)
         await message.channel.send(meme)
 
+'''
     #darn tootin
     if message.content.startswith('!toot'):
         toot = message.content.replace('!toot','')
@@ -43,6 +44,7 @@ async def on_message(message):
     #sentience
     if message.content == '!talk':
         await message.channel.send(sentience.genmsg())
+'''
 
 @client.event
 async def on_ready():

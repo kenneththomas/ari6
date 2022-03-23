@@ -48,6 +48,12 @@ class bwmtests(unittest.TestCase):
 
         self.assertTrue(result)
 
+    def test_mml(self):
+        ad = open('test/ascii_d.txt','r').read()
+        print(ad)
+        p1 = ct.controlmgr('{}'.format(ad),'Barinade88#3367')
+        self.assertTrue(p1.delete)
+
 class mememgr_tests(unittest.TestCase):
     def test_bad_name(self):
         badname = 'carmelo anthony#7'

@@ -2,6 +2,7 @@
 adminlist=['breezyexcursion#9570']
 bannedwords = ['netorare','periodt']
 heldmsgcontainer = []
+mml_userlist = ['Barinade88#3367']
 
 def admincheck(user):
     if user in adminlist:
@@ -10,6 +11,18 @@ def admincheck(user):
     else:
         print('Control: {} not authorized to run admin command'.format(user))
         return False
+
+def mmlcheck(author,message):
+    maxmessagelength = 800
+    if author in mml_userlist:
+        print('debug: in list')
+        charcount = len(message)
+        print(maxmessagelength)
+        print('debug: {}'.format(charcount))
+        if charcount > maxmessagelength:
+            print('control: mmlcheck deleting message from {}, message length = {} > max message length = {}'.format(author,charcount,maxmessagelength))
+            return False
+    return True
 
 def controlmgr(message, author):
     class bwmpayload():
@@ -57,6 +70,9 @@ def controlmgr(message, author):
                     heldmsgcontainer.remove(x)
             return bwm
 
+    if not mmlcheck(author, message):
+        bwm.delete = True
+
     for bannedword in bannedwords:
         if bannedword in message:
             print('BWM: detected message with banned phrase {}'.format(bannedword))
@@ -65,5 +81,6 @@ def controlmgr(message, author):
             held.message = message
             heldmsgcontainer.append(held)
             bwm.delete = True
+
 
     return bwm
