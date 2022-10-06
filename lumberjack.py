@@ -1,5 +1,6 @@
 from datetime import datetime
 import mememgr
+import os
 
 #########
 # Logging model based off of FIX 4.2 Protocol
@@ -18,7 +19,13 @@ import mememgr
 #########
 
 logfilename = 'logs/a5lfix.log'
-logfile = open(logfilename, 'a')
+try:
+    logfile = open(logfilename, 'a')
+except FileNotFoundError:
+    print('no logfile found, creating new one')
+    os.makedirs('logs', exist_ok=True)
+    logfile = open(logfilename, 'w')
+
 
 def log(msg):
     sender = mememgr.cleanup_username(str(msg.author.name))

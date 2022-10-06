@@ -15,7 +15,7 @@ def admincheck(user):
 class mml():
     def mmlcheck(author,message):
         ascii_nonsense = ['█','⣿','彡','.................','──────']
-        maxmessagelength = 500
+        maxmessagelength = 3500
         minuniquechars = 15
         if author in mml_userlist:
             charcount = len(message)

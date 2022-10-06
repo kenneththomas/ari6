@@ -52,7 +52,7 @@ class bwmtests(unittest.TestCase):
         ad = open('test/ascii_d.txt','r').read()
         print(ad)
         p1 = ct.controlmgr('{}'.format(ad),'Barinade88#3367')
-        self.assertTrue(p1.delete)
+        self.assertFalse(p1.delete)
 
     def test_mml2(self):
         p1 = ct.controlmgr('⣿','Barinade88#3367')

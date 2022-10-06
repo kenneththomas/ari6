@@ -1,23 +1,25 @@
-import sys
-from collections import OrderedDict as odict
-import maricon
 import discord
+import maricon
 import lumberjack as l
 import mememgr
 import asyncio
-#import aritooter
-#import sentience
 import control as ct
+import aritooter
+#import sentience
 
+intents = discord.Intents.default()
+intents.message_content = True
 
-client = discord.Client()
+client = discord.Client(intents=intents)
+
+@client.event
+async def on_ready():
+    print(f'We have logged in as {client.user}')
 
 @client.event
 async def on_message(message):
-
     l.log(message)
 
-    # we do not want the bot to reply to itself
     if message.author == client.user:
         return
 
@@ -33,7 +35,6 @@ async def on_message(message):
         asyncio.sleep(1.5)
         await message.channel.send(meme)
 
-'''
     #darn tootin
     if message.content.startswith('!toot'):
         toot = message.content.replace('!toot','')
@@ -41,18 +42,10 @@ async def on_message(message):
         for tootmsg in tootlist:
             await message.channel.send(tootmsg)
 
+'''
     #sentience
     if message.content == '!talk':
         await message.channel.send(sentience.genmsg())
 '''
-
-@client.event
-async def on_ready():
-    print('Logged in as')
-    print(client.user.name)
-    print(client.user.id)
-    print('------')
-    #await client.send_message(discord.Object(id='205903143471415296'), mememgr.startupmsg())
-
 
 client.run(maricon.bottoken)
