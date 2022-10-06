@@ -81,11 +81,19 @@ class mememgr_tests(unittest.TestCase):
         print(repeatresults)
         self.assertEqual(repeatresults[3],[])
 
+    def test_loaded_meme(self):
+        response = mm.memes('push me to the edge')
+        self.assertEqual(response,['all my friends are dead'])
+
 class sentience_tests(unittest.TestCase):
     def test_battlerap_cleanup(self):
         cleaned = mm.battlerap_cleanup('FATHER FIGURE BODYBUILDER\\')
         print(cleaned)
         self.assertFalse(cleaned.endswith('\\'))
+
+class memeloader_tests(unittest.TestCase):
+    def test_memeloader(self):
+        self.assertTrue(mm.meme_loader())
 
 if __name__ == '__main__':
     unittest.main()

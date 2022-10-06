@@ -15,6 +15,7 @@ client = discord.Client(intents=intents)
 @client.event
 async def on_ready():
     print(f'We have logged in as {client.user}')
+    mememgr.meme_loader()
 
 @client.event
 async def on_message(message):
