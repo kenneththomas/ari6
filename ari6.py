@@ -43,6 +43,20 @@ async def on_message(message):
         for tootmsg in tootlist:
             await message.channel.send(tootmsg)
 
+
+    #TODO - move this into meme module or something
+    #TODO - add test when moved into meme module
+    if message.content.lower().startswith('im'):
+        chrasemoji = '<:chras:237738874930069505>'
+        chrasreply = message.content.lower()[2:].lstrip()
+        if mememgr.chance(2):
+            asyncio.sleep(2)
+            await message.add_reaction(chrasemoji)
+            if mememgr.chance(2):
+                await message.reply(f'hi {chrasreply}')
+                asyncio.sleep(1)
+                await message.reply('I\'m ChrasSC')
+
 '''
     #sentience
     if message.content == '!talk':
