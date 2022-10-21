@@ -7,6 +7,7 @@ import control as ct
 import aritooter
 #import sentience
 
+tweetcontainer = []
 intents = discord.Intents.default()
 intents.message_content = True
 
@@ -56,6 +57,25 @@ async def on_message(message):
                 await message.reply(f'hi {chrasreply}')
                 asyncio.sleep(1)
                 await message.reply('I\'m ChrasSC')
+
+
+    #if message content has a link in it, check if it's a twitter link
+    if 'https://twitter.com/' in message.content:
+        #append to tweetcontainer
+        #if it is a duplicate, message.reply with "old"
+        if message.content in tweetcontainer:
+            await message.reply('old')
+        else:
+            tweetcontainer.append(message.content)
+        print(tweetcontainer)
+
+    #call mememgr.emoji_reactor and give the message and author
+    #if the emojireactor returns a list with contents react with the contents
+    emoji = mememgr.emoji_reactor(message.content.lower(),str(message.author))
+    if emoji:
+        for emoj in emoji:
+            await message.add_reaction(emoj)
+
 
 '''
     #sentience

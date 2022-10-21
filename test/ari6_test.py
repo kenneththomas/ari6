@@ -85,6 +85,11 @@ class mememgr_tests(unittest.TestCase):
         response = mm.memes('push me to the edge')
         self.assertEqual(response,['all my friends are dead'])
 
+    def test_emoji_reactor(self):
+        #call mm.emoji_reactor with message 'unittest testcase' and author ari6dev and verify that it returns a list with the check emoji
+        response = mm.emoji_reactor('unittest testcase','ari6dev')
+        self.assertEqual(response,['✅'])
+
 class sentience_tests(unittest.TestCase):
     def test_battlerap_cleanup(self):
         cleaned = mm.battlerap_cleanup('FATHER FIGURE BODYBUILDER\\')
