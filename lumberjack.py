@@ -34,6 +34,9 @@ def log(msg):
     timestamp = str(datetime.now())
     logfix = '8=A6F;35=6L;49={};56={};52={};58={}'.format(sender,channel,timestamp,message)
     print(logfix)
-    logfile.write(logfix + '\n')
-    logfile.flush()
+    #if logfix is a standard ascii string, write to logfile
+    if all(ord(c) < 128 for c in logfix):
+        logfile.write(logfix + '\n')
+    else:
+        print('lumberjack: non-ascii characters found, not logging')
     return

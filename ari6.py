@@ -5,9 +5,17 @@ import mememgr
 import asyncio
 import control as ct
 import aritooter
+import datetime
 #import sentience
 
+emoji_storage = {
+    'eheu': '<:eheu:233869216002998272>',
+    'breez': '<:breez:230153282264236033>',
+    'bari': '<:bariblack:638105381549375515>'
+}
+onlyonce = []
 tweetcontainer = []
+
 intents = discord.Intents.default()
 intents.message_content = True
 
@@ -44,22 +52,26 @@ async def on_message(message):
         for tootmsg in tootlist:
             await message.channel.send(tootmsg)
 
+    #call mememgr.emoji_reactor and give the message and author
+    #if the emojireactor returns a list with contents react with the contents
+    emoji = mememgr.emoji_reactor(message.content.lower(),str(message.author))
+    if emoji:
+        for emoj in emoji:
+            await message.add_reaction(emoj)
 
-    #TODO - move this into meme module or something
-    #TODO - add test when moved into meme module
+    # TODO - this block both replies and reacts so it doesnt fit in emoji reactor or memes
+    #if message content has a link in it, check if it's a twitter link
     if message.content.lower().startswith('im'):
         chrasemoji = '<:chras:237738874930069505>'
         chrasreply = message.content.lower()[2:].lstrip()
-        if mememgr.chance(2):
+        if mememgr.chance(4):
             asyncio.sleep(2)
             await message.add_reaction(chrasemoji)
-            if mememgr.chance(2):
+            if mememgr.chance(6):
                 await message.reply(f'hi {chrasreply}')
                 asyncio.sleep(1)
                 await message.reply('I\'m ChrasSC')
 
-
-    #if message content has a link in it, check if it's a twitter link
     if 'https://twitter.com/' in message.content:
         #append to tweetcontainer
         #if it is a duplicate, message.reply with "old"
@@ -67,14 +79,33 @@ async def on_message(message):
             await message.reply('old')
         else:
             tweetcontainer.append(message.content)
-        print(tweetcontainer)
+        #if the author of the tweet was @jaimierz888, react fire and heart emojis
+        if 'jaimierz888' in message.content:
+            await message.add_reaction('🔥')
+            await message.add_reaction('❤')
 
-    #call mememgr.emoji_reactor and give the message and author
-    #if the emojireactor returns a list with contents react with the contents
-    emoji = mememgr.emoji_reactor(message.content.lower(),str(message.author))
-    if emoji:
-        for emoj in emoji:
-            await message.add_reaction(emoj)
+
+
+
+@client.event
+async def on_reaction_add(reaction, user):
+
+    #if reaction emoji is a u emoji, also react with u emoji
+    if reaction.emoji == '🇺':
+        await reaction.message.add_reaction('🇺')
+    
+    #if reaction emoji is a bari emoji, also react with bari emoji
+    if reaction.emoji == emoji_storage['bari']:
+        await reaction.message.add_reaction(emoji_storage['bari'])
+
+    #if reaction emoji is a breez emoji, also react with breez emoji
+    if reaction.emoji == emoji_storage['breez']:
+        await reaction.message.add_reaction(emoji_storage['breez'])
+
+    #if reaction emoji is a eheu emoji, also react with eheu emoji
+    if reaction.emoji == emoji_storage['eheu']:
+        await reaction.message.add_reaction(emoji_storage['eheu'])
+
 
 
 '''
