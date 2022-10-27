@@ -61,7 +61,7 @@ async def on_message(message):
 
     # TODO - this block both replies and reacts so it doesnt fit in emoji reactor or memes
     #if message content has a link in it, check if it's a twitter link
-    if message.content.lower().startswith('im'):
+    if message.content.lower().startswith('im '):
         chrasemoji = '<:chras:237738874930069505>'
         chrasreply = message.content.lower()[2:].lstrip()
         if mememgr.chance(4):
