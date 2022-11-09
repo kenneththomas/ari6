@@ -97,13 +97,24 @@ def memes(message):
         except ValueError:
             mememessages.append(message[10:] + " " + message[10] + 'ory')
 
+    #if message starts with !spongebob
+    if message.startswith('!spongebob'):
+        #randomly capitalize letters in the message and add it to mememessages
+        message = message.replace('!spongebob ','')
+        mememessages.append(spongemock(message))        
+
     return mememessages
+
+def spongemock(msg):
+    return ''.join([ch.lower() if ch.isalpha() and len([c for c in msg[:i] if c.isalpha()]) % 2 else ch for i, ch in enumerate(msg.upper())])
 
 def cleanup_username(name):
     if name.isalnum() == True:
         return name
+    # if the name is not alphanumeric, remove all non-alphanumeric characters
     else:
-        return 'badname'
+        name = ''.join(e for e in name if e.isalnum())
+        return name
 
 def battlerap_cleanup(message):
     # a lot of the messages end in '\' because i imported it from text battle rap. simply remove that

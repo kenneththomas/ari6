@@ -100,5 +100,9 @@ class memeloader_tests(unittest.TestCase):
     def test_memeloader(self):
         self.assertTrue(mm.meme_loader())
 
+class logging_tests(unittest.TestCase):
+    def test_username_cleanup(self):
+        self.assertEqual(mm.cleanup_username('peter#1234'),'peter1234')
+
 if __name__ == '__main__':
     unittest.main()

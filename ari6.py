@@ -4,9 +4,9 @@ import lumberjack as l
 import mememgr
 import asyncio
 import control as ct
-import aritooter
+#import aritooter
 import datetime
-#import sentience
+import sentience
 
 emoji_storage = {
     'eheu': '<:eheu:233869216002998272>',
@@ -33,6 +33,11 @@ async def on_message(message):
     if message.author == client.user:
         return
 
+    #if someone replies to the bot
+    if message.reference:
+        if message.reference.resolved.author == client.user:
+            await message.reply(sentience.genmsg())
+
     # banned words
     bwm = ct.controlmgr(message.content.lower(),str(message.author))
     if bwm.delete == True:
@@ -45,12 +50,6 @@ async def on_message(message):
         asyncio.sleep(1.5)
         await message.channel.send(meme)
 
-    #darn tootin
-    if message.content.startswith('!toot'):
-        toot = message.content.replace('!toot','')
-        tootlist = aritooter.tootcontrol(toot)
-        for tootmsg in tootlist:
-            await message.channel.send(tootmsg)
 
     #call mememgr.emoji_reactor and give the message and author
     #if the emojireactor returns a list with contents react with the contents
@@ -79,10 +78,19 @@ async def on_message(message):
             await message.reply('old')
         else:
             tweetcontainer.append(message.content)
-        #if the author of the tweet was @jaimierz888, react fire and heart emojis
-        if 'jaimierz888' in message.content:
+        #if the author of the tweet was @nosetuuz, react fire and heart emojis
+        if 'nosetuuz' in message.content:
             await message.add_reaction('🔥')
             await message.add_reaction('❤')
+
+'''
+    #darn tootin
+    if message.content.startswith('!toot'):
+        toot = message.content.replace('!toot','')
+        tootlist = aritooter.tootcontrol(toot)
+        for tootmsg in tootlist:
+            await message.channel.send(tootmsg)
+'''
 
 
 
