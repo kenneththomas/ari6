@@ -6,7 +6,7 @@ import asyncio
 import control as ct
 #import aritooter
 import datetime
-import sentience
+#import sentience
 
 emoji_storage = {
     'eheu': '<:eheu:233869216002998272>',
@@ -33,10 +33,12 @@ async def on_message(message):
     if message.author == client.user:
         return
 
-    #if someone replies to the bot
+    '''
+    if someone replies to the bot
     if message.reference:
         if message.reference.resolved.author == client.user:
             await message.reply(sentience.genmsg())
+    '''
 
     # banned words
     bwm = ct.controlmgr(message.content.lower(),str(message.author))
@@ -83,14 +85,26 @@ async def on_message(message):
             await message.add_reaction('🔥')
             await message.add_reaction('❤')
 
-'''
+    #stats stuff
+    if message.content.startswith('!stats'):
+        maxusers = 8
+        # if --maxusers is provided in the message, get the number after it
+        if '--maxusers' in message.content:
+            maxusers = int(message.content.split('--maxusers')[1].lstrip())
+            print('maxusers is {}'.format(maxusers))
+        statsfile = l.stats(maxusers)
+        with open(statsfile, 'rb') as f:
+            picture = discord.File(f)
+            await message.channel.send('Test:', file=picture)
+
+    '''
     #darn tootin
     if message.content.startswith('!toot'):
         toot = message.content.replace('!toot','')
         tootlist = aritooter.tootcontrol(toot)
         for tootmsg in tootlist:
             await message.channel.send(tootmsg)
-'''
+    '''
 
 
 
@@ -114,12 +128,10 @@ async def on_reaction_add(reaction, user):
     if reaction.emoji == emoji_storage['eheu']:
         await reaction.message.add_reaction(emoji_storage['eheu'])
 
-
-
-'''
+    '''
     #sentience
     if message.content == '!talk':
         await message.channel.send(sentience.genmsg())
-'''
+    '''
 
 client.run(maricon.bottoken)
