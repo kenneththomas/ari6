@@ -61,7 +61,7 @@ class bwmtests(unittest.TestCase):
 class mememgr_tests(unittest.TestCase):
     def test_bad_name(self):
         badname = 'carmelo anthony#7'
-        self.assertEqual(mm.cleanup_username(badname),'badname')
+        self.assertEqual(mm.cleanup_username(badname),'carmeloanthony7')
 
     def test_good_name(self):
         goodname = 'pete123'

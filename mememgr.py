@@ -139,24 +139,14 @@ def emoji_reactor(message,author):
     if message.startswith('unittest testcase'):
         emojilist.append('✅')
 
-    # if the user that sent the message is zithers react with man_bald emoji one time
-    if 'zithers' in author:
-        if 'zithers' not in onlyonce:
-            emojilist.append('👨‍🦲')
-            onlyonce.append('zithers')
-    
+    '''
     # if the user that sent the message is soup, react with coconut emoji and palm tree emoji one time
     if 'soup' in author:
         if 'soup' not in onlyonce:
             emojilist.append('🥥')
             emojilist.append('🌴')
             onlyonce.append('soup')
-
-    # if the user that sent the message is hosea, react with the smirk_cat emoji one time
-    if 'hosea' in author:
-        if 'hosea' not in onlyonce:
-            emojilist.append('😼')
-            onlyonce.append('hosea')
+    '''
 
     if 'breez' in author:
         # if the message has more than 110 characters and ends in punctuation, react with the heart emoji
@@ -164,5 +154,3 @@ def emoji_reactor(message,author):
             emojilist.append('❤️')
             
     return emojilist
-        
-    

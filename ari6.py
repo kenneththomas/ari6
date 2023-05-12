@@ -7,6 +7,7 @@ import control as ct
 #import aritooter
 import datetime
 import sentience
+import personality
 
 emoji_storage = {
     'eheu': '<:eheu:233869216002998272>',
@@ -15,6 +16,9 @@ emoji_storage = {
 }
 onlyonce = []
 tweetcontainer = []
+time_container = []
+sentience_personality = personality.malik
+cm_personality = personality.ari
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -28,15 +32,48 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
+    global sentience_personality
     l.log(message)
 
     if message.author == client.user:
         return
 
     #if someone replies to the bot
-    if message.reference:
-        if message.reference.resolved.author == client.user:
-            await message.reply(sentience.genmsg())
+    #if str(message.channel) == 'barco' or str(message.channel) == 'config':
+    if True:
+        if message.reference:
+            if message.reference.resolved.author == client.user:
+                response_text = await sentience.generate_text_with_timeout_cm(message.content,mememgr.cleanup_username(str(message.author.name)),cm_personality)
+                await asyncio.sleep(1)
+                await message.reply(response_text)
+    
+        #basic gpt
+        if '!gpt' in str(message.content):
+            response_text = await sentience.generate_text_with_timeout_gpt(message.content)
+            await asyncio.sleep(1)
+            await message.reply(response_text)
+
+
+    # sentience control
+
+    if '!switch' in str(message.content):
+        print('switching personality')
+        if 'malik' in str(message.content):
+            sentience_personality = personality.malik
+            await message.reply('personality switched to malik')
+        elif 'dasha' in str(message.content):
+            sentience_personality = personality.dasha
+            await message.reply('personality switched to dasha')
+        elif 'bok' in str(message.content):
+            sentience_personality = personality.bok
+            await message.reply('personality switched to bok')
+        elif 'belf' in str(message.content):
+            sentience_personality = personality.belf
+            await message.reply('YOU WANT BELF! YOU WANT BELF!')
+
+        #clear the conversation history
+        sentience.user_conversations = {}
+
 
     # banned words
     bwm = ct.controlmgr(message.content.lower(),str(message.author))
@@ -47,7 +84,7 @@ async def on_message(message):
 
     memes = mememgr.memes(message.content.lower())
     for meme in memes:
-        asyncio.sleep(1.5)
+        await asyncio.sleep(1.5)
         await message.channel.send(meme)
 
 
@@ -64,11 +101,11 @@ async def on_message(message):
         chrasemoji = '<:chras:237738874930069505>'
         chrasreply = message.content.lower()[2:].lstrip()
         if mememgr.chance(4):
-            asyncio.sleep(2)
+            await asyncio.sleep(2)
             await message.add_reaction(chrasemoji)
             if mememgr.chance(6):
                 await message.reply(f'hi {chrasreply}')
-                asyncio.sleep(1)
+                await asyncio.sleep(1)
                 await message.reply('I\'m ChrasSC')
 
     if 'https://twitter.com/' in message.content:
@@ -83,13 +120,42 @@ async def on_message(message):
             await message.add_reaction('🔥')
             await message.add_reaction('❤')
 
-'''
+    #stats stuff
+    if message.content.startswith('!stats'):
+        maxusers = 8
+        # if --maxusers is provided in the message, get the number after it
+        if '--maxusers' in message.content:
+            maxusers = int(message.content.split('--maxusers')[1].lstrip())
+            print('maxusers is {}'.format(maxusers))
+        statsfile = l.stats(maxusers)
+        with open(statsfile, 'rb') as f:
+            picture = discord.File(f)
+            await message.channel.send('Test:', file=picture)
+
+    '''
     #darn tootin
     if message.content.startswith('!toot'):
         toot = message.content.replace('!toot','')
         tootlist = aritooter.tootcontrol(toot)
         for tootmsg in tootlist:
             await message.channel.send(tootmsg)
+    '''
+
+
+'''
+    currenttime = datetime.datetime.now()
+    # get most recent item from time_container. if it's older than 5 minutes generate a new response
+    try:
+        lasttime = time_container[-1]
+    except IndexError:
+        lasttime = datetime.datetime.now()
+    if (currenttime - lasttime).total_seconds() > 120:
+        if str(message.channel) == 'gato':
+            response_text = await sentience.generate_text_with_timeout_cm(message.content,mememgr.cleanup_username(str(message.author.name)),cm_personality)
+            await asyncio.sleep(1)
+            await message.reply(response_text)
+            bottime = datetime.datetime.now()
+            time_container.append(bottime)
 '''
 
 
@@ -114,12 +180,10 @@ async def on_reaction_add(reaction, user):
     if reaction.emoji == emoji_storage['eheu']:
         await reaction.message.add_reaction(emoji_storage['eheu'])
 
-
-
-'''
+    '''
     #sentience
     if message.content == '!talk':
         await message.channel.send(sentience.genmsg())
-'''
+    '''
 
 client.run(maricon.bottoken)
