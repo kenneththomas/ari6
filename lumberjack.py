@@ -23,6 +23,7 @@ import seaborn as sns
 #########
 
 dbfilename = 'logs/gato.db'
+last15 = []
 
 try:
     dbfile = open(dbfilename, 'a')
@@ -46,7 +47,13 @@ def log(msg):
     channel = str(msg.channel)
     timestamp = str(datetime.now())
     logfix = '8=A6F;35=6L;49={};56={};52={};58={}'.format(sender,channel,timestamp,message)
-    print(logfix)
+    #print(logfix)
+    newlog = f'[{timestamp}] {sender}: {message}'
+    print(newlog)
+    #store last 15 messages
+    last15.append(newlog)
+    if len(last15) > 15:
+        last15.pop(0)
 
     #example timestamp 2023-03-20 22:57:06.370854 get date and hour
     date = timestamp.split(' ')[0]
