@@ -156,18 +156,6 @@ async def on_message(message):
             await message.add_reaction('🔥')
             await message.add_reaction('❤')
 
-    #stats stuff
-    if message.content.startswith('!stats'):
-        maxusers = 8
-        # if --maxusers is provided in the message, get the number after it
-        if '--maxusers' in message.content:
-            maxusers = int(message.content.split('--maxusers')[1].lstrip())
-            print('maxusers is {}'.format(maxusers))
-        statsfile = l.stats(maxusers)
-        with open(statsfile, 'rb') as f:
-            picture = discord.File(f)
-            await message.channel.send('Test:', file=picture)
-
     '''
     #darn tootin
     if message.content.startswith('!toot'):
