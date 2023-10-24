@@ -147,10 +147,11 @@ def emoji_reactor(message,author):
             emojilist.append('🌴')
             onlyonce.append('soup')
     '''
-
+    
     if 'breez' in author:
         # if the message has more than 110 characters and ends in punctuation, react with the heart emoji
         if len(message) > 110 and message[-1] in ['.', '!', '?']:
-            emojilist.append('❤️')
+            print('heart react disabled')
+            #emojilist.append('❤️')
             
     return emojilist

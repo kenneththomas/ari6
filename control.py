@@ -92,3 +92,15 @@ def controlmgr(message, author):
 
 
     return bwm
+
+def should_i_spanish(msg_text):
+
+    if len(msg_text) < 4:
+        return False
+    elif 'http' in msg_text:
+        return False
+    #if it is just a discord emote, don't spanish
+    elif msg_text.startswith('<') and msg_text.endswith('>'):
+        return False
+    else:
+        return True

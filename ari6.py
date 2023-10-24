@@ -8,6 +8,7 @@ import control as ct
 import datetime
 import sentience
 import personality
+import multiprocessing
 
 emoji_storage = {
     'eheu': '<:eheu:233869216002998272>',
@@ -25,6 +26,10 @@ intents.message_content = True
 
 client = discord.Client(intents=intents)
 
+lastmsg = datetime.datetime.now()
+lmcontainer = []
+lmcontainer.append(lastmsg)
+
 @client.event
 async def on_ready():
     print(f'We have logged in as {client.user}')
@@ -32,11 +37,18 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
-    global sentience_personality
-    l.log(message)
+    global lastmsg
+    #ignore webhooks
+    if message.webhook_id:
+        return
 
+    global sentience_personality
     if message.author == client.user:
         return
+    
+    l.log(message)
+
+
 
     #if someone replies to the bot
     #if str(message.channel) == 'barco' or str(message.channel) == 'config':
@@ -54,8 +66,30 @@ async def on_message(message):
             await message.reply(response_text)
 
 
-    # sentience control
 
+    if ct.should_i_spanish(message.content):
+        spanish = await sentience.spanish_translation(message.content)
+        catchannel = client.get_channel(1122326983846678638)
+
+        #if it has been longer than 1 minute since the last message
+        if (datetime.datetime.now() - lmcontainer[0]).total_seconds() > 60:
+            lmcontainer[0] = datetime.datetime.now()
+            webhook = await catchannel.create_webhook(name=message.author.name)
+            await webhook.send(
+                str(spanish), username=message.author.name, avatar_url=message.author.avatar)
+
+            webhooks = await catchannel.webhooks()
+            for webhook in webhooks:
+                await webhook.delete()
+        else:
+            await catchannel.send(f'\n**<{message.author.name}>**\n{spanish}')
+
+    else:
+        print('DEBUG: skipping spanish')
+
+
+    # sentience control
+    '''
     if '!switch' in str(message.content):
         print('switching personality')
         if 'malik' in str(message.content):
@@ -73,7 +107,7 @@ async def on_message(message):
 
         #clear the conversation history
         sentience.user_conversations = {}
-
+    '''
 
     # banned words
     bwm = ct.controlmgr(message.content.lower(),str(message.author))
@@ -95,6 +129,7 @@ async def on_message(message):
         for emoj in emoji:
             await message.add_reaction(emoj)
 
+    '''
     # TODO - this block both replies and reacts so it doesnt fit in emoji reactor or memes
     #if message content has a link in it, check if it's a twitter link
     if message.content.lower().startswith('im '):
@@ -107,6 +142,7 @@ async def on_message(message):
                 await message.reply(f'hi {chrasreply}')
                 await asyncio.sleep(1)
                 await message.reply('I\'m ChrasSC')
+    '''
 
     if 'https://twitter.com/' in message.content:
         #append to tweetcontainer
@@ -185,5 +221,7 @@ async def on_reaction_add(reaction, user):
     if message.content == '!talk':
         await message.channel.send(sentience.genmsg())
     '''
+
+
 
 client.run(maricon.bottoken)

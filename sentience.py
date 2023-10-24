@@ -2,6 +2,8 @@ import openai
 import maricon
 import personality
 import asyncio
+import typing
+import functools
 
 openai.api_key = maricon.gptkey
 
@@ -51,10 +53,6 @@ async def generate_text(prompt,user_id,personality_context=personality.malik):
         generated_text = generated_text[generated_text.find(":")+1:]
     
     generated_text = str(generated_text.replace('AI:',''))
-    for name in personality.personality_names:
-        #split by space
-        for word in name.split(' '):
-            generated_text = generated_text.replace(word + ':','')
 
     # clear user conversation if it has more than 15 ':'s
     # save money!
@@ -73,7 +71,7 @@ async def generate_text_cm(prompt, username, personality_context=personality.ari
     conversation += f"\n{username}: {prompt}"
 
     #full_prompt = f"{personality_context} \n {conversation}"
-    full_prompt = [{"role": "user", "content": f"{personality_context.prompt} \n {conversation}"}]
+    full_prompt = [{"role": "user", "content": f"{personality_context} \n {conversation}"}]
 
     response = openai.ChatCompletion.create(
     model="gpt-4",
@@ -95,10 +93,6 @@ async def generate_text_cm(prompt, username, personality_context=personality.ari
         generated_text = generated_text[generated_text.find(":")+1:]
     
     generated_text = str(generated_text.replace('AI:',''))
-    for name in personality.personality_names:
-        #split by space
-        for word in name.split(' '):
-            generated_text = generated_text.replace(word + ':','')
 
     # replace words in generated text with gato slang
     for word in generated_text.split(' '):
@@ -115,6 +109,13 @@ async def generate_text_cm(prompt, username, personality_context=personality.ari
 async def generate_text_with_timeout_cm(prompt, user_id, personality_context):
     try:
         return await asyncio.wait_for(generate_text_cm(prompt, user_id, personality_context), timeout=15)
+    except asyncio.TimeoutError:
+        return "obama"
+    
+  
+async def spanish_translation(prompt):
+    try:
+        return await asyncio.wait_for(generate_text_gpt(personality.gato + '\n' +  prompt), timeout=15)
     except asyncio.TimeoutError:
         return "obama"
     
@@ -137,7 +138,7 @@ async def generate_text_gpt(prompt):
     temperature=.8,
     messages = full_prompt)
 
-    print(response)
+    #print(response)
     
     generated_text = response.choices[0].message.content.strip()
 
