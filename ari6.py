@@ -71,16 +71,20 @@ async def on_message(message):
         spanish = await sentience.spanish_translation(message.content)
         catchannel = client.get_channel(1122326983846678638)
 
-        #if it has been longer than 1 minute since the last message
-        if (datetime.datetime.now() - lmcontainer[0]).total_seconds() > 60:
-            lmcontainer[0] = datetime.datetime.now()
-            webhook = await catchannel.create_webhook(name=message.author.name)
-            await webhook.send(
-                str(spanish), username=message.author.name, avatar_url=message.author.avatar)
+        #if the message is longer than 60 characters - this rate limits insane lmao
+        if len(spanish) > 60:
+            #if it has been longer than 1 minute since the last message
+            if (datetime.datetime.now() - lmcontainer[0]).total_seconds() > 60:
+                lmcontainer[0] = datetime.datetime.now()
+                webhook = await catchannel.create_webhook(name=message.author.name)
+                await webhook.send(
+                    str(spanish), username=message.author.name, avatar_url=message.author.avatar)
 
-            webhooks = await catchannel.webhooks()
-            for webhook in webhooks:
-                await webhook.delete()
+                webhooks = await catchannel.webhooks()
+                for webhook in webhooks:
+                    await webhook.delete()
+            else:
+                await catchannel.send(f'\n**<{message.author.name}>**\n{spanish}')
         else:
             await catchannel.send(f'\n**<{message.author.name}>**\n{spanish}')
 
