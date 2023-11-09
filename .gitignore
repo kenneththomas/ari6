@@ -2,3 +2,4 @@ maricon.py
 logs/
 *.secret
 *.pyc
+personality.py

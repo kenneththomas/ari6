@@ -34,9 +34,9 @@ async def generate_text(prompt,user_id,personality_context=personality.malik):
     full_prompt = [{"role": "user", "content": f"{personality_context.prompt} \n {user_conversations[user_id]}"}]
 
     response = openai.ChatCompletion.create(
-    model="gpt-4",
+    model="gpt-4-1106-preview",
     max_tokens=200,
-    temperature=1.2,
+    temperature=0.8,
     messages = full_prompt)
 
     print(response)
@@ -74,9 +74,9 @@ async def generate_text_cm(prompt, username, personality_context=personality.ari
     full_prompt = [{"role": "user", "content": f"{personality_context} \n {conversation}"}]
 
     response = openai.ChatCompletion.create(
-    model="gpt-4",
+    model="gpt-4-1106-preview",
     max_tokens=200,
-    temperature=1.2,
+    temperature=0.8,
     messages = full_prompt)
 
     print(response)
