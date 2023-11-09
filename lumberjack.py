@@ -2,9 +2,7 @@ from datetime import datetime
 import mememgr
 import os
 import sqlite3
-import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
+import json
 
 #########
 # Logging model based off of FIX 4.2 Protocol
@@ -65,6 +63,18 @@ def log(msg):
     c.execute("INSERT INTO logs VALUES (?,?,?,?,?,?)", (sender,channel,timestamp,date,hour,message))
     conn.commit()
     conn.close()
+
+    #temporary write to json username, timestamp, message
+
+    #convert timestamp to this format 2023-10-25 15:59:00
+
+    #we only want to write to the json in the message has more than 15 characters
+    if len(message) > 20 and len(message) < 200:
+        timestamp = timestamp.split('.')[0]
+        jsonfile = open('logs/log.json', 'a')
+        json.dump({'username': sender, 'timestamp': timestamp, 'text': message}, jsonfile)
+        jsonfile.write(',\n')
+        jsonfile.close()
 
     return
 
