@@ -160,6 +160,28 @@ async def on_message(message):
             await message.add_reaction('🔥')
             await message.add_reaction('❤')
 
+        #embed fixer
+        if 'vxtwitter.com' not in message.content:
+            if 'twitter.com' in message.content:
+                tweetlink = message.content.replace('twitter.com','vxtwitter.com')
+                await message.channel.send(tweetlink)
+
+    #ELON
+                
+    if 'https://x.com/' in message.content:
+        #append to tweetcontainer
+        #if it is a duplicate, message.reply with "old"
+        if message.content in tweetcontainer:
+            await message.reply('old')
+        else:
+            tweetcontainer.append(message.content)
+        #embed fixer
+        if 'vxtwitter.com' not in message.content:
+            if 'x.com' in message.content:
+                tweetlink = message.content.replace('x.com','vxtwitter.com')
+                await message.channel.send(tweetlink)
+            
+
     '''
     #darn tootin
     if message.content.startswith('!toot'):
