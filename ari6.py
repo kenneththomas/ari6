@@ -9,6 +9,7 @@ import datetime
 import sentience
 import personality
 import multiprocessing
+import re
 
 emoji_storage = {
     'eheu': '<:eheu:233869216002998272>',
@@ -77,8 +78,9 @@ async def on_message(message):
             if (datetime.datetime.now() - lmcontainer[0]).total_seconds() > 60:
                 lmcontainer[0] = datetime.datetime.now()
                 webhook = await catchannel.create_webhook(name=message.author.name)
-                await webhook.send(
-                    str(spanish), username=message.author.name, avatar_url=message.author.avatar)
+                #people complained about being double pinged by the bot so remove the ping, regex away (<@142508812073566208>)
+                spanish = re.sub(r'<@\d+>','',str(spanish))
+                await webhook.send(spanish, username=message.author.name, avatar_url=message.author.avatar)
 
                 webhooks = await catchannel.webhooks()
                 for webhook in webhooks:
