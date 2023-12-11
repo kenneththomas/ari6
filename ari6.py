@@ -166,10 +166,10 @@ async def on_message(message):
         if 'vxtwitter.com' not in message.content:
             if 'twitter.com' in message.content:
                 tweetlink = message.content.replace('twitter.com','vxtwitter.com')
-                await message.channel.send(tweetlink)
+                await message.delete()  # delete the original message
+                await message.channel.send(f"{message.author.display_name} posted:\n {tweetlink}")
 
     #ELON
-                
     if 'https://x.com/' in message.content:
         #append to tweetcontainer
         #if it is a duplicate, message.reply with "old"
@@ -181,7 +181,8 @@ async def on_message(message):
         if 'vxtwitter.com' not in message.content:
             if 'x.com' in message.content:
                 tweetlink = message.content.replace('x.com','vxtwitter.com')
-                await message.channel.send(tweetlink)
+                await message.delete()  # delete the original message
+                await message.channel.send(f"{message.author.display_name} posted:\n {tweetlink}")
             
 
     '''
