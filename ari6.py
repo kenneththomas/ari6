@@ -56,9 +56,12 @@ async def on_message(message):
     if True:
         if message.reference:
             if message.reference.resolved.author == client.user:
+                print('machine broke')
+                '''
                 response_text = await sentience.generate_text_with_timeout_cm(message.content,mememgr.cleanup_username(str(message.author.name)),cm_personality)
                 await asyncio.sleep(1)
                 await message.reply(response_text)
+                '''
     
         #basic gpt
         if '!gpt' in str(message.content):
