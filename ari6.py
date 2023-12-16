@@ -56,12 +56,9 @@ async def on_message(message):
     if True:
         if message.reference:
             if message.reference.resolved.author == client.user:
-                print('machine broke')
-                '''
                 response_text = await sentience.generate_text_with_timeout_cm(message.content,mememgr.cleanup_username(str(message.author.name)),cm_personality)
                 await asyncio.sleep(1)
                 await message.reply(response_text)
-                '''
     
         #basic gpt
         if '!gpt' in str(message.content):
@@ -96,28 +93,6 @@ async def on_message(message):
     else:
         print('DEBUG: skipping spanish')
 
-
-    # sentience control
-    '''
-    if '!switch' in str(message.content):
-        print('switching personality')
-        if 'malik' in str(message.content):
-            sentience_personality = personality.malik
-            await message.reply('personality switched to malik')
-        elif 'dasha' in str(message.content):
-            sentience_personality = personality.dasha
-            await message.reply('personality switched to dasha')
-        elif 'bok' in str(message.content):
-            sentience_personality = personality.bok
-            await message.reply('personality switched to bok')
-        elif 'belf' in str(message.content):
-            sentience_personality = personality.belf
-            await message.reply('YOU WANT BELF! YOU WANT BELF!')
-
-        #clear the conversation history
-        sentience.user_conversations = {}
-    '''
-
     # banned words
     bwm = ct.controlmgr(message.content.lower(),str(message.author))
     if bwm.delete == True:
@@ -138,20 +113,19 @@ async def on_message(message):
         for emoj in emoji:
             await message.add_reaction(emoj)
 
-    '''
+
     # TODO - this block both replies and reacts so it doesnt fit in emoji reactor or memes
     #if message content has a link in it, check if it's a twitter link
     if message.content.lower().startswith('im '):
         chrasemoji = '<:chras:237738874930069505>'
         chrasreply = message.content.lower()[2:].lstrip()
-        if mememgr.chance(4):
+        if mememgr.chance(12):
             await asyncio.sleep(2)
             await message.add_reaction(chrasemoji)
             if mememgr.chance(6):
                 await message.reply(f'hi {chrasreply}')
                 await asyncio.sleep(1)
                 await message.reply('I\'m ChrasSC')
-    '''
 
     if 'https://twitter.com/' in message.content:
         #append to tweetcontainer
@@ -235,13 +209,6 @@ async def on_reaction_add(reaction, user):
     #if reaction emoji is a eheu emoji, also react with eheu emoji
     if reaction.emoji == emoji_storage['eheu']:
         await reaction.message.add_reaction(emoji_storage['eheu'])
-
-    '''
-    #sentience
-    if message.content == '!talk':
-        await message.channel.send(sentience.genmsg())
-    '''
-
 
 
 client.run(maricon.bottoken)

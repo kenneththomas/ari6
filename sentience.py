@@ -2,8 +2,6 @@ import openai
 import maricon
 import personality
 import asyncio
-import typing
-import functools
 
 openai.api_key = maricon.gptkey
 
@@ -115,7 +113,7 @@ async def generate_text_with_timeout_cm(prompt, user_id, personality_context):
   
 async def spanish_translation(prompt):
     try:
-        return await asyncio.wait_for(generate_text_gpt(personality.gato + '\n' +  prompt), timeout=15)
+        return await asyncio.wait_for(generate_text_gpt_spanish(personality.gato + '\n' +  prompt), timeout=15)
     except asyncio.TimeoutError:
         return "obama"
     
@@ -130,7 +128,10 @@ async def generate_text_gpt(prompt):
 
     prompt = prompt.replace('!gpt','')
 
-    full_prompt = [{"role": "user", "content": f"{prompt}"}]
+    full_prompt = [
+        {"role": "system", "content": "you are Ari, you are posting in a discord channel. you will respond with short informal messages. you will not refer to yourself as an AI."},
+        {"role": "user", "content": f"{prompt}"}
+        ]
 
     response = openai.ChatCompletion.create(
     model="gpt-3.5-turbo",
@@ -153,7 +154,6 @@ async def generate_text_gpt(prompt):
 
     return generated_text
 
-    
 gato_slang = {
     'guitar': 'juitar',
     'guitars': 'juitars',
@@ -166,3 +166,24 @@ gato_slang = {
     'barinade' : 'bari',
     'as an ai language model' : '',
 }
+
+async def generate_text_gpt_spanish(prompt):
+
+    full_prompt = [
+        {"role": "user", "content": f"{prompt}"}
+        ]
+
+    response = openai.ChatCompletion.create(
+    model="gpt-3.5-turbo",
+    max_tokens=1200,
+    temperature=.8,
+    messages = full_prompt)
+
+    #print(response)
+    
+    generated_text = response.choices[0].message.content.strip()
+
+    #force lowercase
+    generated_text = generated_text.lower()
+
+    return generated_text
