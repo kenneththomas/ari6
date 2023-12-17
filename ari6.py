@@ -10,6 +10,7 @@ import sentience
 import personality
 import multiprocessing
 import re
+import random
 
 emoji_storage = {
     'eheu': '<:eheu:233869216002998272>',
@@ -32,13 +33,15 @@ lmcontainer = []
 lmcontainer.append(lastmsg)
 
 experimental_container = []
-webhook_names = [('ari','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702772600/outream/xpa09ll1hpuk3wab0jvr.png'),
-                 ('musicsmusic','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702771014/outream/wnzefyt9pihnarjzarku.png'),
-                 ('obama','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702786300/outream/xqjtn4ukkwbopfnkzwfm.jpg'),
-                 ('rachel','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702786482/j4dblijgfimq219yqcyj.png'),
-                 ('james harden','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702786498/quw7xyzafvvztjf90z5j.png'),
-                 ('chang', 'https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702786636/lpdvewfaioo5skxglotb.png'),
-                 ('melo trimble','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702786720/outream/wv4alpfy7gddt83p4fwk.png')
+webhook_names = [
+                 ('musicsmusic','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702771014/outream/wnzefyt9pihnarjzarku.png','A german guy named Dustin'),
+                 ('obama','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702786300/outream/xqjtn4ukkwbopfnkzwfm.jpg','Barack Obama, former president of the United States'),
+                 ('rachel','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702786482/j4dblijgfimq219yqcyj.png','A typical jewish american princess'),
+                 ('james harden','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702786498/quw7xyzafvvztjf90z5j.png','James Harden the basketball player'),
+                 ('chang', 'https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702786636/lpdvewfaioo5skxglotb.png','Chang'),
+                 ('melo trimble','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702786720/outream/wv4alpfy7gddt83p4fwk.png','Melo Trimble, former Maryland basketball player'),
+                 ('yung nic','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702788099/iyg87se9g9i9jbqiqojy.png','Nicolas Cage, actor'),
+                 ('brandon','https://cdn.midjourney.com/4c3839c1-ba1c-4d41-af41-6cf3b62ea614/0_0.webp','Joe Biden, current president of the United States')
                  ]
 
 @client.event
@@ -102,38 +105,17 @@ async def on_message(message):
                 ari_webhook = await catchannel.create_webhook(name='ari')
             await ari_webhook.send(freemsg, username='ari', avatar_url='https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702772600/outream/xpa09ll1hpuk3wab0jvr.png')
 
-        if mememgr.chance(1):
-            await asyncio.sleep(2)
-            freemsg2 = await sentience.ai_experimental2(experimental_container)
-            #post as webhook
-            if freemsg2:
-                experimental_container.append(f'ari: {freemsg2}')
-                catchannel = client.get_channel(205930498034237451)
-                webhooks = await catchannel.webhooks()
-                music_webhook = next((webhook for webhook in webhooks if webhook.name == 'music'), None)
-                if not music_webhook:
-                    music_webhook = await catchannel.create_webhook(name='music')
-                await music_webhook.send(freemsg2, username='music', avatar_url='https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702771014/outream/wnzefyt9pihnarjzarku.png')
+            #call this again a random number of times from 1-3
 
-            await asyncio.sleep(2)
-
-            freemsg3 = await sentience.ai_experimental(experimental_container)
-
-            if freemsg3:
-                experimental_container.append(f'ari: {freemsg3}')
-                catchannel = client.get_channel(205930498034237451)
-                webhooks = await catchannel.webhooks()
-                await ari_webhook.send(freemsg3, username='ari', avatar_url='https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702772600/outream/xpa09ll1hpuk3wab0jvr.png')
-
-            freemsg4 = await sentience.ai_experimental2(experimental_container)
-
-            await asyncio.sleep(2)
-            
-            if freemsg4:
-                experimental_container.append(f'ari: {freemsg4}')
-                catchannel = client.get_channel(205930498034237451)
-                webhooks = await catchannel.webhooks()
-                await music_webhook.send(freemsg4, username='music', avatar_url='https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702771014/outream/wnzefyt9pihnarjzarku.png')
+            for i in range(random.randint(1,3)):
+                personality = random.choice(webhook_names)
+                username = personality[0]
+                avatar = personality[1]
+                system_prompt = personality[2]
+                freemsg = await sentience.ai_experimental(experimental_container, 'gpt-4-1106-preview')
+                experimental_container.append(f'{username}: {freemsg}')
+                await ari_webhook.send(freemsg, username=username, avatar_url=avatar)
+                await asyncio.sleep(random.randint(1,9))
 
             return
 
