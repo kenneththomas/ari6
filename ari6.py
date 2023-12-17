@@ -33,16 +33,6 @@ lmcontainer = []
 lmcontainer.append(lastmsg)
 
 experimental_container = []
-webhook_names = [
-                 ('musicsmusic','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702771014/outream/wnzefyt9pihnarjzarku.png','A german guy named Dustin'),
-                 ('obama','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702786300/outream/xqjtn4ukkwbopfnkzwfm.jpg','Barack Obama, former president of the United States'),
-                 ('rachel','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702786482/j4dblijgfimq219yqcyj.png','A typical jewish american princess'),
-                 ('james harden','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702786498/quw7xyzafvvztjf90z5j.png','James Harden the basketball player'),
-                 ('chang', 'https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702786636/lpdvewfaioo5skxglotb.png','Chang'),
-                 ('melo trimble','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702786720/outream/wv4alpfy7gddt83p4fwk.png','Melo Trimble, former Maryland basketball player'),
-                 ('yung nic','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702788099/iyg87se9g9i9jbqiqojy.png','Nicolas Cage, actor'),
-                 ('brandon','https://cdn.midjourney.com/4c3839c1-ba1c-4d41-af41-6cf3b62ea614/0_0.webp','Joe Biden, current president of the United States')
-                 ]
 
 available_languages = ['spanish','french','italian','arabic','chinese','russian','german','korean','greek','japanese','portuguese']
 
@@ -120,7 +110,8 @@ async def on_message(message):
     #ari experimental - store last 10 messages in experimental_container
     if len(experimental_container) > 10:
         experimental_container.pop(0)
-    '''   
+
+    '''
     #call ai_experimental from sentience
     if mememgr.chance(15):
         freemsg = await sentience.ai_experimental(experimental_container, 'gpt-4-1106-preview')
@@ -137,10 +128,10 @@ async def on_message(message):
             #call this again a random number of times from 1-3
 
             for i in range(random.randint(1,3)):
-                personality = random.choice(webhook_names)
+                personality = random.choice(list(webhook_library.values()))
                 username = personality[0]
                 avatar = personality[1]
-                system_prompt = personality[2]
+                #system_prompt = personality[2]
                 freemsg = await sentience.ai_experimental(experimental_container, 'gpt-4-1106-preview')
                 experimental_container.append(f'{username}: {freemsg}')
                 await ari_webhook.send(freemsg, username=username, avatar_url=avatar)
