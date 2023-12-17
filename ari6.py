@@ -153,17 +153,8 @@ async def on_message(message):
             if not spanish_webhook:
                 spanish_webhook = await catchannel.create_webhook(name='spanish')
 
-            #if the message is longer than 60 characters - this rate limits insane lmao
-            if len(spanish) > 60:
-                #if it has been longer than 1 minute since the last message
-                if (datetime.datetime.now() - lmcontainer[0]).total_seconds() > 5:
-                    lmcontainer[0] = datetime.datetime.now()
-
-                    await spanish_webhook.send(spanish, username=message.author.name, avatar_url=message.author.avatar)
-                else:
-                    await catchannel.send(f'\n**<{message.author.name}>**\n{spanish}')
-            else:
-                await catchannel.send(f'\n**<{message.author.name}>**\n{spanish}')
+            await spanish_webhook.send(spanish, username=message.author.name, avatar_url=message.author.avatar)
+            #await catchannel.send(f'\n**<{message.author.name}>**\n{spanish}')
 
     else:
         print('DEBUG: skipping spanish')
@@ -248,7 +239,11 @@ async def on_message(message):
                 tweetlink = message.content.replace('twitter.com','vxtwitter.com')
                 await message.delete()  # delete the original message
                 if str(message.channel) == 'gato':
-                    await ari_webhook.send(f'{message.author.display_name} posted:\n {tweetlink}', username='obama', avatar_url='https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702786300/outream/xqjtn4ukkwbopfnkzwfm.jpg')
+                    #pick random webhook from webhook_library
+                    personality = random.choice(list(webhook_library.values()))
+                    username = personality[0]
+                    avatar = personality[1]
+                    await ari_webhook.send(f'{message.author.display_name} posted:\n {tweetlink}', username=username, avatar_url=avatar)
                 else:
                     await message.channel.send(f"{message.author.display_name} posted:\n {tweetlink}")
 
