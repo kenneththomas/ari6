@@ -1,10 +1,10 @@
-import openai
+from openai import OpenAI
 import maricon
+client = OpenAI(api_key=maricon.gptkey)
 import personality
 import asyncio
 import random
 
-openai.api_key = maricon.gptkey
 
 # Initialize a dictionary to store conversation history for each user
 user_conversations = {}
@@ -31,8 +31,7 @@ async def generate_text(prompt,user_id,personality_context=personality.malik):
     #full_prompt = f"{personality_context} \n {user_conversations[user_id]}"
     full_prompt = [{"role": "user", "content": f"{personality_context.prompt} \n {user_conversations[user_id]}"}]
 
-    response = openai.ChatCompletion.create(
-    model="gpt-4-1106-preview",
+    response = client.chat.completions.create(model="gpt-4-1106-preview",
     max_tokens=200,
     temperature=0.8,
     messages = full_prompt)
@@ -59,56 +58,6 @@ async def generate_text(prompt,user_id,personality_context=personality.malik):
 
     return generated_text
 
-async def generate_text_cm(prompt, username, personality_context=personality.ari):
-    # Check if the conversation history exists
-    if "conversation" not in globals():
-        global conversation
-        conversation = ""
-
-    # Update the conversation history with the new message
-    conversation += f"\n{username}: {prompt}"
-
-    #full_prompt = f"{personality_context} \n {conversation}"
-    full_prompt = [{"role": "user", "content": f"{personality_context} \n {conversation}"}]
-
-    response = openai.ChatCompletion.create(
-    model="gpt-4-1106-preview",
-    max_tokens=200,
-    temperature=0.8,
-    messages = full_prompt)
-
-    print(response)
-    
-    generated_text = response.choices[0].message.content.strip()
-
-    conversation += f"\nAI: {generated_text}"
-
-    print(f'debug + {conversation}')
-
-    print('text before replace: ' + generated_text)
-    
-    if ":" in generated_text:
-        generated_text = generated_text[generated_text.find(":")+1:]
-    
-    generated_text = str(generated_text.replace('AI:',''))
-
-    # replace words in generated text with gato slang
-    for word in generated_text.split(' '):
-        if word in gato_slang:
-            generated_text = generated_text.replace(word, gato_slang[word])
-
-    # clear conversation if it has more than 15 ':'s
-    # save money!
-    if conversation.count(':') > 15:
-        conversation = ""
-
-    return generated_text
-
-async def generate_text_with_timeout_cm(prompt, user_id, personality_context):
-    try:
-        return await asyncio.wait_for(generate_text_cm(prompt, user_id, personality_context), timeout=15)
-    except asyncio.TimeoutError:
-        return "obama"
     
   
 async def spanish_translation(prompt):
@@ -134,8 +83,7 @@ async def generate_text_gpt(prompt):
         {"role": "user", "content": f"{prompt}"}
         ]
 
-    response = openai.ChatCompletion.create(
-    model="gpt-3.5-turbo",
+    response = client.chat.completions.create(model="gpt-3.5-turbo",
     max_tokens=1200,
     temperature=.8,
     messages = full_prompt)
@@ -174,8 +122,7 @@ async def generate_text_gpt_spanish(prompt):
         {"role": "user", "content": f"{prompt}"}
         ]
 
-    response = openai.ChatCompletion.create(
-    model="gpt-3.5-turbo",
+    response = client.chat.completions.create(model="gpt-3.5-turbo",
     max_tokens=1200,
     temperature=.8,
     messages = full_prompt)
@@ -217,8 +164,7 @@ async def ai_experimental(prompt, gmodel="gpt-3.5-turbo", prompt_addition=False)
         {"role": "user", "content": f"{prompt}"}
         ]
 
-    response = openai.ChatCompletion.create(
-    model=gmodel,
+    response = client.chat.completions.create(model=gmodel,
     max_tokens = 800,
     temperature=.8,
     messages = promptcontainer)
