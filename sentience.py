@@ -2,16 +2,16 @@ import openai
 import maricon
 import personality
 import asyncio
+import random
 
 openai.api_key = maricon.gptkey
-
-# gpt-3.5-turbo
-# text-davinci-002
-
 
 # Initialize a dictionary to store conversation history for each user
 user_conversations = {}
 cm_chat_conversations = {}
+
+#for translation module, this can be changed to any language
+translate_language = 'spanish'
 
 
 async def generate_text_with_timeout(prompt, user_id):
@@ -112,8 +112,9 @@ async def generate_text_with_timeout_cm(prompt, user_id, personality_context):
     
   
 async def spanish_translation(prompt):
+    language_prompt = f'Translate chatroom message from english to {translate_language}, keep similar grammar/formality:'
     try:
-        return await asyncio.wait_for(generate_text_gpt_spanish(personality.gato + '\n' +  prompt), timeout=15)
+        return await asyncio.wait_for(generate_text_gpt_spanish(language_prompt + '\n' +  prompt), timeout=15)
     except asyncio.TimeoutError:
         return "obama"
     
@@ -181,6 +182,48 @@ async def generate_text_gpt_spanish(prompt):
 
     #print(response)
     
+    generated_text = response.choices[0].message.content.strip()
+
+    #force lowercase
+    generated_text = generated_text.lower()
+
+    return generated_text
+
+async def ai_experimental(prompt, gmodel="gpt-3.5-turbo", prompt_addition=False):
+
+    #in prompt we receive a list of messages. each item is user: message, convert it into prompt. if user is ari, then role is system'
+
+    if prompt_addition:
+        rprole = prompt_addition
+    else:
+        rprole = 'ari'
+
+    promptcontainer = [{"role": "system", "content": f"you are role playing as {rprole}, you are posting in a discord channel. short and informal chat style messages. you will not refer to yourself as an AI. do not use emojis or hashtags. do not end your sentence with a question"}]
+
+    for message in prompt:
+        #parse user
+        user = message.split(':')[0]
+        #message is everything after the first colon as there may be multiple colons in the message
+        #message = message.split(':',1)[1]
+        if user == 'ari':
+            role = 'assistant'
+        else:
+            role = 'user'
+        promptcontainer.append({"role": role, "content": f"{message}"})
+    print(promptcontainer)
+
+
+    full_prompt = [
+        {"role": "user", "content": f"{prompt}"}
+        ]
+
+    response = openai.ChatCompletion.create(
+    model=gmodel,
+    max_tokens = 800,
+    temperature=.8,
+    messages = promptcontainer)
+
+    print(response)
     generated_text = response.choices[0].message.content.strip()
 
     #force lowercase

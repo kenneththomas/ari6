@@ -10,6 +10,7 @@ import sentience
 import personality
 import multiprocessing
 import re
+import random
 
 emoji_storage = {
     'eheu': '<:eheu:233869216002998272>',
@@ -31,6 +32,37 @@ lastmsg = datetime.datetime.now()
 lmcontainer = []
 lmcontainer.append(lastmsg)
 
+experimental_container = []
+
+available_languages = ['spanish','french','italian','arabic','chinese','russian','german','korean','greek','japanese','portuguese']
+
+language_webhooks = {
+    'chinese' : ['asian_ariana','xi'],
+    'korean' : ['asian_ariana'],
+    'japanese' : ['asian_ariana'],
+    'german' : ['musicsmusic'],
+    'russian' : ['obama','brandon'],
+    'french' : ['obama'],
+    'italian' : ['obama'],
+    'arabic' : ['obama'],
+    'greek' : ['obama'],
+    'portuguese' : ['james harden'],
+}
+
+webhook_library = {
+    'asian_ariana' : ('asianfacing ariana grande', 'https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702838375/etzmyo2jjca7kq91lglm.png'),
+    'xi' : ('xi jinping', 'https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702838484/ydr6ftugfuy5kxis4igj.jpg'),
+    'musicsmusic' : ('musicsmusic','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702771014/outream/wnzefyt9pihnarjzarku.png'),
+    'obama' : ('obama','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702786300/outream/xqjtn4ukkwbopfnkzwfm.jpg'),
+    'brandon' : ('brandon','https://cdn.midjourney.com/4c3839c1-ba1c-4d41-af41-6cf3b62ea614/0_0.webp'),
+    'rachel' : ('rachel','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702786482/j4dblijgfimq219yqcyj.png'),
+    'james harden' : ('james harden','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702786498/quw7xyzafvvztjf90z5j.png'),
+    'chang' : ('chang','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702786636/lpdvewfaioo5skxglotb.png'),
+    'melo trimble' : ('melo trimble','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702786720/outream/wv4alpfy7gddt83p4fwk.png'),
+    'yung nic' : ('yung nic','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702788099/iyg87se9g9i9jbqiqojy.png'),
+}
+
+
 @client.event
 async def on_ready():
     print(f'We have logged in as {client.user}')
@@ -50,15 +82,24 @@ async def on_message(message):
     l.log(message)
 
 
+    #start AI block
 
-    #if someone replies to the bot
-    #if str(message.channel) == 'barco' or str(message.channel) == 'config':
+    experimental_container.append(f'{message.author.display_name}: {message.content}')
     if True:
         if message.reference:
             if message.reference.resolved.author == client.user:
-                response_text = await sentience.generate_text_with_timeout_cm(message.content,mememgr.cleanup_username(str(message.author.name)),cm_personality)
+
+                #check if that reply had a vxtwitter link in it, if it did, dont reply
+                if 'vxtwitter.com' in message.reference.resolved.content:
+                    print('DEBUG: not responding to vxtwitter link that was probably posted by me')
+                    return
+
+                freemsg = await sentience.ai_experimental(experimental_container,'gpt-4-1106-preview')
+                experimental_container.append(f'ari: {freemsg}')
                 await asyncio.sleep(1)
-                await message.reply(response_text)
+                await message.reply(freemsg)                    
+
+                return
     
         #basic gpt
         if '!gpt' in str(message.content):
@@ -66,32 +107,87 @@ async def on_message(message):
             await asyncio.sleep(1)
             await message.reply(response_text)
 
+    #ari experimental - store last 10 messages in experimental_container
+    if len(experimental_container) > 10:
+        experimental_container.pop(0)
 
+    '''
+    #call ai_experimental from sentience
+    if mememgr.chance(15):
+        freemsg = await sentience.ai_experimental(experimental_container, 'gpt-4-1106-preview')
+
+        if freemsg:
+            experimental_container.append(f'dustin: {freemsg}')
+            catchannel = client.get_channel(205930498034237451)
+            webhooks = await catchannel.webhooks()
+            ari_webhook = next((webhook for webhook in webhooks if webhook.name == 'ari'), None)
+            if not ari_webhook:
+                ari_webhook = await catchannel.create_webhook(name='ari')
+            await ari_webhook.send(freemsg, username='ari', avatar_url='https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702772600/outream/xpa09ll1hpuk3wab0jvr.png')
+
+            #call this again a random number of times from 1-3
+
+            for i in range(random.randint(1,3)):
+                personality = random.choice(list(webhook_library.values()))
+                username = personality[0]
+                avatar = personality[1]
+                #system_prompt = personality[2]
+                freemsg = await sentience.ai_experimental(experimental_container, 'gpt-4-1106-preview')
+                experimental_container.append(f'{username}: {freemsg}')
+                await ari_webhook.send(freemsg, username=username, avatar_url=avatar)
+                await asyncio.sleep(random.randint(1,9))
+
+            return
+    '''
 
     if ct.should_i_spanish(message.content):
-        spanish = await sentience.spanish_translation(message.content)
-        catchannel = client.get_channel(1122326983846678638)
+            spanish = await sentience.spanish_translation(message.content)
+            #people complained about being double pinged by the bot so remove the ping, regex away (<@142508812073566208>)
+            spanish = re.sub(r'<@\d+>','',str(spanish))
+            catchannel = client.get_channel(1122326983846678638)
 
-        #if the message is longer than 60 characters - this rate limits insane lmao
-        if len(spanish) > 60:
-            #if it has been longer than 1 minute since the last message
-            if (datetime.datetime.now() - lmcontainer[0]).total_seconds() > 60:
-                lmcontainer[0] = datetime.datetime.now()
-                webhook = await catchannel.create_webhook(name=message.author.name)
-                #people complained about being double pinged by the bot so remove the ping, regex away (<@142508812073566208>)
-                spanish = re.sub(r'<@\d+>','',str(spanish))
-                await webhook.send(spanish, username=message.author.name, avatar_url=message.author.avatar)
+            # Create or reuse a single webhook
+            webhooks = await catchannel.webhooks()
+            spanish_webhook = next((webhook for webhook in webhooks if webhook.name == 'spanish'), None)
 
-                webhooks = await catchannel.webhooks()
-                for webhook in webhooks:
-                    await webhook.delete()
+            if not spanish_webhook:
+                spanish_webhook = await catchannel.create_webhook(name='spanish')
+
+            #if the message is longer than 60 characters - this rate limits insane lmao
+            if len(spanish) > 60:
+                #if it has been longer than 1 minute since the last message
+                if (datetime.datetime.now() - lmcontainer[0]).total_seconds() > 5:
+                    lmcontainer[0] = datetime.datetime.now()
+
+                    await spanish_webhook.send(spanish, username=message.author.name, avatar_url=message.author.avatar)
+                else:
+                    await catchannel.send(f'\n**<{message.author.name}>**\n{spanish}')
             else:
                 await catchannel.send(f'\n**<{message.author.name}>**\n{spanish}')
-        else:
-            await catchannel.send(f'\n**<{message.author.name}>**\n{spanish}')
 
     else:
         print('DEBUG: skipping spanish')
+
+
+    #switch sentience.translate_language if !language is called to change translation language
+    if str(message.content).startswith('!language'):
+        new_language = str(message.content).replace('!language','').strip()
+        if new_language in available_languages:
+            #use webhook if it exists
+            if new_language in language_webhooks.keys():
+                # pick random webhook from language_webhooks[new_language] then get username and avatar from webhook_library
+                # send message with username and avatar
+                translator = random.choice(language_webhooks[new_language])
+                translator_name = webhook_library[translator][0]
+                translator_avatar = webhook_library[translator][1]
+                await spanish_webhook.send(f'#cat language changed to {new_language}', username=translator_name, avatar_url=translator_avatar) 
+            else:
+                await message.channel.send(f'#cat language changed to {new_language}')
+            sentience.translate_language = new_language
+        else:
+            await message.channel.send(f'{new_language} is not a supported language')
+
+    # end AI block
 
     # banned words
     bwm = ct.controlmgr(message.content.lower(),str(message.author))
@@ -128,6 +224,13 @@ async def on_message(message):
                 await message.reply('I\'m ChrasSC')
 
     if 'https://twitter.com/' in message.content:
+
+        catchannel = client.get_channel(205903143471415296)
+        webhooks = await catchannel.webhooks()
+        ari_webhook = next((webhook for webhook in webhooks if webhook.name == 'ari'), None)
+        if not ari_webhook:
+            ari_webhook = await catchannel.create_webhook(name='ari')
+    
         #append to tweetcontainer
         #if it is a duplicate, message.reply with "old"
         if message.content in tweetcontainer:
@@ -144,10 +247,22 @@ async def on_message(message):
             if 'twitter.com' in message.content:
                 tweetlink = message.content.replace('twitter.com','vxtwitter.com')
                 await message.delete()  # delete the original message
-                await message.channel.send(f"{message.author.display_name} posted:\n {tweetlink}")
+                if str(message.channel) == 'gato':
+                    await ari_webhook.send(f'{message.author.display_name} posted:\n {tweetlink}', username='obama', avatar_url='https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702786300/outream/xqjtn4ukkwbopfnkzwfm.jpg')
+                else:
+                    await message.channel.send(f"{message.author.display_name} posted:\n {tweetlink}")
 
     #ELON
     if 'https://x.com/' in message.content:
+
+        catchannel = client.get_channel(205903143471415296)
+        webhooks = await catchannel.webhooks()
+        ari_webhook = next((webhook for webhook in webhooks if webhook.name == 'ari'), None)
+        if not ari_webhook:
+            ari_webhook = await catchannel.create_webhook(name='ari')
+    
+
+
         #append to tweetcontainer
         #if it is a duplicate, message.reply with "old"
         if message.content in tweetcontainer:
@@ -159,8 +274,11 @@ async def on_message(message):
             if 'x.com' in message.content:
                 tweetlink = message.content.replace('x.com','vxtwitter.com')
                 await message.delete()  # delete the original message
-                await message.channel.send(f"{message.author.display_name} posted:\n {tweetlink}")
-            
+                if str(message.channel) == 'gato':
+                    await ari_webhook.send(f'{message.author.display_name} posted:\n {tweetlink}', username='obama', avatar_url='https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702786300/outream/xqjtn4ukkwbopfnkzwfm.jpg')
+                else:
+                    await message.channel.send(f"{message.author.display_name} posted:\n {tweetlink}")
+
 
     '''
     #darn tootin
