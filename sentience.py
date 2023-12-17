@@ -189,7 +189,7 @@ async def ai_experimental(prompt, gmodel="gpt-3.5-turbo"):
 
     #in prompt we receive a list of messages. each item is user: message, convert it into prompt. if user is ari, then role is system'
 
-    promptcontainer = [{"role": "system", "content": "you are Ari, you are posting in a discord channel. informal chat style messages. you will not refer to yourself as an AI."}]
+    promptcontainer = [{"role": "system", "content": "you are Ari, you are posting in a discord channel. short and informal chat style messages. you will not refer to yourself as an AI. do not use emojis or hashtags."}]
 
     for message in prompt:
         #parse user
@@ -201,7 +201,7 @@ async def ai_experimental(prompt, gmodel="gpt-3.5-turbo"):
         else:
             role = 'user'
         promptcontainer.append({"role": role, "content": f"{message}"})
-        print(promptcontainer)
+    print(promptcontainer)
 
 
     full_prompt = [
@@ -210,7 +210,7 @@ async def ai_experimental(prompt, gmodel="gpt-3.5-turbo"):
 
     response = openai.ChatCompletion.create(
     model=gmodel,
-    max_tokens=1200,
+    max_tokens = 800,
     temperature=.8,
     messages = promptcontainer)
 
@@ -226,7 +226,7 @@ async def ai_experimental2(prompt, gmodel="gpt-3.5-turbo"):
 
     #in prompt we receive a list of messages. each item is user: message, convert it into prompt. if user is ari, then role is system'
 
-    promptcontainer = [{"role": "system", "content": "you are dustin, you are posting in a discord channel. informal chat style messages. you will not refer to yourself as an AI."}]
+    promptcontainer = [{"role": "system", "content": "you are dustin, you are posting in a discord channel. short informal chat style messages. you will not refer to yourself as an AI. do not use emojis or hashtags."}]
 
     for message in prompt:
         #parse user
@@ -238,7 +238,7 @@ async def ai_experimental2(prompt, gmodel="gpt-3.5-turbo"):
         else:
             role = 'user'
         promptcontainer.append({"role": role, "content": f"{message}"})
-        print(promptcontainer)
+    print(promptcontainer)
 
 
     full_prompt = [
@@ -247,7 +247,7 @@ async def ai_experimental2(prompt, gmodel="gpt-3.5-turbo"):
 
     response = openai.ChatCompletion.create(
     model=gmodel,
-    max_tokens=1200,
+    max_tokens=800,
     temperature=1,
     messages = promptcontainer)
 

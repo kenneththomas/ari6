@@ -32,6 +32,14 @@ lmcontainer = []
 lmcontainer.append(lastmsg)
 
 experimental_container = []
+webhook_names = [('ari','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702772600/outream/xpa09ll1hpuk3wab0jvr.png'),
+                 ('musicsmusic','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702771014/outream/wnzefyt9pihnarjzarku.png'),
+                 ('obama','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702786300/outream/xqjtn4ukkwbopfnkzwfm.jpg'),
+                 ('rachel','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702786482/j4dblijgfimq219yqcyj.png'),
+                 ('james harden','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702786498/quw7xyzafvvztjf90z5j.png'),
+                 ('chang', 'https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702786636/lpdvewfaioo5skxglotb.png'),
+                 ('melo trimble','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702786720/outream/wv4alpfy7gddt83p4fwk.png')
+                 ]
 
 @client.event
 async def on_ready():
@@ -82,12 +90,12 @@ async def on_message(message):
         experimental_container.pop(0)
     
     #call ai_experimental from sentience
-    if mememgr.chance(5):
-        freemsg = await sentience.ai_experimental(experimental_container)
+    if mememgr.chance(15):
+        freemsg = await sentience.ai_experimental(experimental_container, 'gpt-4-1106-preview')
 
         if freemsg:
             experimental_container.append(f'dustin: {freemsg}')
-            catchannel = client.get_channel(1122326983846678638)
+            catchannel = client.get_channel(205930498034237451)
             webhooks = await catchannel.webhooks()
             ari_webhook = next((webhook for webhook in webhooks if webhook.name == 'ari'), None)
             if not ari_webhook:
@@ -100,36 +108,59 @@ async def on_message(message):
             #post as webhook
             if freemsg2:
                 experimental_container.append(f'ari: {freemsg2}')
-                catchannel = client.get_channel(1122326983846678638)
+                catchannel = client.get_channel(205930498034237451)
                 webhooks = await catchannel.webhooks()
                 music_webhook = next((webhook for webhook in webhooks if webhook.name == 'music'), None)
                 if not music_webhook:
                     music_webhook = await catchannel.create_webhook(name='music')
                 await music_webhook.send(freemsg2, username='music', avatar_url='https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702771014/outream/wnzefyt9pihnarjzarku.png')
 
+            await asyncio.sleep(2)
+
+            freemsg3 = await sentience.ai_experimental(experimental_container)
+
+            if freemsg3:
+                experimental_container.append(f'ari: {freemsg3}')
+                catchannel = client.get_channel(205930498034237451)
+                webhooks = await catchannel.webhooks()
+                await ari_webhook.send(freemsg3, username='ari', avatar_url='https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702772600/outream/xpa09ll1hpuk3wab0jvr.png')
+
+            freemsg4 = await sentience.ai_experimental2(experimental_container)
+
+            await asyncio.sleep(2)
+            
+            if freemsg4:
+                experimental_container.append(f'ari: {freemsg4}')
+                catchannel = client.get_channel(205930498034237451)
+                webhooks = await catchannel.webhooks()
+                await music_webhook.send(freemsg4, username='music', avatar_url='https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702771014/outream/wnzefyt9pihnarjzarku.png')
+
             return
 
     if ct.should_i_spanish(message.content):
-        spanish = await sentience.spanish_translation(message.content)
-        catchannel = client.get_channel(1122326983846678638)
+            spanish = await sentience.spanish_translation(message.content)
+            #people complained about being double pinged by the bot so remove the ping, regex away (<@142508812073566208>)
+            spanish = re.sub(r'<@\d+>','',str(spanish))
+            catchannel = client.get_channel(1122326983846678638)
 
-        #if the message is longer than 60 characters - this rate limits insane lmao
-        if len(spanish) > 60:
-            #if it has been longer than 1 minute since the last message
-            if (datetime.datetime.now() - lmcontainer[0]).total_seconds() > 60:
-                lmcontainer[0] = datetime.datetime.now()
-                webhook = await catchannel.create_webhook(name=message.author.name)
-                #people complained about being double pinged by the bot so remove the ping, regex away (<@142508812073566208>)
-                spanish = re.sub(r'<@\d+>','',str(spanish))
-                await webhook.send(spanish, username=message.author.name, avatar_url=message.author.avatar)
+            # Create or reuse a single webhook
+            webhooks = await catchannel.webhooks()
+            spanish_webhook = next((webhook for webhook in webhooks if webhook.name == 'spanish'), None)
 
-                webhooks = await catchannel.webhooks()
-                for webhook in webhooks:
-                    await webhook.delete()
+            if not spanish_webhook:
+                spanish_webhook = await catchannel.create_webhook(name='spanish')
+
+            #if the message is longer than 60 characters - this rate limits insane lmao
+            if len(spanish) > 60:
+                #if it has been longer than 1 minute since the last message
+                if (datetime.datetime.now() - lmcontainer[0]).total_seconds() > 5:
+                    lmcontainer[0] = datetime.datetime.now()
+
+                    await spanish_webhook.send(spanish, username=message.author.name, avatar_url=message.author.avatar)
+                else:
+                    await catchannel.send(f'\n**<{message.author.name}>**\n{spanish}')
             else:
                 await catchannel.send(f'\n**<{message.author.name}>**\n{spanish}')
-        else:
-            await catchannel.send(f'\n**<{message.author.name}>**\n{spanish}')
 
     else:
         print('DEBUG: skipping spanish')
