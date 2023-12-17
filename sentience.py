@@ -2,12 +2,9 @@ import openai
 import maricon
 import personality
 import asyncio
+import random
 
 openai.api_key = maricon.gptkey
-
-# gpt-3.5-turbo
-# text-davinci-002
-
 
 # Initialize a dictionary to store conversation history for each user
 user_conversations = {}
@@ -181,6 +178,80 @@ async def generate_text_gpt_spanish(prompt):
 
     #print(response)
     
+    generated_text = response.choices[0].message.content.strip()
+
+    #force lowercase
+    generated_text = generated_text.lower()
+
+    return generated_text
+
+async def ai_experimental(prompt, gmodel="gpt-3.5-turbo"):
+
+    #in prompt we receive a list of messages. each item is user: message, convert it into prompt. if user is ari, then role is system'
+
+    promptcontainer = [{"role": "system", "content": "you are Ari, you are posting in a discord channel. informal chat style messages. you will not refer to yourself as an AI."}]
+
+    for message in prompt:
+        #parse user
+        user = message.split(':')[0]
+        #message is everything after the first colon as there may be multiple colons in the message
+        message = message.split(':',1)[1]
+        if user == 'ari':
+            role = 'assistant'
+        else:
+            role = 'user'
+        promptcontainer.append({"role": role, "content": f"{message}"})
+        print(promptcontainer)
+
+
+    full_prompt = [
+        {"role": "user", "content": f"{prompt}"}
+        ]
+
+    response = openai.ChatCompletion.create(
+    model=gmodel,
+    max_tokens=1200,
+    temperature=.8,
+    messages = promptcontainer)
+
+    print(response)
+    generated_text = response.choices[0].message.content.strip()
+
+    #force lowercase
+    generated_text = generated_text.lower()
+
+    return generated_text
+
+async def ai_experimental2(prompt, gmodel="gpt-3.5-turbo"):
+
+    #in prompt we receive a list of messages. each item is user: message, convert it into prompt. if user is ari, then role is system'
+
+    promptcontainer = [{"role": "system", "content": "you are dustin, you are posting in a discord channel. informal chat style messages. you will not refer to yourself as an AI."}]
+
+    for message in prompt:
+        #parse user
+        user = message.split(':')[0]
+        #message is everything after the first colon as there may be multiple colons in the message
+        message = message.split(':',1)[1]
+        if user == 'ari':
+            role = 'assistant'
+        else:
+            role = 'user'
+        promptcontainer.append({"role": role, "content": f"{message}"})
+        print(promptcontainer)
+
+
+    full_prompt = [
+        {"role": "user", "content": f"{prompt}"}
+        ]
+
+    response = openai.ChatCompletion.create(
+    model=gmodel,
+    max_tokens=1200,
+    temperature=1,
+    messages = promptcontainer)
+
+    print(response)
     generated_text = response.choices[0].message.content.strip()
 
     #force lowercase

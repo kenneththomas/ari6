@@ -31,6 +31,8 @@ lastmsg = datetime.datetime.now()
 lmcontainer = []
 lmcontainer.append(lastmsg)
 
+experimental_container = []
+
 @client.event
 async def on_ready():
     print(f'We have logged in as {client.user}')
@@ -50,15 +52,24 @@ async def on_message(message):
     l.log(message)
 
 
+    #start AI block
 
-    #if someone replies to the bot
-    #if str(message.channel) == 'barco' or str(message.channel) == 'config':
+    experimental_container.append(f'{message.author.display_name}: {message.content}')
     if True:
         if message.reference:
             if message.reference.resolved.author == client.user:
-                response_text = await sentience.generate_text_with_timeout_cm(message.content,mememgr.cleanup_username(str(message.author.name)),cm_personality)
+
+                #check if that reply had a vxtwitter link in it, if it did, dont reply
+                if 'vxtwitter.com' in message.reference.resolved.content:
+                    print('DEBUG: not responding to vxtwitter link that was probably posted by me')
+                    return
+
+                freemsg = await sentience.ai_experimental(experimental_container,'gpt-4-1106-preview')
+                experimental_container.append(f'ari: {freemsg}')
                 await asyncio.sleep(1)
-                await message.reply(response_text)
+                await message.reply(freemsg)                    
+
+                return
     
         #basic gpt
         if '!gpt' in str(message.content):
@@ -66,7 +77,37 @@ async def on_message(message):
             await asyncio.sleep(1)
             await message.reply(response_text)
 
+    #ari experimental - store last 10 messages in experimental_container
+    if len(experimental_container) > 10:
+        experimental_container.pop(0)
+    
+    #call ai_experimental from sentience
+    if mememgr.chance(5):
+        freemsg = await sentience.ai_experimental(experimental_container)
 
+        if freemsg:
+            experimental_container.append(f'dustin: {freemsg}')
+            catchannel = client.get_channel(1122326983846678638)
+            webhooks = await catchannel.webhooks()
+            ari_webhook = next((webhook for webhook in webhooks if webhook.name == 'ari'), None)
+            if not ari_webhook:
+                ari_webhook = await catchannel.create_webhook(name='ari')
+            await ari_webhook.send(freemsg, username='ari', avatar_url='https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702772600/outream/xpa09ll1hpuk3wab0jvr.png')
+
+        if mememgr.chance(1):
+            await asyncio.sleep(2)
+            freemsg2 = await sentience.ai_experimental2(experimental_container)
+            #post as webhook
+            if freemsg2:
+                experimental_container.append(f'ari: {freemsg2}')
+                catchannel = client.get_channel(1122326983846678638)
+                webhooks = await catchannel.webhooks()
+                music_webhook = next((webhook for webhook in webhooks if webhook.name == 'music'), None)
+                if not music_webhook:
+                    music_webhook = await catchannel.create_webhook(name='music')
+                await music_webhook.send(freemsg2, username='music', avatar_url='https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702771014/outream/wnzefyt9pihnarjzarku.png')
+
+            return
 
     if ct.should_i_spanish(message.content):
         spanish = await sentience.spanish_translation(message.content)
@@ -92,6 +133,8 @@ async def on_message(message):
 
     else:
         print('DEBUG: skipping spanish')
+
+    # end AI block
 
     # banned words
     bwm = ct.controlmgr(message.content.lower(),str(message.author))
