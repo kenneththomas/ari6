@@ -10,6 +10,9 @@ openai.api_key = maricon.gptkey
 user_conversations = {}
 cm_chat_conversations = {}
 
+#for translation module, this can be changed to any language
+translate_language = 'spanish'
+
 
 async def generate_text_with_timeout(prompt, user_id):
     try:
@@ -109,8 +112,9 @@ async def generate_text_with_timeout_cm(prompt, user_id, personality_context):
     
   
 async def spanish_translation(prompt):
+    language_prompt = f'Translate chatroom message from english to {translate_language}, keep similar grammar/formality:'
     try:
-        return await asyncio.wait_for(generate_text_gpt_spanish(personality.gato + '\n' +  prompt), timeout=15)
+        return await asyncio.wait_for(generate_text_gpt_spanish(language_prompt + '\n' +  prompt), timeout=15)
     except asyncio.TimeoutError:
         return "obama"
     
