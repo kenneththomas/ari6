@@ -11,6 +11,7 @@ import personality
 import multiprocessing
 import re
 import random
+#import sentience2 # local llm instead of openai, for testing
 
 emoji_storage = {
     'eheu': '<:eheu:233869216002998272>',
@@ -21,7 +22,6 @@ onlyonce = []
 tweetcontainer = []
 time_container = []
 sentience_personality = personality.malik
-cm_personality = personality.ari
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -50,16 +50,16 @@ language_webhooks = {
 }
 
 webhook_library = {
-    'asian_ariana' : ('asianfacing ariana grande', 'https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702838375/etzmyo2jjca7kq91lglm.png'),
-    'xi' : ('xi jinping', 'https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702838484/ydr6ftugfuy5kxis4igj.jpg'),
-    'musicsmusic' : ('musicsmusic','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702771014/outream/wnzefyt9pihnarjzarku.png'),
-    'obama' : ('obama','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702786300/outream/xqjtn4ukkwbopfnkzwfm.jpg'),
-    'brandon' : ('brandon','https://cdn.midjourney.com/4c3839c1-ba1c-4d41-af41-6cf3b62ea614/0_0.webp'),
-    'rachel' : ('rachel','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702786482/j4dblijgfimq219yqcyj.png'),
-    'james harden' : ('james harden','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702786498/quw7xyzafvvztjf90z5j.png'),
-    'chang' : ('chang','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702786636/lpdvewfaioo5skxglotb.png'),
-    'melo trimble' : ('melo trimble','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702786720/outream/wv4alpfy7gddt83p4fwk.png'),
-    'yung nic' : ('yung nic','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702788099/iyg87se9g9i9jbqiqojy.png'),
+    'asian_ariana' : ('asianfacing ariana grande', 'https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702838375/etzmyo2jjca7kq91lglm.png','Ariana Grande'),
+    'xi' : ('xi jinping', 'https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702838484/ydr6ftugfuy5kxis4igj.jpg','Xi Jinping'),
+    'musicsmusic' : ('musicsmusic','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702771014/outream/wnzefyt9pihnarjzarku.png','A german guy'),
+    'obama' : ('obama','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702786300/outream/xqjtn4ukkwbopfnkzwfm.jpg','Barack Obama, former president.'),
+    'brandon' : ('brandon','https://cdn.midjourney.com/4c3839c1-ba1c-4d41-af41-6cf3b62ea614/0_0.webp','Joe Biden, current president.'),
+    #'rachel' : ('rachel','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702786482/j4dblijgfimq219yqcyj.png','a typical Jewish American Princess'),
+    'james harden' : ('james harden','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702786498/quw7xyzafvvztjf90z5j.png','NBA player James Harden, noted flopper and strip club enthusiast'),
+    'chang' : ('chang','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702786636/lpdvewfaioo5skxglotb.png','chang'),
+    'melo trimble' : ('melo trimble','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702786720/outream/wv4alpfy7gddt83p4fwk.png','Melo Trimble, former Maryland Terrapin and current NBA player'),
+    'yung nic' : ('yung nic','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702788099/iyg87se9g9i9jbqiqojy.png','Actor Nicolas Cage'),
 }
 
 
@@ -113,7 +113,7 @@ async def on_message(message):
 
     '''
     #call ai_experimental from sentience
-    if mememgr.chance(15):
+    if mememgr.chance(3):
         freemsg = await sentience.ai_experimental(experimental_container, 'gpt-4-1106-preview')
 
         if freemsg:
@@ -131,13 +131,14 @@ async def on_message(message):
                 personality = random.choice(list(webhook_library.values()))
                 username = personality[0]
                 avatar = personality[1]
-                #system_prompt = personality[2]
-                freemsg = await sentience.ai_experimental(experimental_container, 'gpt-4-1106-preview')
+                system_prompt = personality[2]
+                freemsg = await sentience.ai_experimental(experimental_container, 'gpt-4-1106-preview', system_prompt)
                 experimental_container.append(f'{username}: {freemsg}')
                 await ari_webhook.send(freemsg, username=username, avatar_url=avatar)
                 await asyncio.sleep(random.randint(1,9))
 
             return
+
     '''
 
     if ct.should_i_spanish(message.content):
@@ -270,7 +271,11 @@ async def on_message(message):
                 tweetlink = message.content.replace('x.com','vxtwitter.com')
                 await message.delete()  # delete the original message
                 if str(message.channel) == 'gato':
-                    await ari_webhook.send(f'{message.author.display_name} posted:\n {tweetlink}', username='obama', avatar_url='https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702786300/outream/xqjtn4ukkwbopfnkzwfm.jpg')
+                    #pick random webhook from webhook_library
+                    personality = random.choice(list(webhook_library.values()))
+                    username = personality[0]
+                    avatar = personality[1]
+                    await ari_webhook.send(f'{message.author.display_name} posted:\n {tweetlink}', username=username, avatar_url=avatar)
                 else:
                     await message.channel.send(f"{message.author.display_name} posted:\n {tweetlink}")
 
