@@ -22,6 +22,7 @@ onlyonce = []
 tweetcontainer = []
 time_container = []
 sentience_personality = personality.malik
+spanishmode = False
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -142,24 +143,32 @@ async def on_message(message):
 
     '''
 
-    if ct.should_i_spanish(message.content):
-            spanish = await sentience.spanish_translation(message.content)
-            #people complained about being double pinged by the bot so remove the ping, regex away (<@142508812073566208>)
-            spanish = re.sub(r'<@\d+>','',str(spanish))
-            catchannel = client.get_channel(1122326983846678638)
+    global spanishmode
+    if spanishmode:
+        if ct.should_i_spanish(message.content):
+                spanish = await sentience.spanish_translation(message.content)
+                #people complained about being double pinged by the bot so remove the ping, regex away (<@142508812073566208>)
+                spanish = re.sub(r'<@\d+>','',str(spanish))
+                catchannel = client.get_channel(1122326983846678638)
 
-            # Create or reuse a single webhook
-            webhooks = await catchannel.webhooks()
-            spanish_webhook = next((webhook for webhook in webhooks if webhook.name == 'spanish'), None)
+                # Create or reuse a single webhook
+                webhooks = await catchannel.webhooks()
+                spanish_webhook = next((webhook for webhook in webhooks if webhook.name == 'spanish'), None)
 
-            if not spanish_webhook:
-                spanish_webhook = await catchannel.create_webhook(name='spanish')
+                if not spanish_webhook:
+                    spanish_webhook = await catchannel.create_webhook(name='spanish')
 
-            await spanish_webhook.send(spanish, username=message.author.name, avatar_url=message.author.avatar)
-            #await catchannel.send(f'\n**<{message.author.name}>**\n{spanish}')
-
-    else:
-        print('DEBUG: skipping spanish')
+                await spanish_webhook.send(spanish, username=message.author.name, avatar_url=message.author.avatar)
+                #await catchannel.send(f'\n**<{message.author.name}>**\n{spanish}')
+    # if message is !spanish enable
+    if str(message.content).startswith('!spanish'):
+        if str(message.content).replace('!spanish','').strip() == 'enable':
+            spanishmode = True
+            await message.channel.send('spanish mode enabled')
+        elif str(message.content).replace('!spanish','').strip() == 'disable':
+            spanishmode = False
+            await message.channel.send('spanish mode disabled')
+        
 
 
     #switch sentience.translate_language if !language is called to change translation language
