@@ -31,7 +31,7 @@ async def generate_text(prompt,user_id,personality_context=personality.malik):
     #full_prompt = f"{personality_context} \n {user_conversations[user_id]}"
     full_prompt = [{"role": "user", "content": f"{personality_context.prompt} \n {user_conversations[user_id]}"}]
 
-    response = client.chat.completions.create(model="gpt-4-1106-preview",
+    response = client.chat.completions.create(model="gpt-4-0125-preview",
     max_tokens=200,
     temperature=0.8,
     messages = full_prompt)
@@ -83,7 +83,7 @@ async def generate_text_gpt(prompt):
         {"role": "user", "content": f"{prompt}"}
         ]
 
-    response = client.chat.completions.create(model="gpt-3.5-turbo",
+    response = client.chat.completions.create(model="gpt-3.5-turbo-0125",
     max_tokens=1200,
     temperature=.8,
     messages = full_prompt)
@@ -122,7 +122,7 @@ async def generate_text_gpt_spanish(prompt):
         {"role": "user", "content": f"{prompt}"}
         ]
 
-    response = client.chat.completions.create(model="gpt-3.5-turbo",
+    response = client.chat.completions.create(model="gpt-3.5-turbo-0125",
     max_tokens=1200,
     temperature=.8,
     messages = full_prompt)
@@ -136,7 +136,7 @@ async def generate_text_gpt_spanish(prompt):
 
     return generated_text
 
-async def ai_experimental(prompt, gmodel="gpt-3.5-turbo", prompt_addition=False):
+async def ai_experimental(prompt, gmodel="gpt-3.5-turbo-0125", prompt_addition=False):
 
     #in prompt we receive a list of messages. each item is user: message, convert it into prompt. if user is ari, then role is system'
 
