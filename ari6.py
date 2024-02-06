@@ -22,7 +22,7 @@ onlyonce = []
 tweetcontainer = []
 time_container = []
 sentience_personality = personality.malik
-spanishmode = False
+spanishmode = True
 
 intents = discord.Intents.default()
 intents.message_content = True
