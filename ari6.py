@@ -96,10 +96,10 @@ async def on_message(message):
                     print('DEBUG: not responding to vxtwitter link that was probably posted by me')
                     return
 
-                freemsg = await sentience.ai_experimental(experimental_container,'gpt-4-1106-preview')
-                experimental_container.append(f'ari: {freemsg}')
-                await asyncio.sleep(1)
-                await message.reply(freemsg)                    
+                async with message.channel.typing():
+                    freemsg = await sentience.ai_experimental(experimental_container,'gpt-4-0125-preview')
+                    experimental_container.append(f'{freemsg}')
+                    await message.reply(freemsg)                    
 
                 return
     
