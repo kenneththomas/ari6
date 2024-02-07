@@ -12,6 +12,8 @@ import random
 #import sentience2 # local llm instead of openai, for testing
 import ari_webhooks as wl
 
+ari_version = '8.0'
+
 emoji_storage = {
     'eheu': '<:eheu:233869216002998272>',
     'breez': '<:breez:230153282264236033>',
@@ -36,6 +38,7 @@ experimental_container = []
 available_languages = ['spanish','french','italian','arabic','chinese','russian','german','korean','greek','japanese','portuguese']
 
 
+main_enabled = True
 
 
 @client.event
@@ -54,8 +57,25 @@ async def on_message(message):
     if message.author == client.user:
         return
     
+    global main_enabled
+    
     l.log(message)
 
+    #toggle main_enabled with !main toggle
+    if str(message.content).startswith('!main'):
+        if str(message.content).replace('!main','').strip() == 'enable':
+            main_enabled = True
+            await message.channel.send('main enabled')
+        elif str(message.content).replace('!main','').strip() == 'disable':
+            main_enabled = False
+            await message.channel.send('main disabled')
+
+    if main_enabled == False:
+        #if channel id is 205903143471415296, return
+        if message.channel.id == 205903143471415296:
+            #print timestamp main disabled
+            print(f'{datetime.datetime.now()} main disabled')
+            return
 
     #start AI block
 
@@ -77,7 +97,7 @@ async def on_message(message):
                 return
     
         #basic gpt
-        if '!gpt' in str(message.content):
+        if message.content.startswith('!gpt'):
             response_text = await sentience.generate_text_with_timeout_gpt(message.content)
             await asyncio.sleep(1)
             await message.reply(response_text)

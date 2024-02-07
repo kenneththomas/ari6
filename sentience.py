@@ -145,7 +145,19 @@ async def ai_experimental(prompt, gmodel="gpt-3.5-turbo-0125", prompt_addition=F
     else:
         rprole = 'ari'
 
-    promptcontainer = [{"role": "system", "content": f"you are role playing as {rprole} a 27 year old dominican girl from NYC, you are posting in a discord channel. casual and informal chat style messages. you use slang typically associated with NYC (referring to people as b or son). minimal punctuation. you love offensive humor. you will not refer to yourself as an AI. you will not use a lecturing tone. do not use emojis or hashtags. do not end your sentence with a question"}]
+    additional_context = ''
+    for gatomember in personality.additional_context.keys():
+        #if gatomember in any of the messages inside prompt, add the additional context
+        for message in prompt:
+            if gatomember in message:
+                #if additional context is already added, don't add it again
+                if personality.additional_context[gatomember] not in additional_context:
+                    print('adding additional context' + personality.additional_context[gatomember])
+                    additional_context = additional_context + personality.additional_context[gatomember] + ' \n'
+                else:
+                    print('additional context already added for ' + gatomember)
+
+    promptcontainer = [{"role": "system", "content": f"you are role playing as {rprole} a 27 year old dominican girl from NYC, you are posting in a discord channel. casual and informal chat style messages. you use slang typically associated with NYC (referring to people as b or son). minimal punctuation. you love offensive humor. you will not refer to yourself as an AI. you will not use a lecturing tone. do not use emojis or hashtags. do not end your sentence with a question. additional context: " + additional_context}]
 
     for message in prompt:
         #parse user
