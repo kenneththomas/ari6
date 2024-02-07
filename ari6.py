@@ -10,6 +10,7 @@ import sentience
 import re
 import random
 #import sentience2 # local llm instead of openai, for testing
+import ari_webhooks as wl
 
 emoji_storage = {
     'eheu': '<:eheu:233869216002998272>',
@@ -34,32 +35,7 @@ experimental_container = []
 
 available_languages = ['spanish','french','italian','arabic','chinese','russian','german','korean','greek','japanese','portuguese']
 
-language_webhooks = {
-    'chinese' : ['asian_ariana','xi'],
-    'korean' : ['asian_ariana'],
-    'japanese' : ['asian_ariana'],
-    'german' : ['musicsmusic'],
-    'russian' : ['obama','brandon'],
-    'french' : ['obama'],
-    'italian' : ['obama'],
-    'arabic' : ['obama'],
-    'greek' : ['obama'],
-    'portuguese' : ['james harden'],
-}
 
-webhook_library = {
-    'asian_ariana' : ('asianfacing ariana grande', 'https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702838375/etzmyo2jjca7kq91lglm.png','Ariana Grande'),
-    'xi' : ('xi jinping', 'https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702838484/ydr6ftugfuy5kxis4igj.jpg','Xi Jinping'),
-    'musicsmusic' : ('musicsmusic','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702771014/outream/wnzefyt9pihnarjzarku.png','A german guy'),
-    'obama' : ('obama','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702786300/outream/xqjtn4ukkwbopfnkzwfm.jpg','Barack Obama, former president.'),
-    'brandon' : ('brandon','https://cdn.midjourney.com/4c3839c1-ba1c-4d41-af41-6cf3b62ea614/0_0.webp','Joe Biden, current president.'),
-    #'rachel' : ('rachel','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702786482/j4dblijgfimq219yqcyj.png','a typical Jewish American Princess'),
-    'james harden' : ('james harden','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702786498/quw7xyzafvvztjf90z5j.png','NBA player James Harden, noted flopper and strip club enthusiast'),
-    'chang' : ('chang','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702786636/lpdvewfaioo5skxglotb.png','chang'),
-    'melo trimble' : ('melo trimble','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702786720/outream/wv4alpfy7gddt83p4fwk.png','Melo Trimble, former Maryland Terrapin and current NBA player'),
-    'yung nic' : ('yung nic','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702788099/iyg87se9g9i9jbqiqojy.png','Actor Nicolas Cage'),
-    'dasha' : ('nobody_stop_me','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1703086050/outream/dwutolw1i4vzitqkn6rx.jpg','Edgy podcast host Dasha Nekrasova'),
-}
 
 
 @client.event
@@ -173,12 +149,12 @@ async def on_message(message):
         new_language = str(message.content).replace('!language','').strip()
         if new_language in available_languages:
             #use webhook if it exists
-            if new_language in language_webhooks.keys():
+            if new_language in wl.language_webhooks.keys():
                 # pick random webhook from language_webhooks[new_language] then get username and avatar from webhook_library
                 # send message with username and avatar
-                translator = random.choice(language_webhooks[new_language])
-                translator_name = webhook_library[translator][0]
-                translator_avatar = webhook_library[translator][1]
+                translator = random.choice(wl.language_webhooks[new_language])
+                translator_name = wl.webhook_library[translator][0]
+                translator_avatar = wl.webhook_library[translator][1]
                 await spanish_webhook.send(f'#cat language changed to {new_language}', username=translator_name, avatar_url=translator_avatar) 
             else:
                 await message.channel.send(f'#cat language changed to {new_language}')
@@ -244,7 +220,7 @@ async def on_message(message):
                 await message.delete()  # delete the original message
                 if str(message.channel) == 'gato':
                     #pick random webhook from webhook_library
-                    personality = random.choice(list(webhook_library.values()))
+                    personality = random.choice(list(wl.webhook_library.values()))
                     username = personality[0]
                     avatar = personality[1]
                     await ari_webhook.send(f'{message.author.display_name} posted:\n {tweetlink}', username=username, avatar_url=avatar)
