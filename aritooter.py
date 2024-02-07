@@ -27,10 +27,3 @@ def tootcontrol(message):
     ourtoot = mastodon.toot(message)
     outputmsg.append(ourtoot['url'])
     return outputmsg
-
-'''
-twitterapi = twitter.Api(consumer_key=maricon.twitterconsumerkey,
-                        consumer_secret=maricon.twitterconsumersecret,
-                        access_token_key=maricon.twitteraccesstoken,
-                        access_token_secret=maricon.twitteraccesstokensecret)
-'''

@@ -7,8 +7,6 @@ import control as ct
 #import aritooter
 import datetime
 import sentience
-import personality
-import multiprocessing
 import re
 import random
 #import sentience2 # local llm instead of openai, for testing
@@ -21,7 +19,6 @@ emoji_storage = {
 onlyonce = []
 tweetcontainer = []
 time_container = []
-sentience_personality = personality.malik
 spanishmode = True
 
 intents = discord.Intents.default()
@@ -160,7 +157,8 @@ async def on_message(message):
 
                 await spanish_webhook.send(spanish, username=message.author.name, avatar_url=message.author.avatar)
                 #await catchannel.send(f'\n**<{message.author.name}>**\n{spanish}')
-    # if message is !spanish enable
+
+    #toggle spanish mode
     if str(message.content).startswith('!spanish'):
         if str(message.content).replace('!spanish','').strip() == 'enable':
             spanishmode = True
@@ -169,7 +167,6 @@ async def on_message(message):
             spanishmode = False
             await message.channel.send('spanish mode disabled')
         
-
 
     #switch sentience.translate_language if !language is called to change translation language
     if str(message.content).startswith('!language'):
@@ -239,10 +236,6 @@ async def on_message(message):
             await message.reply('old')
         else:
             tweetcontainer.append(message.content)
-        #if the author of the tweet was @nosetuuz, react fire and heart emojis
-        if 'nosetuuz' in message.content:
-            await message.add_reaction('🔥')
-            await message.add_reaction('❤')
 
         #embed fixer
         if 'vxtwitter.com' not in message.content:
