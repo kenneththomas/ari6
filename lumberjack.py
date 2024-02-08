@@ -44,8 +44,6 @@ def log(msg):
     message = str(msg.content)
     channel = str(msg.channel)
     timestamp = str(datetime.now())
-    logfix = '8=A6F;35=6L;49={};56={};52={};58={}'.format(sender,channel,timestamp,message)
-    #print(logfix)
     newlog = f'[{timestamp}] {sender}: {message}'
     print(newlog)
     #store last 15 messages

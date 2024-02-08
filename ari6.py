@@ -12,7 +12,7 @@ import random
 #import sentience2 # local llm instead of openai, for testing
 import ari_webhooks as wl
 
-ari_version = '8.1'
+ari_version = '8.2'
 
 emoji_storage = {
     'eheu': '<:eheu:233869216002998272>',
@@ -22,7 +22,7 @@ emoji_storage = {
 onlyonce = []
 tweetcontainer = []
 time_container = []
-spanishmode = True
+spanishmode = False
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -89,8 +89,9 @@ async def on_message(message):
     if main_enabled == False:
         #if channel id is 205903143471415296, return
         if message.channel.id == 205903143471415296:
-            #print timestamp main disabled
-            print(f'{datetime.datetime.now()} main disabled')
+            # if it seems like someone is trying to run a command
+            if str(message.content).startswith('!'):
+                print(f'seems like someone is trying to run a command! main disabled tho lol')
             return
 
     #start AI block
