@@ -6,10 +6,10 @@ mml_userlist = ['Barinade88#3367']
 
 def admincheck(user):
     if user in adminlist:
-        print('Control: {} is authorized to run admin command'.format(user))
+        #print('Control: {} is authorized to run admin command'.format(user))
         return True
     else:
-        print('Control: {} not authorized to run admin command'.format(user))
+        #print('Control: {} not authorized to run admin command'.format(user))
         return False
 
 class mml():

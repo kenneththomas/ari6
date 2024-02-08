@@ -12,7 +12,7 @@ import random
 #import sentience2 # local llm instead of openai, for testing
 import ari_webhooks as wl
 
-ari_version = '8.0'
+ari_version = '8.1'
 
 emoji_storage = {
     'eheu': '<:eheu:233869216002998272>',
@@ -40,6 +40,8 @@ available_languages = ['spanish','french','italian','arabic','chinese','russian'
 
 main_enabled = True
 
+starttime = datetime.datetime.now()
+
 
 @client.event
 async def on_ready():
@@ -60,6 +62,20 @@ async def on_message(message):
     global main_enabled
     
     l.log(message)
+
+    #system
+    if str(message.content).startswith('!version'):
+        await message.channel.send(ari_version)
+
+    global starttime
+    if str(message.content).startswith('!uptime'):
+        currenttime = datetime.datetime.now()
+        uptime = currenttime - starttime
+        total_seconds = int(uptime.total_seconds())
+        hours, remainder = divmod(total_seconds, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        uptime_string = f"{hours} hours, {minutes} minutes, {seconds} seconds"
+        await message.channel.send(uptime_string)
 
     #toggle main_enabled with !main toggle
     if str(message.content).startswith('!main'):
