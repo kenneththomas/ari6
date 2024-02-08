@@ -62,6 +62,10 @@ async def on_message(message):
     global main_enabled
     
     l.log(message)
+    experimental_container.append(f'{message.author.display_name}: {message.content}')
+
+    if len(experimental_container) > 10:
+        experimental_container.pop(0)
 
     #system
     if str(message.content).startswith('!version'):
@@ -96,7 +100,6 @@ async def on_message(message):
 
     #start AI block
 
-    experimental_container.append(f'{message.author.display_name}: {message.content}')
     if True:
         if message.reference:
             if message.reference.resolved.author == client.user:
@@ -119,9 +122,6 @@ async def on_message(message):
             await asyncio.sleep(1)
             await message.reply(response_text)
 
-    #ari experimental - store last 10 messages in experimental_container
-    if len(experimental_container) > 10:
-        experimental_container.pop(0)
 
     '''
     #call ai_experimental from sentience
