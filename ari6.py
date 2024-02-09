@@ -4,7 +4,7 @@ import lumberjack as l
 import mememgr
 import asyncio
 import control as ct
-#import aritooter
+import aritooter
 import datetime
 import sentience
 import re
@@ -12,7 +12,7 @@ import random
 #import sentience2 # local llm instead of openai, for testing
 import ari_webhooks as wl
 
-ari_version = '8.2.1'
+ari_version = '8.2.2'
 
 emoji_storage = {
     'eheu': '<:eheu:233869216002998272>',
@@ -23,6 +23,15 @@ onlyonce = []
 tweetcontainer = []
 time_container = []
 spanishmode = False
+
+breezagg = False
+breezagg_window = 90
+breezagg_lastmsg = []
+breezagg_container = []
+agg_gpt_model = 'gpt-4-0125-preview'
+donotpost = True
+processing_message = False
+lasttweet = ''
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -89,6 +98,96 @@ async def on_message(message):
         elif str(message.content).replace('!main','').strip() == 'disable':
             main_enabled = False
             await message.channel.send('main disabled')
+
+    #breez aggregation
+    global breezagg
+    global breezagg_window
+    global breezagg_container
+    global breezagg_lastmsg
+    global agg_gpt_model
+    global donotpost
+    global processing_message
+    global lasttweet
+
+    #ignore bot commands for breezagg
+    if str(message.content).startswith('!aggmodel'):
+        if agg_gpt_model == 'gpt-4-0125-preview':
+            agg_gpt_model = 'gpt-3.5-turbo-0125'
+            await message.channel.send('aggregation model switched to gpt-3.5-turbo-0125')
+        elif agg_gpt_model == 'gpt-3.5-turbo-0125':
+            agg_gpt_model = 'gpt-4-0125-preview'
+            await message.channel.send('aggregation model switched to gpt-4-0125-preview')
+        #toggle donotpost
+    if str(message.content).startswith('!donotpost'):
+        donotpost = not donotpost
+        await message.channel.send(f'donotpost is now {donotpost}')
+
+    if not str(message.content).startswith('!'):
+        #by default we are using gpt3.5 but we can toggle to switch to gpt4. simple toggle with !aggmodel
+
+
+        #if sender is breezyexcursion, set breezagg to True
+        if str(message.author) == 'breezyexcursion':
+            print('breez posted, aggregating messages...')
+            print(f'current time: {datetime.datetime.now()}')
+            print(f'window will expire at: {datetime.datetime.now() + datetime.timedelta(seconds=breezagg_window)}')
+            breezagg = True
+
+        #if breezagg is false, add most recent message to breezagg_container but clear others
+        if not breezagg:
+            breezagg_container = []
+            breezagg_lastmsg = []
+            breezagg_container.append(f'{message.author.name}: {message.content}')
+            breezagg_lastmsg.append(datetime.datetime.now())
+
+        if breezagg:
+            #add messages from anyone into breezagg_container, with their name 
+            breezagg_container.append(f'{message.author.name}: {message.content}')
+            #add timestamp to breezagg_lastmsg
+            breezagg_lastmsg.append(datetime.datetime.now())
+            #if the last message is older than breezagg_window seconds, set breezagg to False
+            if (datetime.datetime.now() - breezagg_lastmsg[0]).total_seconds() > breezagg_window:
+                #breezagg_prompt = 'summarize user breezyexcursion thoughts into a tweet, trying to use the same tone as breezyexcursion himself. you can consider feedback from other users as well.'
+
+                # print the contents of breezagg_container
+                print(breezagg_container)
+
+                #call ai_experimental from sentience, use gpt3.5 for now
+                #gpt-3.5-turbo-0125
+                #gpt-4-0125-preview
+                if not processing_message:
+                    processing_message = True
+                    print('debug: processing message')
+                    if not donotpost:
+                        #add last tweet to front of container for additional context
+                        lasttweet = f'last_tweet: {lasttweet}'
+                        #breezagg_container.insert(0,lasttweet)
+                        aggmsg = await sentience.ai_breezagg(breezagg_container, agg_gpt_model)
+                        lasttweet = aggmsg
+                        print('debug lasttweet: {}'.format(lasttweet))
+                        #remove breezyexcursion: from aggmsg
+                        aggmsg = aggmsg.replace('breezyexcursion: ','')
+                        print('''breezagg: aggmsg = {}'''.format(aggmsg))
+                        #toot
+                        tootlist = aritooter.tootcontrol(aggmsg)
+                        #post link to toot in 212681539304030209
+                        cfgchannel = client.get_channel(212681539304030209)
+                        for tootmsg in tootlist:
+                            await cfgchannel.send(tootmsg)
+                    processing_message = False
+                else:
+                    print('debug: message is already being processed')
+
+                breezagg = False
+
+                # reset
+                breezagg_container = []
+                breezagg_lastmsg = []
+
+
+    # temporarily returning here just to test breezagg if u end up committing this ur so dumb dawg
+    if True:
+        return
 
     if main_enabled == False:
         #if channel id is 205903143471415296, return
@@ -331,18 +430,5 @@ async def on_reaction_add(reaction, user):
     #if reaction emoji is a u emoji, also react with u emoji
     if reaction.emoji == '🇺':
         await reaction.message.add_reaction('🇺')
-    
-    #if reaction emoji is a bari emoji, also react with bari emoji
-    if reaction.emoji == emoji_storage['bari']:
-        await reaction.message.add_reaction(emoji_storage['bari'])
-
-    #if reaction emoji is a breez emoji, also react with breez emoji
-    if reaction.emoji == emoji_storage['breez']:
-        await reaction.message.add_reaction(emoji_storage['breez'])
-
-    #if reaction emoji is a eheu emoji, also react with eheu emoji
-    if reaction.emoji == emoji_storage['eheu']:
-        await reaction.message.add_reaction(emoji_storage['eheu'])
-
 
 client.run(maricon.bottoken)

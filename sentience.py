@@ -136,7 +136,9 @@ async def generate_text_gpt_spanish(prompt):
 
     return generated_text
 
-async def ai_experimental(prompt, gmodel="gpt-3.5-turbo-0125", prompt_addition=False):
+
+
+async def ai_breezagg(prompt, gmodel="gpt-3.5-turbo-0125", prompt_addition=False):
 
     #in prompt we receive a list of messages. each item is user: message, convert it into prompt. if user is ari, then role is system'
 
@@ -145,19 +147,7 @@ async def ai_experimental(prompt, gmodel="gpt-3.5-turbo-0125", prompt_addition=F
     else:
         rprole = 'ari'
 
-    additional_context = ''
-    for gatomember in personality.additional_context.keys():
-        #if gatomember in any of the messages inside prompt, add the additional context
-        for message in prompt:
-            if gatomember in message:
-                #if additional context is already added, don't add it again
-                if personality.additional_context[gatomember] not in additional_context:
-                    print('adding additional context' + personality.additional_context[gatomember])
-                    additional_context = additional_context + personality.additional_context[gatomember] + ' \n'
-                else:
-                    print('additional context already added for ' + gatomember)
-
-    promptcontainer = [{"role": "system", "content": f"you are role playing as {rprole} a 27 year old dominican girl from NYC, you are posting in a discord channel. casual and informal chat style messages. you use slang/grammar typically associated with NYC (referring to people as b or son, you is, we is, they instead of their for possessive). minimal punctuation. you love offensive humor. you will not refer to yourself as an AI. you will not use a lecturing tone. do not use emojis or hashtags. do not end your sentence with a question. additional context: " + additional_context}]
+    promptcontainer = [{"role": "system", "content": f"summarize user breezyexcursion thoughts into a tweet, trying to use the same tone as breezyexcursion himself. you can consider feedback from other users as well. no emojis no hashtags. if there are multiple subjects going on, only use what relates to breez's comments"}]
 
     for message in prompt:
         #parse user
