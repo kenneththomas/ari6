@@ -32,6 +32,7 @@ agg_gpt_model = 'gpt-4-0125-preview'
 donotpost = True
 processing_message = False
 lasttweet = ''
+gptagg = False
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -108,8 +109,9 @@ async def on_message(message):
     global donotpost
     global processing_message
     global lasttweet
+    global gptagg
 
-    #ignore bot commands for breezagg
+
     if str(message.content).startswith('!aggmodel'):
         if agg_gpt_model == 'gpt-4-0125-preview':
             agg_gpt_model = 'gpt-3.5-turbo-0125'
@@ -117,13 +119,19 @@ async def on_message(message):
         elif agg_gpt_model == 'gpt-3.5-turbo-0125':
             agg_gpt_model = 'gpt-4-0125-preview'
             await message.channel.send('aggregation model switched to gpt-4-0125-preview')
-        #toggle donotpost
+
+    #toggle gptagg
+    if str(message.content).startswith('!gptagg'):
+        gptagg = not gptagg
+        await message.channel.send(f'gptagg is now {gptagg}')
+
+    #toggle donotpost
     if str(message.content).startswith('!donotpost'):
         donotpost = not donotpost
         await message.channel.send(f'donotpost is now {donotpost}')
 
+    #ignore bot commands for breezagg
     if not str(message.content).startswith('!'):
-        #by default we are using gpt3.5 but we can toggle to switch to gpt4. simple toggle with !aggmodel
 
 
         #if sender is breezyexcursion, set breezagg to True
@@ -152,31 +160,51 @@ async def on_message(message):
                 # print the contents of breezagg_container
                 print(breezagg_container)
 
-                #call ai_experimental from sentience, use gpt3.5 for now
-                #gpt-3.5-turbo-0125
-                #gpt-4-0125-preview
-                if not processing_message:
-                    processing_message = True
-                    print('debug: processing message')
-                    if not donotpost:
-                        #add last tweet to front of container for additional context
-                        lasttweet = f'last_tweet: {lasttweet}'
-                        #breezagg_container.insert(0,lasttweet)
-                        aggmsg = await sentience.ai_breezagg(breezagg_container, agg_gpt_model)
-                        lasttweet = aggmsg
-                        print('debug lasttweet: {}'.format(lasttweet))
-                        #remove breezyexcursion: from aggmsg
-                        aggmsg = aggmsg.replace('breezyexcursion: ','')
-                        print('''breezagg: aggmsg = {}'''.format(aggmsg))
-                        #toot
-                        tootlist = aritooter.tootcontrol(aggmsg)
-                        #post link to toot in 212681539304030209
-                        cfgchannel = client.get_channel(212681539304030209)
-                        for tootmsg in tootlist:
-                            await cfgchannel.send(tootmsg)
-                    processing_message = False
+                if gptagg:
+                    #call ai_experimental from sentience, use gpt3.5 for now
+                    #gpt-3.5-turbo-0125
+                    #gpt-4-0125-preview
+                    if not processing_message:
+                        processing_message = True
+                        print('debug: processing message')
+                        if not donotpost:
+                            #add last tweet to front of container for additional context
+                            lasttweet = f'last_tweet: {lasttweet}'
+                            #breezagg_container.insert(0,lasttweet)
+                            aggmsg = await sentience.ai_breezagg(breezagg_container, agg_gpt_model)
+                            lasttweet = aggmsg
+                            print('debug lasttweet: {}'.format(lasttweet))
+                            #remove breezyexcursion: from aggmsg
+                            aggmsg = aggmsg.replace('breezyexcursion: ','')
+                            print('''breezagg: aggmsg = {}'''.format(aggmsg))
+                            #toot
+                            tootlist = aritooter.tootcontrol(aggmsg)
+                            #post link to toot in 212681539304030209
+                            cfgchannel = client.get_channel(212681539304030209)
+                            for tootmsg in tootlist:
+                                await cfgchannel.send(tootmsg)
+                        processing_message = False
+                    else:
+                        print('debug: message is already being processed')
+                #else toot container without gpt
                 else:
-                    print('debug: message is already being processed')
+                    processing_message = True
+                    print('debug not using gpt for aggregation summary')
+
+                    nongptpost = ''
+                    #break down breezagg_container into string
+                    for msg in breezagg_container:
+                        #only if breezyexcursion is the author
+                        if 'breezyexcursion' in msg:
+                            #remove breezyexcursion: from msg
+                            msg = msg.replace('breezyexcursion: ','')
+                            nongptpost = nongptpost + msg + '\n'
+                        
+                    tootlist = aritooter.tootcontrol(nongptpost)
+                    cfgchannel = client.get_channel(212681539304030209)
+                    for tootmsg in tootlist:
+                        await cfgchannel.send(tootmsg)
+                    processing_message = False
 
                 breezagg = False
 
@@ -381,6 +409,8 @@ async def on_message(message):
         else:
             tweetcontainer.append(message.content)
         #embed fixer
+            
+        '''
         if 'vxtwitter.com' not in message.content:
             if 'x.com' in message.content:
                 tweetlink = message.content.replace('x.com','vxtwitter.com')
@@ -393,6 +423,7 @@ async def on_message(message):
                     await ari_webhook.send(f'{message.author.display_name} posted:\n {tweetlink}', username=username, avatar_url=avatar)
                 else:
                     await message.channel.send(f"{message.author.display_name} posted:\n {tweetlink}")
+        '''
 
 
     '''
@@ -422,13 +453,12 @@ async def on_message(message):
 '''
 
 
-
-
 @client.event
 async def on_reaction_add(reaction, user):
 
     #if reaction emoji is a u emoji, also react with u emoji
     if reaction.emoji == '🇺':
+        #TODO: i noticed here if people are spamming the u emoji it will try to do this multiple times and fail/rate limit
         await reaction.message.add_reaction('🇺')
 
 client.run(maricon.bottoken)
