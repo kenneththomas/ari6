@@ -4,22 +4,6 @@ import os
 import sqlite3
 import json
 
-#########
-# Logging model based off of FIX 4.2 Protocol
-# Full Dictionary: https://www.onixs.biz/fix-dictionary/4.2/fields_by_tag.html
-# Will try to keep usage of tags documented here though
-#
-# 8 = FIX Version
-#
-# 35 = Message Type
-# 49 = Discord Account
-# 52 = Timestamp
-# 56 = Channel
-# 58 = Message Text
-#
-#
-#########
-
 dbfilename = 'logs/gato.db'
 last15 = []
 
