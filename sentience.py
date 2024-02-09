@@ -178,3 +178,56 @@ async def ai_breezagg(prompt, gmodel="gpt-3.5-turbo-0125", prompt_addition=False
     generated_text = generated_text.lower()
 
     return generated_text
+
+async def ai_experimental(prompt, gmodel="gpt-3.5-turbo-0125", prompt_addition=False):
+
+    #in prompt we receive a list of messages. each item is user: message, convert it into prompt. if user is ari, then role is system'
+
+    if prompt_addition:
+        rprole = prompt_addition
+    else:
+        rprole = 'ari'
+
+    additional_context = ''
+    for gatomember in personality.additional_context.keys():
+        #if gatomember in any of the messages inside prompt, add the additional context
+        for message in prompt:
+            if gatomember in message:
+                #if additional context is already added, don't add it again
+                if personality.additional_context[gatomember] not in additional_context:
+                    print('adding additional context' + personality.additional_context[gatomember])
+                    additional_context = additional_context + personality.additional_context[gatomember] + ' \n'
+                else:
+                    print('additional context already added for ' + gatomember)
+
+    promptcontainer = [{"role": "system", "content": f"you are role playing as {rprole} a 27 year old dominican girl from NYC, you are posting in a discord channel. casual and informal chat style messages. you use slang/grammar typically associated with NYC (referring to people as b or son, you is, we is, they instead of their for possessive). minimal punctuation. you love offensive humor. you will not refer to yourself as an AI. you will not use a lecturing tone. do not use emojis or hashtags. do not end your sentence with a question. additional context: " + additional_context}]
+
+    for message in prompt:
+        #parse user
+        user = message.split(':')[0]
+        #message is everything after the first colon as there may be multiple colons in the message
+        #message = message.split(':',1)[1]
+        if user == 'ari':
+            role = 'assistant'
+        else:
+            role = 'user'
+        promptcontainer.append({"role": role, "content": f"{message}"})
+    print(promptcontainer)
+
+
+    full_prompt = [
+        {"role": "user", "content": f"{prompt}"}
+        ]
+
+    response = client.chat.completions.create(model=gmodel,
+    max_tokens = 800,
+    temperature=.8,
+    messages = promptcontainer)
+
+    print(response)
+    generated_text = response.choices[0].message.content.strip()
+
+    #force lowercase
+    generated_text = generated_text.lower()
+
+    return generated_text
