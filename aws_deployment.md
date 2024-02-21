@@ -26,3 +26,6 @@ tooter enable instructions
 even tho python module is called mastodon, you pip install "Mastodon.py"
 add username (email) and password to maricon, uncomment top section to generate keys
 re-comment after
+
+log db:
+/home/ec2-user/prod/ari6/logs/gato.db

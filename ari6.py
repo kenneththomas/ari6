@@ -12,7 +12,7 @@ import random
 #import sentience2 # local llm instead of openai, for testing
 import ari_webhooks as wl
 
-ari_version = '8.2.2-hotfix'
+ari_version = '8.3'
 
 emoji_storage = {
     'eheu': '<:eheu:233869216002998272>',
@@ -90,6 +90,21 @@ async def on_message(message):
         minutes, seconds = divmod(remainder, 60)
         uptime_string = f"{hours} hours, {minutes} minutes, {seconds} seconds"
         await message.channel.send(uptime_string)
+
+    #if username is breezyexcursion
+    if str(message.author) == 'breezyexcursion':
+        if 'vxtwitter.com' not in message.content:
+            if 'x.com' in message.content:
+                tweetlink = message.content.replace('x.com','vxtwitter.com')
+                await message.delete()  # delete the original message
+                if str(message.channel) == 'gato':
+                    #pick random webhook from webhook_library
+                    personality = random.choice(list(webhook_library.values()))
+                    username = personality[0]
+                    avatar = personality[1]
+                    await ari_webhook.send(f'{message.author.display_name} posted:\n {tweetlink}', username=username, avatar_url=avatar)
+                else:
+                    await message.channel.send(f"{message.author.display_name} posted:\n {tweetlink}")
 
     #toggle main_enabled with !main toggle
     if str(message.content).startswith('!main'):
@@ -405,20 +420,6 @@ async def on_message(message):
             tweetcontainer.append(message.content)
         #embed fixer
             
-        '''
-        if 'vxtwitter.com' not in message.content:
-            if 'x.com' in message.content:
-                tweetlink = message.content.replace('x.com','vxtwitter.com')
-                await message.delete()  # delete the original message
-                if str(message.channel) == 'gato':
-                    #pick random webhook from webhook_library
-                    personality = random.choice(list(webhook_library.values()))
-                    username = personality[0]
-                    avatar = personality[1]
-                    await ari_webhook.send(f'{message.author.display_name} posted:\n {tweetlink}', username=username, avatar_url=avatar)
-                else:
-                    await message.channel.send(f"{message.author.display_name} posted:\n {tweetlink}")
-        '''
 
 
     #darn tootin
