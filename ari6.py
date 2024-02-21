@@ -12,7 +12,7 @@ import random
 #import sentience2 # local llm instead of openai, for testing
 import ari_webhooks as wl
 
-ari_version = '8.3.1'
+ari_version = '8.3.1b'
 
 emoji_storage = {
     'eheu': '<:eheu:233869216002998272>',
@@ -99,7 +99,7 @@ async def on_message(message):
                 await message.delete()  # delete the original message
                 if str(message.channel) == 'gato':
                     #pick random webhook from webhook_library
-                    personality = random.choice(list(webhook_library.values()))
+                    personality = random.choice(list(wl.webhook_library.values()))
                     username = personality[0]
                     avatar = personality[1]
                     await ari_webhook.send(f'{message.author.display_name} posted:\n {tweetlink}', username=username, avatar_url=avatar)

@@ -26,7 +26,7 @@ messages = cursor.fetchall()
 text = " ".join(message[0] for message in messages)
 
 # List of words to exclude (blacklist)
-blacklist = ['https','this','that','they','tenor','just','with','have','good','like','what','when','view','youtube','discordapp','attachments','vxtwitter','status']  # Add your own words here
+blacklist = ['https','this','that','they','tenor','just','with','have','good','like','what','when','view','youtube','discordapp','attachments','vxtwitter','status','there','thats','gonna']  # Add your own words here
 
 # Generate the word cloud, excluding words less than 3 characters and in the blacklist
 wordcloud = WordCloud(width = 800, height = 800, 
