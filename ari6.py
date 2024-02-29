@@ -98,6 +98,9 @@ async def on_message(message):
                 tweetlink = message.content.replace('x.com','vxtwitter.com')
                 await message.delete()  # delete the original message
                 if str(message.channel) == 'gato':
+                    catchannel = client.get_channel(205903143471415296)
+                    webhooks = await catchannel.webhooks()
+                    ari_webhook = next((webhook for webhook in webhooks if webhook.name == 'ari'), None)
                     #pick random webhook from webhook_library
                     personality = random.choice(list(wl.webhook_library.values()))
                     username = personality[0]
