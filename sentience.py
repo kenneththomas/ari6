@@ -129,55 +129,48 @@ async def generate_text_gpt_spanish(prompt):
     temperature=.8,
     messages = full_prompt)
 
-    #print(response)
-    
-    generated_text = response.choices[0].message.content.strip()
-
-    #force lowercase
-    generated_text = generated_text.lower()
+    generated_text = response.choices[0].message.content.strip().lower()
 
     return generated_text
 
 
+async def ai_breezagg(prompt, model="gpt-3.5-turbo-0125", prompt_addition=None):
+    """
+    Converts a list of messages into a prompt for the AI model, focusing on simulating the tone of a specific user
+    ('breezyexcursion'). The function generates a tweet-like response, considering feedback from other users and 
+    excluding emojis and hashtags.
 
-async def ai_breezagg(prompt, gmodel="gpt-3.5-turbo-0125", prompt_addition=False):
+    :param prompt: List of strings, where each string format is "user: message".
+    :param model: Model name to use for generating the response.
+    :param prompt_addition: Optional; Specifies an additional role, defaults to 'ari' if not provided.
+    :return: A lowercase string representing the AI-generated text.
+    """
+    role = prompt_addition if prompt_addition else 'ari'
 
-    #in prompt we receive a list of messages. each item is user: message, convert it into prompt. if user is ari, then role is system'
+    # Initial prompt setup, focusing on breezyexcursion's comments.
+    prompt_container = [{
+        "role": "system",
+        "content": "Summarize user breezyexcursion thoughts into a tweet, trying to use the same tone as breezyexcursion himself. Consider feedback from other users as well. No emojis, no hashtags. If there are multiple subjects, focus on what relates to breezy's comments."
+    }]
 
-    if prompt_addition:
-        rprole = prompt_addition
-    else:
-        rprole = 'ari'
-
-    promptcontainer = [{"role": "system", "content": f"summarize user breezyexcursion thoughts into a tweet, trying to use the same tone as breezyexcursion himself. you can consider feedback from other users as well. no emojis no hashtags. if there are multiple subjects going on, only use what relates to breez's comments"}]
-
+    # Parse each message and determine its role based on the user.
     for message in prompt:
-        #parse user
-        user = message.split(':')[0]
-        #message is everything after the first colon as there may be multiple colons in the message
-        #message = message.split(':',1)[1]
-        if user == 'ari':
-            role = 'assistant'
-        else:
-            role = 'user'
-        promptcontainer.append({"role": role, "content": f"{message}"})
-    print(promptcontainer)
+        user, message_text = message.split(':', 1)  # Split once at the first colon.
+        role = 'assistant' if user == 'ari' else 'user'
+        prompt_container.append({"role": role, "content": message_text})
 
+    print(prompt_container)
 
-    full_prompt = [
-        {"role": "user", "content": f"{prompt}"}
-        ]
-
-    response = client.chat.completions.create(model=gmodel,
-    max_tokens = 800,
-    temperature=.8,
-    messages = promptcontainer)
+    # Generate completion with the model.
+    response = client.chat.completions.create(
+        model=model,
+        max_tokens=800,
+        temperature=0.8,
+        messages=prompt_container
+    )
 
     print(response)
-    generated_text = response.choices[0].message.content.strip()
-
-    #force lowercase
-    generated_text = generated_text.lower()
+    generated_text = response.choices[0].message.content.strip().lower()
 
     return generated_text
 
