@@ -9,10 +9,9 @@ import datetime
 import sentience
 import re
 import random
-#import sentience2 # local llm instead of openai, for testing
 import ari_webhooks as wl
 
-ari_version = '8.4b'
+ari_version = '8.4'
 
 emoji_storage = {
     'eheu': '<:eheu:233869216002998272>',
