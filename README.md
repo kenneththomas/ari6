@@ -2,7 +2,7 @@
 
 ## Description
 
-ari is a versatile discord bot designed to enhance community interaction through a wide range of features including automated moderation, custom responses, language translation, meme generation, and social media integration. Built with Python and integrating various APIs, ARI aims to provide an engaging and seamless experience for the dogs that inhabit gato.
+ari is a versatile discord bot designed to enhance community interaction through a wide range of features including automated moderation, custom responses, language translation, meme generation, and social media integration. Built with Python and integrating various APIs, ari aims to provide an engaging and seamless experience for the dogs that inhabit gato.
 
 ## Features
 

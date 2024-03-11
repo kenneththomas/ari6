@@ -46,18 +46,6 @@ def log(msg):
     conn.commit()
     conn.close()
 
-    #temporary write to json username, timestamp, message
-
-    #convert timestamp to this format 2023-10-25 15:59:00
-
-    #we only want to write to the json in the message has more than 15 characters
-    if len(message) > 20 and len(message) < 200:
-        timestamp = timestamp.split('.')[0]
-        jsonfile = open('logs/log.json', 'a')
-        json.dump({'username': sender, 'timestamp': timestamp, 'text': message}, jsonfile)
-        jsonfile.write(',\n')
-        jsonfile.close()
-
     return
 
 
