@@ -4,6 +4,8 @@ client = OpenAI(api_key=maricon.gptkey)
 import personality
 import asyncio
 import random
+import anthropic
+claude = anthropic.Anthropic(api_key=maricon.anthropic_key)
 
 
 # Initialize a dictionary to store conversation history for each user
@@ -234,3 +236,53 @@ async def ai_experimental(prompt, gmodel="gpt-3.5-turbo-0125", prompt_addition=F
     generated_text = generated_text.lower()
 
     return generated_text
+
+async def claudex(prompt, model='claude-3-opus-20240229', prompt_addition=False):
+    #in prompt we receive a list of messages. each item is user: message, convert it into prompt. if user is ari, then role is system'
+
+    if prompt_addition:
+        rprole = prompt_addition
+    else:
+        rprole = 'ari'
+
+    additional_context = ''
+    for gatomember in personality.additional_context.keys():
+        #if gatomember in any of the messages inside prompt, add the additional context
+        for message in prompt:
+            if gatomember in message:
+                # count how many times gatomember is mentioned in the message
+                count = message.count(gatomember)
+                # count / 10 chance of adding additional context
+                if random.randint(1,10) <= count:
+                    if personality.additional_context[gatomember] not in additional_context:
+                        print('adding additional context' + personality.additional_context[gatomember])
+                        additional_context = additional_context + personality.additional_context[gatomember] + ' \n'
+                    else:
+                        print('additional context already added for ' + gatomember)
+
+
+    #anthropic format is different from openai so we need to put promptcontainer back into a single user prompt instead of multiple.
+    #forloop through promptcontainer and add each message to a single string
+
+    print(prompt)
+
+    mxx = ''
+    for message in prompt:
+        mxx = mxx + message + ' \n'
+
+    claudeprompt = [{"role": "user", "content": f"{mxx}"}]
+
+
+    response = claude.messages.create(
+        model=model,
+        max_tokens=800,
+        messages=claudeprompt,
+        system=f'you are role playing as {rprole} a 27 year old dominican girl from NYC, you are posting in a discord channel. casual and informal chat style messages. you use slang/grammar typically associated with NYC (referring to people as b or son, you is, we is, they instead of their for possessive). minimal punctuation. you love offensive humor. you will not refer to yourself as an AI. you will not use a lecturing tone. do not use emojis or hashtags. do not end your sentence with a question. ' + additional_context
+    )
+    print(response)
+
+    text_content = ''.join([block.text for block in response.content])
+    print(text_content)
+
+    return text_content
+

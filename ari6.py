@@ -12,7 +12,7 @@ import random
 #import sentience2 # local llm instead of openai, for testing
 import ari_webhooks as wl
 
-ari_version = '8.3.1b'
+ari_version = '8.4b'
 
 emoji_storage = {
     'eheu': '<:eheu:233869216002998272>',
@@ -251,6 +251,7 @@ async def on_message(message):
 
                 async with message.channel.typing():
                     freemsg = await sentience.ai_experimental(experimental_container,'gpt-4-0125-preview')
+                    #freemsg = await sentience.claudex(experimental_container)
                     experimental_container.append(f'{freemsg}')
                     await message.reply(freemsg)                    
 
