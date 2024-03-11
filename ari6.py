@@ -33,6 +33,7 @@ donotpost = True
 processing_message = False
 lasttweet = ''
 gptagg = False
+claude = False
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -60,6 +61,7 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
+    global claude
     global lastmsg
     #ignore webhooks
     if message.webhook_id:
@@ -139,6 +141,10 @@ async def on_message(message):
         donotpost = not donotpost
         await message.channel.send(f'donotpost is now {donotpost}')
 
+    #toggle claude
+    if str(message.content).startswith('!claude'):
+        claude = not claude
+        await message.channel.send(f'claude is now {claude}')
 
     #if sender is breezyexcursion, set breezagg to True
     if str(message.author) == 'breezyexcursion':
@@ -250,8 +256,10 @@ async def on_message(message):
                     return
 
                 async with message.channel.typing():
-                    freemsg = await sentience.ai_experimental(experimental_container,'gpt-4-0125-preview')
-                    #freemsg = await sentience.claudex(experimental_container)
+                    if not claude:
+                        freemsg = await sentience.ai_experimental(experimental_container,'gpt-4-0125-preview')
+                    else:    
+                        freemsg = await sentience.claudex(experimental_container)
                     experimental_container.append(f'{freemsg}')
                     await message.reply(freemsg)                    
 
