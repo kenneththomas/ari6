@@ -12,6 +12,7 @@ dbfilename = 'logs/gato.db'
 batch_buffer = []
 last_write_time = datetime.now()
 xp_buffer = {}
+trivia_questions = {}
 
 # Ensure the logs directory exists
 os.makedirs('logs', exist_ok=True)
@@ -22,6 +23,18 @@ c = conn.cursor()
 c.execute('''CREATE TABLE IF NOT EXISTS logs (sender text, channel text, timestamp text, date text, hour text, message text)''')
 # create xp table
 c.execute('''CREATE TABLE IF NOT EXISTS xp (user text, xp integer)''')
+# create trivia_questions table
+c.execute('''CREATE TABLE IF NOT EXISTS trivia_questions (question text, answer text)''')
+# load trivia questions into memory, if there are no questions, add a sample one
+c.execute("SELECT * FROM trivia_questions")
+result = c.fetchall()
+if not result:
+    c.execute("INSERT INTO trivia_questions VALUES (?,?)", ('What is the capital of France?', 'Paris'))
+    conn.commit()
+    c.execute("SELECT * FROM trivia_questions")
+    result = c.fetchall()
+for row in result:
+    trivia_questions[row[0]] = row[1]
 conn.commit()
 conn.close()
 
@@ -79,8 +92,28 @@ def log(msg):
         conn.close()
 
     # add 1 xp to the sender
+    # TODO: add a way to adjust xp gain
     xp_buffer[sender] += 1
     
     # Check if it's time to flush the buffer
     if len(batch_buffer) >= BATCH_SIZE or (now - last_write_time) >= FLUSH_INTERVAL:
         flush_to_db()
+
+def get_xp_user(user):
+    #check buffer first
+    if user in xp_buffer:
+        return xp_buffer[user]
+    #else check the database
+    conn = sqlite3.connect(dbfilename)
+    c = conn.cursor()
+    c.execute("SELECT xp FROM xp WHERE user = ?", (user,))
+    result = c.fetchone()
+    conn.close()
+    if result:
+        return result[0]
+    
+def add_xp_user(user, xp):
+    #check buffer first
+    if user in xp_buffer:
+        xp_buffer[user] += xp
+        return

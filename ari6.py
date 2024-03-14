@@ -11,7 +11,7 @@ import re
 import random
 import ari_webhooks as wl
 
-ari_version = '8.5'
+ari_version = '8.5.1'
 
 emoji_storage = {
     'eheu': '<:eheu:233869216002998272>',
@@ -34,6 +34,8 @@ lasttweet = ''
 gptagg = False
 claude = False
 dev_mode = False
+trivia_answer = ''
+trivia_question = ''
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -63,6 +65,7 @@ async def on_ready():
 async def on_message(message):
     global claude
     global lastmsg
+    global trivia_answer, trivia_question
     #ignore webhooks
     if message.webhook_id:
         return
@@ -416,6 +419,32 @@ async def on_message(message):
         for tootmsg in tootlist:
             await message.channel.send(tootmsg)
 
+    # tell me how much xp i have call get_xp_user
+    if message.content.startswith('!xp'):
+        xp = l.get_xp_user(str(message.author))
+        # if xp is not None, send message with xp
+        if xp:
+            await message.channel.send(f'{message.author} has {xp} xp')
+
+    # trivia in lumberjack there is trivia_questions dictionary with key question and value answer
+    if message.content.startswith('!trivia'):
+        #random question
+        trivia_question = random.choice(list(l.trivia_questions.keys()))
+        trivia_answer = l.trivia_questions[trivia_question]
+        host_question = await sentience.ask_trivia_question(trivia_question)
+        await message.channel.send(f'{host_question}')
+        #await message.channel.send(f'{question}')
+
+    # if message is answer to trivia question, give xp
+    if message.content.lower() == trivia_answer.lower():
+        # if trivia answer is blank, dont do anything
+        if trivia_answer != '':
+            trivia_answer = ''
+            l.add_xp_user(str(message.author), 10)
+            #await message.channel.send(f'{message.author} got it right! 10 xp')
+            congratulatory_msg = await sentience.congratulate_trivia_winner(str(message.author),trivia_question,trivia_answer)
+            await message.channel.send(f'{congratulatory_msg}')
+    
 
 @client.event
 async def on_reaction_add(reaction, user):

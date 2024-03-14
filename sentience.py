@@ -69,6 +69,20 @@ async def spanish_translation(prompt):
     except asyncio.TimeoutError:
         return "obama"
     
+async def ask_trivia_question(question):
+    question_prompt = f'You are roleplaying as a funny and creative trivia host. Add some flavor to ask the following question: {question}'
+    try:
+        return await asyncio.wait_for(generate_text_gpt_spanish(question_prompt), timeout=15)
+    except asyncio.TimeoutError:
+        return "obama"
+    
+async def congratulate_trivia_winner(winner, question, answer):
+    congrats_prompt = f'You are roleplaying as a funny and creative trivia host. Add some flavor to congratulate {winner} for answering the question "{question}" with "{answer}"'
+    try:
+        return await asyncio.wait_for(generate_text_gpt_spanish(congrats_prompt), timeout=15)
+    except asyncio.TimeoutError:
+        return "obama"
+    
 async def generate_text_with_timeout_gpt(prompt):
     try:
         return await asyncio.wait_for(generate_text_gpt(prompt), timeout=15)
