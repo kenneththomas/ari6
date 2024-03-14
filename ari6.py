@@ -12,7 +12,7 @@ import random
 import ari_webhooks as wl
 import uuid
 
-ari_version = '8.5.4'
+ari_version = '8.5.5'
 
 emoji_storage = {
     'eheu': '<:eheu:233869216002998272>',
@@ -372,6 +372,10 @@ async def on_message(message):
 
 @client.event
 async def on_reaction_add(reaction, user):
+
+    #print who reacted and what they reacted with to msg
+    print(f'[{datetime.datetime.now()}] {user} reacted with {reaction.emoji} to {reaction.message.author.name}\'s message')
+    l.add_xp_user(str(user), 1)
 
     #if reaction emoji is a u emoji, also react with u emoji
     if reaction.emoji == '🇺':

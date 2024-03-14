@@ -1,6 +1,11 @@
 # releasenotes
 making a releasenotes file because it is cute. no guarantees that i maintain this at all. use commit history lol
 
+## 8.5.5
+- display channel on cli log
+- do not store config channel messages in db
+- emoji logging in cli, 1 xp for emoting
+
 ## 8.5.4
 - refactor xp to fix database locking
 - batchsize adjustment valdiation

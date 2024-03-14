@@ -90,11 +90,15 @@ def log(msg):
     date = timestamp.split(' ')[0]
     hour = timestamp.split(' ')[1].split(':')[0]
 
-    newlog = f'[{timestamp}] {sender}: {message}'
+    newlog = f'[{timestamp}] ({channel}) {sender}: {message}'
     print(newlog)
     
     # no further processing on bot commands
     if message.startswith('!'):
+        return
+    
+    # ignore config channel
+    if channel == 'config':
         return
 
     # Add to batch buffer
