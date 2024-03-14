@@ -6,6 +6,8 @@ making a releasenotes file because it is cute. no guarantees that i maintain thi
 - reduce xp for getting a trivia question correct from 10 to 3
 - trivia hints
 - trivia gets its own dedicated gpt function instead of reusing spanish, it uses gpt4 and has a lower token limit
+- rename some of the spanish stuff to translation stuff cuz it does more than just spanish
+- toggle main adjustment
 
 ## 8.5.2
 - bot appears to be typing while doing trivia ai stuff

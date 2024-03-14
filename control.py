@@ -93,7 +93,7 @@ def controlmgr(message, author):
 
     return bwm
 
-def should_i_spanish(msg_text):
+def should_i_translate(msg_text):
 
     if len(msg_text) < 4:
         return False

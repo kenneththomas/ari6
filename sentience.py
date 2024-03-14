@@ -62,10 +62,10 @@ async def generate_text(prompt,user_id,personality_context=personality.malik):
 
     
   
-async def spanish_translation(prompt):
+async def gpt_translation(prompt):
     language_prompt = f'Translate chatroom message from english to {translate_language}, keep similar grammar/formality:'
     try:
-        return await asyncio.wait_for(generate_text_gpt_spanish(language_prompt + '\n' +  prompt), timeout=15)
+        return await asyncio.wait_for(generate_text_gpt_translation(language_prompt + '\n' +  prompt), timeout=15)
     except asyncio.TimeoutError:
         return "obama"
     
@@ -139,7 +139,7 @@ gato_slang = {
     'as an ai language model' : '',
 }
 
-async def generate_text_gpt_spanish(prompt):
+async def generate_text_gpt_translation(prompt):
 
     full_prompt = [
         {"role": "user", "content": f"{prompt}"}
@@ -161,7 +161,7 @@ async def trivia_gpt(prompt,trivia_model='gpt-4-0125-preview'):
         ]
 
     response = client.chat.completions.create(model=trivia_model,
-    max_tokens=150,
+    max_tokens=200,
     temperature=.8,
     messages = full_prompt)
 
