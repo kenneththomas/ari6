@@ -12,7 +12,7 @@ import random
 import ari_webhooks as wl
 import uuid
 
-ari_version = '8.5.3'
+ari_version = '8.5.4'
 
 emoji_storage = {
     'eheu': '<:eheu:233869216002998272>',
@@ -360,9 +360,12 @@ async def on_message(message):
     #adjust l.BATCH_SIZE with !batch $number
     if message.content.startswith('!batch'):
         if ct.admincheck(str(message.author)):
-            new_batch_size = int(message.content.replace('!batch','').strip())
-            l.BATCH_SIZE = new_batch_size
-            await message.channel.send(f'batch size is now {new_batch_size}')
+            try:
+                new_batch_size = int(message.content.replace('!batch','').strip())
+                l.BATCH_SIZE = new_batch_size
+                await message.channel.send(f'batch size is now {new_batch_size}')
+            except:
+                await message.channel.send('Invalid batch size')
         else:
             await message.channel.send('u cant do that lol')
     

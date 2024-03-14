@@ -15,6 +15,7 @@ xp_buffer = {}
 trivia_questions = {}
 newquestion = {}
 questions_to_save = {}
+previous_xp_buffer = {}
 
 # Ensure the logs directory exists
 os.makedirs('logs', exist_ok=True)
@@ -25,6 +26,13 @@ c = conn.cursor()
 c.execute('''CREATE TABLE IF NOT EXISTS logs (sender text, channel text, timestamp text, date text, hour text, message text)''')
 # create xp table
 c.execute('''CREATE TABLE IF NOT EXISTS xp (user text, xp integer)''')
+# populate xp buffer
+c.execute("SELECT * FROM xp")
+result = c.fetchall()
+for row in result:
+    xp_buffer[row[0]] = row[1]
+# we use previous xp buffer to track changes to xp_buffer
+previous_xp_buffer = xp_buffer.copy()
 # create trivia_questions table
 c.execute('''CREATE TABLE IF NOT EXISTS trivia_questions (question text, answer text)''')
 # load trivia questions into memory, if there are no questions, add a sample one
@@ -50,9 +58,13 @@ def flush_to_db():
     c = conn.cursor()
     c.executemany("INSERT INTO logs VALUES (?,?,?,?,?,?)", batch_buffer)
     print(f'xp updates: {xp_buffer}')
-    #TODO: reduce writes by only updating xp if it has changed
+
     for user, xp in xp_buffer.items():
-        c.execute("INSERT OR REPLACE INTO xp VALUES (?,?)", (user, xp))
+        #check if xp has changed. if it has print the change and update the database
+        if xp != previous_xp_buffer[user]:
+            print(f'XP change for {user}: {previous_xp_buffer[user]} -> {xp}')
+            c.execute("INSERT OR REPLACE INTO xp VALUES (?,?)", (user, xp))
+            previous_xp_buffer[user] = xp
     #save trivia questions
     for question, answer in questions_to_save.items():
         print(f'Saving trivia question: {question} {answer}')
@@ -114,14 +126,8 @@ def get_xp_user(user):
     #check buffer first
     if user in xp_buffer:
         return xp_buffer[user]
-    #else check the database
-    conn = sqlite3.connect(dbfilename)
-    c = conn.cursor()
-    c.execute("SELECT xp FROM xp WHERE user = ?", (user,))
-    result = c.fetchone()
-    conn.close()
-    if result:
-        return result[0]
+    else:
+        return 0
     
 def add_xp_user(user, xp):
     #check buffer first

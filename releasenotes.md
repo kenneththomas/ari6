@@ -1,6 +1,10 @@
 # releasenotes
 making a releasenotes file because it is cute. no guarantees that i maintain this at all. use commit history lol
 
+## 8.5.4
+- refactor xp to fix database locking
+- batchsize adjustment valdiation
+
 ## 8.5.3
 - bot commands - do not save to log db or award xp
 - reduce xp for getting a trivia question correct from 10 to 3
