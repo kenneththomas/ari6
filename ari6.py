@@ -11,7 +11,7 @@ import re
 import random
 import ari_webhooks as wl
 
-ari_version = '8.5.1'
+ari_version = '8.5.2'
 
 emoji_storage = {
     'eheu': '<:eheu:233869216002998272>',
@@ -431,9 +431,9 @@ async def on_message(message):
         #random question
         trivia_question = random.choice(list(l.trivia_questions.keys()))
         trivia_answer = l.trivia_questions[trivia_question]
-        host_question = await sentience.ask_trivia_question(trivia_question)
-        await message.channel.send(f'{host_question}')
-        #await message.channel.send(f'{question}')
+        async with message.channel.typing():
+            host_question = await sentience.ask_trivia_question(trivia_question)
+            await message.channel.send(f'{host_question}')
 
     # if message is answer to trivia question, give xp
     if message.content.lower() == trivia_answer.lower():
@@ -442,8 +442,9 @@ async def on_message(message):
             trivia_answer = ''
             l.add_xp_user(str(message.author), 10)
             #await message.channel.send(f'{message.author} got it right! 10 xp')
-            congratulatory_msg = await sentience.congratulate_trivia_winner(str(message.author),trivia_question,trivia_answer)
-            await message.channel.send(f'{congratulatory_msg}')
+            async with message.channel.typing():
+                congratulatory_msg = await sentience.congratulate_trivia_winner(str(message.author),trivia_question,trivia_answer)
+                await message.channel.send(f'{congratulatory_msg}')
     
 
 @client.event
