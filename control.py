@@ -1,5 +1,5 @@
 #config
-adminlist=['breezyexcursion#9570']
+adminlist=['breezyexcursion']
 bannedwords = ['netorare','periodt']
 heldmsgcontainer = []
 mml_userlist = ['Barinade88#3367']

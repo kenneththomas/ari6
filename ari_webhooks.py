@@ -23,4 +23,5 @@ webhook_library = {
     'melo trimble' : ('melo trimble','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702786720/outream/wv4alpfy7gddt83p4fwk.png','Melo Trimble, former Maryland Terrapin and current NBA player'),
     'yung nic' : ('yung nic','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702788099/iyg87se9g9i9jbqiqojy.png','Actor Nicolas Cage'),
     'dasha' : ('nobody_stop_me','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1703086050/outream/dwutolw1i4vzitqkn6rx.jpg','Edgy podcast host Dasha Nekrasova'),
+    'kamala' : ('kamala','https://res.cloudinary.com/dr2rzyu6p/image/upload/c_pad,b_auto:predominant,fl_preserve_transparency/v1710424416/kamala_hpghjo.jpg','Kamala Harris, Vice President of the United States'),
 }
