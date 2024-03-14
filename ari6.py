@@ -10,6 +10,7 @@ import sentience
 import re
 import random
 import ari_webhooks as wl
+import uuid
 
 ari_version = '8.5.2'
 
@@ -313,8 +314,8 @@ async def on_message(message):
         if xp:
             await message.channel.send(f'{message.author} has {xp} xp')
 
-    # trivia in lumberjack there is trivia_questions dictionary with key question and value answer
-    if message.content.startswith('!trivia'):
+
+    if message.content == '!trivia':
         #random question
         trivia_question = random.choice(list(l.trivia_questions.keys()))
         trivia_answer = l.trivia_questions[trivia_question]
@@ -332,6 +333,35 @@ async def on_message(message):
             async with message.channel.typing():
                 congratulatory_msg = await sentience.congratulate_trivia_winner(str(message.author),trivia_question,trivia_answer)
                 await message.channel.send(f'{congratulatory_msg}')
+
+    # add trivia question to lumberjack trivia_questions dictionary
+    if message.content.startswith('!addquestion'):
+        new_trivia = message.content.replace('!addquestion','').strip()
+        #split by ,
+        #validation, if not 2 items, return
+        if len(new_trivia.split(',')) != 2:
+            await message.channel.send('Invalid format, use !addquestion question,answer')
+            return
+        question, answer = [item.strip() for item in new_trivia.split(',')]
+        short_uuid = str(uuid.uuid4())[:5]
+
+        l.trivia_questions[question] = answer
+        l.newquestion[short_uuid] = [question,answer]
+        await message.channel.send(f'Added {question} to trivia questions.\nbreez can save this question with !savequestion {short_uuid}')
+
+    # save trivia question to lumberjack trivia_questions dictionary
+    if message.content.startswith('!savequestion'):
+        #check if user is admin
+        if not ct.admincheck(str(message.author)):
+            await message.channel.send('u cant do that lol')
+            return
+        short_uuid = message.content.replace('!savequestion','').strip()
+        if short_uuid in l.newquestion:
+            question, answer = l.newquestion[short_uuid]
+            l.trivia_questions[question] = answer
+            await message.channel.send(f'Saved {question} to trivia questions')
+        else:
+            await message.channel.send(f'{short_uuid} not found')
     
 
 @client.event

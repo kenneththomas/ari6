@@ -3,6 +3,9 @@ making a releasenotes file because it is cute. no guarantees that i maintain thi
 
 ## 8.5.2
 - bot appears to be typing while doing trivia ai stuff
+- remove the aggregation stuff
+- functionality to add trivia questions
+- save trivia questions
 
 ## 8.5.1
 - !xp tells you how much xp you have
