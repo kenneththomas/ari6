@@ -61,8 +61,13 @@ def flush_to_db():
 
     for user, xp in xp_buffer.items():
         #check if xp has changed. if it has print the change and update the database
-        if xp != previous_xp_buffer[user]:
-            print(f'XP change for {user}: {previous_xp_buffer[user]} -> {xp}')
+        try:
+            if xp != previous_xp_buffer[user]:
+                print(f'XP change for {user}: {previous_xp_buffer[user]} -> {xp}')
+                c.execute("INSERT OR REPLACE INTO xp VALUES (?,?)", (user, xp))
+                previous_xp_buffer[user] = xp
+        except KeyError:
+            print(f'XP change for {user}: 0 -> {xp}')
             c.execute("INSERT OR REPLACE INTO xp VALUES (?,?)", (user, xp))
             previous_xp_buffer[user] = xp
     #save trivia questions

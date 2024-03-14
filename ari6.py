@@ -12,7 +12,7 @@ import random
 import ari_webhooks as wl
 import uuid
 
-ari_version = '8.5.5'
+ari_version = '8.5.5-hotfix-xp'
 
 emoji_storage = {
     'eheu': '<:eheu:233869216002998272>',

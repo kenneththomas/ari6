@@ -1,6 +1,9 @@
 # releasenotes
 making a releasenotes file because it is cute. no guarantees that i maintain this at all. use commit history lol
 
+## 8.5.5-hotfix-xp
+- fix keyerror for new users xp
+
 ## 8.5.5
 - display channel on cli log
 - do not store config channel messages in db
