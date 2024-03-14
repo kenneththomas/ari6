@@ -77,7 +77,7 @@ async def ask_trivia_question(question):
         return "obama"
     
 async def congratulate_trivia_winner(winner, question, answer):
-    congrats_prompt = f'You are roleplaying as a funny and creative trivia host. Add some flavor to congratulate {winner} for answering the question "{question}" with "{answer}"'
+    congrats_prompt = f'You are roleplaying as a funny and creative trivia host. Add some flavor to succinctly congratulate {winner} for answering the question "{question}" with "{answer}"'
     try:
         return await asyncio.wait_for(generate_text_gpt_spanish(congrats_prompt), timeout=15)
     except asyncio.TimeoutError:
@@ -147,46 +147,6 @@ async def generate_text_gpt_spanish(prompt):
 
     return generated_text
 
-
-async def ai_breezagg(prompt, model="gpt-3.5-turbo-0125", prompt_addition=None):
-    """
-    Converts a list of messages into a prompt for the AI model, focusing on simulating the tone of a specific user
-    ('breezyexcursion'). The function generates a tweet-like response, considering feedback from other users and 
-    excluding emojis and hashtags.
-
-    :param prompt: List of strings, where each string format is "user: message".
-    :param model: Model name to use for generating the response.
-    :param prompt_addition: Optional; Specifies an additional role, defaults to 'ari' if not provided.
-    :return: A lowercase string representing the AI-generated text.
-    """
-    role = prompt_addition if prompt_addition else 'ari'
-
-    # Initial prompt setup, focusing on breezyexcursion's comments.
-    prompt_container = [{
-        "role": "system",
-        "content": "Summarize user breezyexcursion thoughts into a tweet, trying to use the same tone as breezyexcursion himself. Consider feedback from other users as well. No emojis, no hashtags. If there are multiple subjects, focus on what relates to breezy's comments."
-    }]
-
-    # Parse each message and determine its role based on the user.
-    for message in prompt:
-        user, message_text = message.split(':', 1)  # Split once at the first colon.
-        role = 'assistant' if user == 'ari' else 'user'
-        prompt_container.append({"role": role, "content": message_text})
-
-    print(prompt_container)
-
-    # Generate completion with the model.
-    response = client.chat.completions.create(
-        model=model,
-        max_tokens=800,
-        temperature=0.8,
-        messages=prompt_container
-    )
-
-    print(response)
-    generated_text = response.choices[0].message.content.strip().lower()
-
-    return generated_text
 
 async def ai_experimental(prompt, gmodel="gpt-3.5-turbo-0125", prompt_addition=False):
 

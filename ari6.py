@@ -23,15 +23,8 @@ tweetcontainer = []
 time_container = []
 spanishmode = False
 
-breezagg = False
-breezagg_window = 90
-breezagg_lastmsg = []
-breezagg_container = []
 agg_gpt_model = 'gpt-4-0125-preview'
-donotpost = True
-processing_message = False
 lasttweet = ''
-gptagg = False
 claude = False
 dev_mode = False
 trivia_answer = ''
@@ -134,119 +127,13 @@ async def on_message(message):
             await message.channel.send('main disabled')
 
     #breez aggregation
-    global breezagg
-    global breezagg_window
-    global breezagg_container
-    global breezagg_lastmsg
-    global agg_gpt_model
-    global donotpost
-    global processing_message
     global lasttweet
-    global gptagg
 
-    #toggle gptagg
-    if str(message.content).startswith('!gptagg'):
-        gptagg = not gptagg
-        await message.channel.send(f'gptagg is now {gptagg}')
-
-    #toggle donotpost
-    if str(message.content).startswith('!donotpost'):
-        donotpost = not donotpost
-        await message.channel.send(f'donotpost is now {donotpost}')
 
     #toggle claude
     if str(message.content).startswith('!claude'):
         claude = not claude
         await message.channel.send(f'claude is now {claude}')
-
-    #if sender is breezyexcursion, set breezagg to True
-    if str(message.author) == 'breezyexcursion':
-        print('breez posted, aggregating messages...')
-        print(f'current time: {datetime.datetime.now()}')
-        print(f'window will expire at: {datetime.datetime.now() + datetime.timedelta(seconds=breezagg_window)}')
-        breezagg = True
-
-    #if breezagg is false, add most recent message to breezagg_container but clear others
-    if not breezagg:
-        breezagg_container = []
-        breezagg_lastmsg = []
-        breezagg_container.append(f'{message.author.name}: {message.content}')
-        breezagg_lastmsg.append(datetime.datetime.now())
-
-    if breezagg:
-        #add messages from anyone into breezagg_container, with their name 
-        #do not add if message starts with !
-        if not str(message.content).startswith('!'):
-            breezagg_container.append(f'{message.author.name}: {message.content}')
-            #add timestamp to breezagg_lastmsg
-            breezagg_lastmsg.append(datetime.datetime.now())
-        #if the last message is older than breezagg_window seconds, set breezagg to False
-        if (datetime.datetime.now() - breezagg_lastmsg[0]).total_seconds() > breezagg_window:
-            #breezagg_prompt = 'summarize user breezyexcursion thoughts into a tweet, trying to use the same tone as breezyexcursion himself. you can consider feedback from other users as well.'
-
-            # print the contents of breezagg_container
-            print(breezagg_container)
-            #clear breezagg_container
-            breezagg_container = []
-            breezagg_lastmsg = []
-            #set breezagg to False
-            breezagg = False
-
-        #manual control, !summary
-        if str(message.content) == '!summary':
-            print('debug: manual summary requested')
-            #delete request message
-            await message.delete()
-            aggmsg = await sentience.ai_breezagg(breezagg_container, agg_gpt_model)
-            tootlist = aritooter.tootcontrol(aggmsg)
-            cfgchannel = client.get_channel(212681539304030209)
-            for tootmsg in tootlist:
-                await message.channel.send(tootmsg)
-
-            breezagg_container = []
-            breezagg_lastmsg = []
-
-
-        #manual control, just post my messages
-        if str(message.content) == '!postme':
-            print('debug: manual post requested')
-            #delete request message
-            await message.delete()
-            nongptpost = ''
-            #break down breezagg_container into string
-            for msg in breezagg_container:
-                #only if breezyexcursion is the author
-                if 'breezyexcursion' in msg:
-                    #remove breezyexcursion: from msg
-                    msg = msg.replace('breezyexcursion: ','')
-                    nongptpost = nongptpost + msg + '\n'
-                
-            tootlist = aritooter.tootcontrol(nongptpost)
-            cfgchannel = client.get_channel(212681539304030209)
-            for tootmsg in tootlist:
-                await message.channel.send(tootmsg)
-
-            breezagg_container = []
-            breezagg_lastmsg = []
-
-        #manual post all messages not just mine
-        if str(message.content) == '!postall':
-            print('debug: manual post all requested')
-            #delete request message
-            await message.delete()
-            nongptpost = ''
-            #break down breezagg_container into string
-            for msg in breezagg_container:
-                nongptpost = nongptpost + msg + '\n'
-                
-            tootlist = aritooter.tootcontrol(nongptpost)
-            
-            #send to current channel
-            for tootmsg in tootlist:
-                await message.channel.send(tootmsg)
-
-            breezagg_container = []
-            breezagg_lastmsg = []
 
 
     if main_enabled == False:
