@@ -11,7 +11,7 @@ import re
 import random
 import ari_webhooks as wl
 
-ari_version = '8.4.2'
+ari_version = '8.4.3'
 
 emoji_storage = {
     'eheu': '<:eheu:233869216002998272>',
@@ -33,6 +33,7 @@ processing_message = False
 lasttweet = ''
 gptagg = False
 claude = False
+dev_mode = False
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -71,9 +72,22 @@ async def on_message(message):
         return
     
     global main_enabled
+    global dev_mode
     
     l.log(message)
     experimental_container.append(f'{message.author.display_name}: {message.content}')
+
+    #toggle dev mode, include admin check
+    if str(message.content).startswith('!devmode'):
+        if ct.admincheck(str(message.author)):
+            dev_mode = not dev_mode
+            await message.channel.send(f'dev mode is now {dev_mode}')
+        else:
+            await message.channel.send('u cant do that lol')
+
+    #if in dev_mode dont run any of the following code
+    if dev_mode:
+        return
 
     if len(experimental_container) > 10:
         experimental_container.pop(0)

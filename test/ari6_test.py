@@ -8,7 +8,7 @@ import mememgr as mm
 
 class admintests(unittest.TestCase):
     def test_admin_succeed(self):
-        self.assertTrue(ct.admincheck('breezyexcursion#9570'))
+        self.assertTrue(ct.admincheck('breezyexcursion'))
 
     def test_admin(self):
         self.assertFalse(ct.admincheck('peter/chucky/zach'))
@@ -34,7 +34,7 @@ class bwmtests(unittest.TestCase):
     def test_admincontrol_bwm_release(self):
         ct.controlmgr('!bw add pickle','bobby')
         p1 = ct.controlmgr('pickle','bobby')
-        ct.controlmgr('!admin add bobby','breezyexcursion#9570')
+        ct.controlmgr('!admin add bobby','breezyexcursion')
         p2 = ct.controlmgr('!bw add pickle','bobby')
         p3 = ct.controlmgr('pickle','armando')
         p4 = ct.controlmgr('!release','bobby')
