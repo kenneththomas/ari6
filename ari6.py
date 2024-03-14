@@ -323,6 +323,17 @@ async def on_message(message):
             host_question = await sentience.ask_trivia_question(trivia_question)
             await message.channel.send(f'{host_question}')
 
+    '''
+    # if trivia answer has more than one word and a user said one of the words, let them know they got part of it right
+    if trivia_answer != '' and len(trivia_answer.split(' ')) > 1:
+        #if its not the actual answer
+        if not message.content.lower() == trivia_answer.lower():
+            if any(word in message.content.lower() for word in trivia_answer.split(' ')):
+                async with message.channel.typing():
+                    almost = await sentience.trivia_almost(trivia_question,message.content,trivia_answer)
+                    await message.channel.send(f'{almost}')
+    '''
+
     # if message is answer to trivia question, give xp
     if message.content.lower() == trivia_answer.lower():
         # if trivia answer is blank, dont do anything
@@ -358,10 +369,19 @@ async def on_message(message):
         short_uuid = message.content.replace('!savequestion','').strip()
         if short_uuid in l.newquestion:
             question, answer = l.newquestion[short_uuid]
-            l.trivia_questions[question] = answer
+            l.questions_to_save[question] = answer
             await message.channel.send(f'Saved {question} to trivia questions')
         else:
             await message.channel.send(f'{short_uuid} not found')
+
+    #adjust l.BATCH_SIZE with !batch $number
+    if message.content.startswith('!batch'):
+        if ct.admincheck(str(message.author)):
+            new_batch_size = int(message.content.replace('!batch','').strip())
+            l.BATCH_SIZE = new_batch_size
+            await message.channel.send(f'batch size is now {new_batch_size}')
+        else:
+            await message.channel.send('u cant do that lol')
     
 
 @client.event

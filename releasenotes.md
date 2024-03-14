@@ -6,6 +6,8 @@ making a releasenotes file because it is cute. no guarantees that i maintain thi
 - remove the aggregation stuff
 - functionality to add trivia questions
 - save trivia questions
+- allow adjusting of log batching
+- partial trivia answer handling but commented out for now
 
 ## 8.5.1
 - !xp tells you how much xp you have

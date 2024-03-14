@@ -83,6 +83,13 @@ async def congratulate_trivia_winner(winner, question, answer):
     except asyncio.TimeoutError:
         return "obama"
     
+async def trivia_almost(question, wronganswer,correctanswer):
+    almost_prompt = f'You are roleplaying as a funny and creative trivia host. someone just gave a close but incorrect answer {wronganswer}. Let them know they are close!'
+    try:
+        return await asyncio.wait_for(generate_text_gpt_spanish(almost_prompt), timeout=15)
+    except asyncio.TimeoutError:
+        return "obama"
+    
 async def generate_text_with_timeout_gpt(prompt):
     try:
         return await asyncio.wait_for(generate_text_gpt(prompt), timeout=15)

@@ -55,6 +55,7 @@ def flush_to_db():
         c.execute("INSERT OR REPLACE INTO xp VALUES (?,?)", (user, xp))
     #save trivia questions
     for question, answer in questions_to_save.items():
+        print(f'Saving trivia question: {question} {answer}')
         c.execute("INSERT OR REPLACE INTO trivia_questions VALUES (?,?)", (question, answer))
     #reset questions_to_save
     questions_to_save = {}
