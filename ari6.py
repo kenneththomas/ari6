@@ -12,7 +12,7 @@ import random
 import ari_webhooks as wl
 import uuid
 
-ari_version = '8.5.2'
+ari_version = '8.5.3'
 
 emoji_storage = {
     'eheu': '<:eheu:233869216002998272>',
@@ -24,7 +24,6 @@ tweetcontainer = []
 time_container = []
 spanishmode = False
 
-agg_gpt_model = 'gpt-4-0125-preview'
 lasttweet = ''
 claude = False
 dev_mode = False
@@ -127,7 +126,6 @@ async def on_message(message):
             main_enabled = False
             await message.channel.send('main disabled')
 
-    #breez aggregation
     global lasttweet
 
 
@@ -323,24 +321,19 @@ async def on_message(message):
             host_question = await sentience.ask_trivia_question(trivia_question)
             await message.channel.send(f'{host_question}')
 
-    '''
-    # if trivia answer has more than one word and a user said one of the words, let them know they got part of it right
-    if trivia_answer != '' and len(trivia_answer.split(' ')) > 1:
-        #if its not the actual answer
-        if not message.content.lower() == trivia_answer.lower():
-            if any(word in message.content.lower() for word in trivia_answer.split(' ')):
-                async with message.channel.typing():
-                    almost = await sentience.trivia_almost(trivia_question,message.content,trivia_answer)
-                    await message.channel.send(f'{almost}')
-    '''
+
+    # trivia hint
+    if message.content == '!hint':
+        if trivia_answer != '':
+            hint = await sentience.trivia_hint(trivia_question, trivia_answer)
+            await message.channel.send(f'{hint}')
 
     # if message is answer to trivia question, give xp
     if message.content.lower() == trivia_answer.lower():
         # if trivia answer is blank, dont do anything
         if trivia_answer != '':
             trivia_answer = ''
-            l.add_xp_user(str(message.author), 10)
-            #await message.channel.send(f'{message.author} got it right! 10 xp')
+            l.add_xp_user(str(message.author), 3)
             async with message.channel.typing():
                 congratulatory_msg = await sentience.congratulate_trivia_winner(str(message.author),trivia_question,trivia_answer)
                 await message.channel.send(f'{congratulatory_msg}')

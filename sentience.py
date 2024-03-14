@@ -70,23 +70,23 @@ async def spanish_translation(prompt):
         return "obama"
     
 async def ask_trivia_question(question):
-    question_prompt = f'You are roleplaying as a funny and creative trivia host. Add some flavor to ask the following question: {question}'
+    question_prompt = f'You are roleplaying as a funny and creative trivia host. Add some flavor to ask the following question: {question} in less than 4 sentences.'
     try:
-        return await asyncio.wait_for(generate_text_gpt_spanish(question_prompt), timeout=15)
+        return await asyncio.wait_for(trivia_gpt(question_prompt), timeout=15)
     except asyncio.TimeoutError:
         return "obama"
     
 async def congratulate_trivia_winner(winner, question, answer):
     congrats_prompt = f'You are roleplaying as a funny and creative trivia host. Add some flavor to succinctly congratulate {winner} for answering the question "{question}" with "{answer}"'
     try:
-        return await asyncio.wait_for(generate_text_gpt_spanish(congrats_prompt), timeout=15)
+        return await asyncio.wait_for(trivia_gpt(congrats_prompt), timeout=15)
     except asyncio.TimeoutError:
         return "obama"
     
-async def trivia_almost(question, wronganswer,correctanswer):
-    almost_prompt = f'You are roleplaying as a funny and creative trivia host. someone just gave a close but incorrect answer {wronganswer}. Let them know they are close!'
+async def trivia_hint(question, answer):
+    almost_prompt = f'give a humorous hint to to the question "{question}" without revealing the answer'
     try:
-        return await asyncio.wait_for(generate_text_gpt_spanish(almost_prompt), timeout=15)
+        return await asyncio.wait_for(trivia_gpt(almost_prompt), timeout=15)
     except asyncio.TimeoutError:
         return "obama"
     
@@ -147,6 +147,21 @@ async def generate_text_gpt_spanish(prompt):
 
     response = client.chat.completions.create(model="gpt-3.5-turbo-0125",
     max_tokens=1200,
+    temperature=.8,
+    messages = full_prompt)
+
+    generated_text = response.choices[0].message.content.strip().lower()
+
+    return generated_text
+
+async def trivia_gpt(prompt,trivia_model='gpt-4-0125-preview'):
+
+    full_prompt = [
+        {"role": "user", "content": f"{prompt}"}
+        ]
+
+    response = client.chat.completions.create(model=trivia_model,
+    max_tokens=150,
     temperature=.8,
     messages = full_prompt)
 

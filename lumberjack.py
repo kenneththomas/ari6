@@ -81,6 +81,10 @@ def log(msg):
     newlog = f'[{timestamp}] {sender}: {message}'
     print(newlog)
     
+    # no further processing on bot commands
+    if message.startswith('!'):
+        return
+
     # Add to batch buffer
     batch_buffer.append((sender, channel, timestamp, date, hour, message))
 
