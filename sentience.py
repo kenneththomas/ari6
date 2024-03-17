@@ -97,12 +97,12 @@ async def generate_text_with_timeout_gpt(prompt):
         return "obama"
     
 #basic gpt
-async def generate_text_gpt(prompt):
+async def generate_text_gpt(prompt,sysprompt='you are Ari, you are posting in a discord channel. you will respond with short informal messages. you will not refer to yourself as an AI.'):
 
     prompt = prompt.replace('!gpt','')
 
     full_prompt = [
-        {"role": "system", "content": "you are Ari, you are posting in a discord channel. you will respond with short informal messages. you will not refer to yourself as an AI."},
+        {"role": "system", "content": f"{sysprompt}"},
         {"role": "user", "content": f"{prompt}"}
         ]
 

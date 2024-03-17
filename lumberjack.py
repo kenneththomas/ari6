@@ -129,6 +129,7 @@ def log(msg):
     
     # Check if it's time to flush the buffer
     if len(batch_buffer) >= BATCH_SIZE or (now - last_write_time) >= FLUSH_INTERVAL:
+        print(f'batch_buffer length: {len(batch_buffer)}, time since last write: {now - last_write_time}')
         flush_to_db()
 
 def get_xp_user(user):

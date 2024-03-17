@@ -12,7 +12,7 @@ import random
 import ari_webhooks as wl
 import uuid
 
-ari_version = '8.5.5-hotfix-xp'
+ari_version = '8.5.6'
 
 emoji_storage = {
     'eheu': '<:eheu:233869216002998272>',
@@ -24,6 +24,7 @@ tweetcontainer = []
 time_container = []
 translation_enabled = False
 main_enabled = False
+zoomerposting = False
 
 lasttweet = ''
 claude = False
@@ -58,6 +59,7 @@ async def on_message(message):
     global claude
     global lastmsg
     global trivia_answer, trivia_question
+    global zoomerposting
     #ignore webhooks
     if message.webhook_id:
         return
@@ -368,7 +370,31 @@ async def on_message(message):
                 await message.channel.send('Invalid batch size')
         else:
             await message.channel.send('u cant do that lol')
-    
+
+    #toggle zoomerposting
+    if message.content == '!zoomerposting':
+        zoomerposting = not zoomerposting
+        await message.channel.send(f'zoomerposting is now {zoomerposting}')
+
+    #zoomerposting
+    if zoomerposting:
+        '''
+        catchannel = client.get_channel(205903143471415296)
+        webhooks = await catchannel.webhooks()
+        ari_webhook = next((webhook for webhook in webhooks if webhook.name == 'ari'), None)
+        if not ari_webhook:
+            ari_webhook = await catchannel.create_webhook(name='ari')
+        '''
+        barcochannel =  client.get_channel(205930498034237451)
+        webhooks = await barcochannel.webhooks()
+        barco_webhook = next((webhook for webhook in webhooks if webhook.name == 'barco'), None)
+        if not barco_webhook:
+            barco_webhook = await barcochannel.create_webhook(name='barco')
+        if mememgr.chance(8):
+            async with message.channel.typing():
+                zoomerpost = await sentience.generate_text_gpt(f'{message.content}','respond to messages very briefly in the style of a zoomer male in disbelief, finishing with a skull emoji')
+                #post as lamelo ball webhook
+                await barco_webhook.send(zoomerpost, username='lamelo ball', avatar_url=wl.webhook_library['lamelo ball'][1])
 
 @client.event
 async def on_reaction_add(reaction, user):

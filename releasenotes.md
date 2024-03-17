@@ -1,6 +1,13 @@
 # releasenotes
 making a releasenotes file because it is cute. no guarantees that i maintain this at all. use commit history lol
 
+## 8.5.6
+- additional logging around flush to db
+- "zoomerposting" functionality where bot will occasionally respond with short messages including a skull emoji
+- add lamelo ball webhook
+- generic gpt function has a default prompt in the function now but it can be overridden
+- zoomerposting uses lamelo ball webhook
+
 ## 8.5.5-hotfix-xp
 - fix keyerror for new users xp
 
