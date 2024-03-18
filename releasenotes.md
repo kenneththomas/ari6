@@ -1,6 +1,11 @@
 # releasenotes
 making a releasenotes file because it is cute. no guarantees that i maintain this at all. use commit history lol
 
+## 8.5.7
+- get xp works for users other than self
+- do not translate from config channel
+- get nba scores with !ctespn (this will expand to more later)
+
 ## 8.5.6
 - additional logging around flush to db
 - "zoomerposting" functionality where bot will occasionally respond with short messages including a skull emoji

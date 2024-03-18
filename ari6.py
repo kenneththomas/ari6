@@ -11,8 +11,9 @@ import re
 import random
 import ari_webhooks as wl
 import uuid
+import ctespn
 
-ari_version = '8.5.6'
+ari_version = '8.5.7'
 
 emoji_storage = {
     'eheu': '<:eheu:233869216002998272>',
@@ -168,7 +169,7 @@ async def on_message(message):
 
     global translation_enabled
     if translation_enabled:
-        if ct.should_i_translate(message.content):
+        if ct.should_i_translate(message.content,message.channel.id):
                 spanish = await sentience.gpt_translation(message.content)
                 #people complained about being double pinged by the bot so remove the ping, regex away (<@142508812073566208>)
                 spanish = re.sub(r'<@\d+>','',str(spanish))
@@ -299,10 +300,19 @@ async def on_message(message):
 
     # tell me how much xp i have call get_xp_user
     if message.content.startswith('!xp'):
-        xp = l.get_xp_user(str(message.author))
-        # if xp is not None, send message with xp
-        if xp:
-            await message.channel.send(f'{message.author} has {xp} xp')
+        #get xp of self if no user is mentioned
+        if len(message.content.split(' ')) == 1:
+            xp = l.get_xp_user(str(message.author))
+            # if xp is not None, send message with xp
+            if xp:
+                await message.channel.send(f'{message.author} has {xp} xp')
+        else:
+            #get xp of user mentioned
+            user = message.content.split(' ')[1]
+            xp = l.get_xp_user(user)
+            # if xp is not None, send message with xp
+            if xp:
+                await message.channel.send(f'{user} has {xp} xp')
 
 
     if message.content == '!trivia':
@@ -378,13 +388,6 @@ async def on_message(message):
 
     #zoomerposting
     if zoomerposting:
-        '''
-        catchannel = client.get_channel(205903143471415296)
-        webhooks = await catchannel.webhooks()
-        ari_webhook = next((webhook for webhook in webhooks if webhook.name == 'ari'), None)
-        if not ari_webhook:
-            ari_webhook = await catchannel.create_webhook(name='ari')
-        '''
         barcochannel =  client.get_channel(205930498034237451)
         webhooks = await barcochannel.webhooks()
         barco_webhook = next((webhook for webhook in webhooks if webhook.name == 'barco'), None)
@@ -395,6 +398,13 @@ async def on_message(message):
                 zoomerpost = await sentience.generate_text_gpt(f'{message.content}','respond to messages very briefly in the style of a zoomer male in disbelief, finishing with a skull emoji')
                 #post as lamelo ball webhook
                 await barco_webhook.send(zoomerpost, username='lamelo ball', avatar_url=wl.webhook_library['lamelo ball'][1])
+
+    #if message is !ctespn run scoreboard_request and sb_parser
+    if message.content == '!ctespn':
+        data = ctespn.scoreboard_request()
+        ctespn.sb_parser(data)
+        for game in ctespn.storage.values():
+            await message.channel.send(ctespn.info_printer(game))
 
 @client.event
 async def on_reaction_add(reaction, user):

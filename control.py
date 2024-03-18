@@ -93,8 +93,9 @@ def controlmgr(message, author):
 
     return bwm
 
-def should_i_translate(msg_text):
-
+def should_i_translate(msg_text,channelid):
+    if channelid == '212681539304030209':
+        return False
     if len(msg_text) < 4:
         return False
     elif 'http' in msg_text:
