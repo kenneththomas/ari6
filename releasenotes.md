@@ -1,6 +1,11 @@
 # releasenotes
 making a releasenotes file because it is cute. no guarantees that i maintain this at all. use commit history lol
 
+## 8.5.8-beta
+- fix do not translate from config channel
+- tatsu bot commands no longer award xp (ex: t!weather)
+- reverse translation (beta feature)
+
 ## 8.5.7
 - get xp works for users other than self
 - do not translate from config channel

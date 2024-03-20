@@ -94,7 +94,9 @@ def controlmgr(message, author):
     return bwm
 
 def should_i_translate(msg_text,channelid):
-    if channelid == '212681539304030209':
+    ignorechannels = ['config','cat']
+    if str(channelid) in ignorechannels:
+        print('debug successful ignore')
         return False
     if len(msg_text) < 4:
         return False

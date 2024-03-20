@@ -99,7 +99,7 @@ def log(msg):
     print(newlog)
     
     # no further processing on bot commands
-    if message.startswith('!'):
+    if message.startswith('!') or message.startswith('t!'):
         return
     
     # ignore config channel

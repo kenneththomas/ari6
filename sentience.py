@@ -62,8 +62,10 @@ async def generate_text(prompt,user_id,personality_context=personality.malik):
 
     
   
-async def gpt_translation(prompt):
+async def gpt_translation(prompt, reverse=False):
     language_prompt = f'Translate chatroom message from english to {translate_language}, keep similar grammar/formality:'
+    if reverse:
+        language_prompt = f'Translate chatroom message from {translate_language} to english, keep similar grammar/formality:'
     try:
         return await asyncio.wait_for(generate_text_gpt_translation(language_prompt + '\n' +  prompt), timeout=15)
     except asyncio.TimeoutError:

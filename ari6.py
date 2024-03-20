@@ -13,7 +13,7 @@ import ari_webhooks as wl
 import uuid
 import ctespn
 
-ari_version = '8.5.7'
+ari_version = '8.5.8-beta'
 
 emoji_storage = {
     'eheu': '<:eheu:233869216002998272>',
@@ -169,7 +169,7 @@ async def on_message(message):
 
     global translation_enabled
     if translation_enabled:
-        if ct.should_i_translate(message.content,message.channel.id):
+        if ct.should_i_translate(message.content,message.channel):
                 spanish = await sentience.gpt_translation(message.content)
                 #people complained about being double pinged by the bot so remove the ping, regex away (<@142508812073566208>)
                 spanish = re.sub(r'<@\d+>','',str(spanish))
@@ -183,6 +183,30 @@ async def on_message(message):
                     spanish_webhook = await catchannel.create_webhook(name='spanish')
 
                 await spanish_webhook.send(spanish, username=message.author.name, avatar_url=message.author.avatar)
+
+        #reverse translation. if there is a post in the spanish channel, translate it back to english
+        catid = 1122326983846678638
+        if message.channel.id == catid:
+            if message.content.startswith('xt'):
+                #remove xt from start of message only
+                message.content = message.content[2:]
+                english = await sentience.gpt_translation(message.content, reverse=True)
+                gatochannel = client.get_channel(205903143471415296)
+                webhooks = await gatochannel.webhooks()
+                english_webhook = next((webhook for webhook in webhooks if webhook.name == 'english'), None)
+                if not english_webhook:
+                    english_webhook = await gatochannel.create_webhook(name='english')
+                await english_webhook.send(english, username=message.author.name, avatar_url=message.author.avatar)
+            else:
+                cathelp = await sentience.generate_text_gpt(f'{message.content}','you are a helpful spanish teacher that is helpful with grammar and vocabulary. if you see words in quotations, translate from english to spanish or vice versa.')
+                catchannel = client.get_channel(1122326983846678638)
+                webhooks = await catchannel.webhooks()
+                spanish_webhook = next((webhook for webhook in webhooks if webhook.name == 'spanish'), None)
+                if not spanish_webhook:
+                    spanish_webhook = await catchannel.create_webhook(name='spanish')
+                await spanish_webhook.send(cathelp, username='luis', avatar_url='https://res.cloudinary.com/dr2rzyu6p/image/upload/v1710891819/noidfrqtvvxxqkme94vg.jpg')
+
+
 
     #toggle translation
     if str(message.content).startswith('!translation'):
