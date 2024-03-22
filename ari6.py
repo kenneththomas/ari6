@@ -13,7 +13,7 @@ import ari_webhooks as wl
 import uuid
 import ctespn
 
-ari_version = '8.5.8-beta'
+ari_version = '8.5.8'
 
 emoji_storage = {
     'eheu': '<:eheu:233869216002998272>',
@@ -185,10 +185,10 @@ async def on_message(message):
                 await spanish_webhook.send(spanish, username=message.author.name, avatar_url=message.author.avatar)
 
         #reverse translation. if there is a post in the spanish channel, translate it back to english
-        catid = 1122326983846678638
-        if message.channel.id == catid:
-            if message.content.startswith('xt'):
-                #remove xt from start of message only
+
+        catchannel = client.get_channel(1122326983846678638)
+        if message.channel == catchannel:
+            if message.content.startswith('xx'):
                 message.content = message.content[2:]
                 english = await sentience.gpt_translation(message.content, reverse=True)
                 gatochannel = client.get_channel(205903143471415296)
@@ -199,7 +199,6 @@ async def on_message(message):
                 await english_webhook.send(english, username=message.author.name, avatar_url=message.author.avatar)
             else:
                 cathelp = await sentience.generate_text_gpt(f'{message.content}','you are a helpful spanish teacher that is helpful with grammar and vocabulary. if you see words in quotations, translate from english to spanish or vice versa.')
-                catchannel = client.get_channel(1122326983846678638)
                 webhooks = await catchannel.webhooks()
                 spanish_webhook = next((webhook for webhook in webhooks if webhook.name == 'spanish'), None)
                 if not spanish_webhook:
@@ -441,5 +440,9 @@ async def on_reaction_add(reaction, user):
     if reaction.emoji == '🇺':
         #TODO: i noticed here if people are spamming the u emoji it will try to do this multiple times and fail/rate limit
         await reaction.message.add_reaction('🇺')
+
+@client.event
+async def on_message_delete(message):
+    print(f'[{datetime.datetime.now()}] {message.author.name} deleted message: {message.content}')
 
 client.run(maricon.bottoken)

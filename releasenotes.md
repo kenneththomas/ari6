@@ -1,6 +1,11 @@
 # releasenotes
 making a releasenotes file because it is cute. no guarantees that i maintain this at all. use commit history lol
 
+## 8.5.8
+- cleanup reverse translation a little
+- change language crosspost shortcut from xt to xx
+- log deleted messages to console
+
 ## 8.5.8-beta
 - fix do not translate from config channel
 - tatsu bot commands no longer award xp (ex: t!weather)
