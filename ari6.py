@@ -14,7 +14,18 @@ import uuid
 import ctespn
 import cloudhouse
 
-ari_version = '8.5.8'
+ari_version = '8.6-alpha'
+
+#object to store queued messages that will be sent in the future, contains message, which channel to send it to, when to send it, webhook username and picture
+class QueuedMessage:
+    def __init__(self, message, channel, when, username, avatar):
+        self.message = message
+        self.channel = channel
+        self.when = when
+        self.username = username
+        self.avatar = avatar
+
+messagequeue = []
 
 emoji_storage = {
     'eheu': '<:eheu:233869216002998272>',
@@ -434,7 +445,8 @@ async def on_message(message):
     cloudchannel = client.get_channel(1163165256093286412)
     if message.channel == cloudchannel:
         print('cloudhouse channel')
-        cloudhouse_message = await cloudhouse.cloudhouse(message.author.name, message.content)
+        async with message.channel.typing():
+            cloudhouse_message = await cloudhouse.cloudhouse(message.author.name, message.content)
         #this returns {'webhook':webhook,'message':message}
         webhook = cloudhouse_message['webhook']
         cmessage = cloudhouse_message['message']
@@ -444,8 +456,27 @@ async def on_message(message):
         if not cloudhouse_webhook:
             cloudhouse_webhook = await cloudchannel.create_webhook(name='cloudhouse')
 
+        # used below to test message queue, it works. can remove this comment when i have actually implemented this somewhere.
+        #messagequeue.append(QueuedMessage('this is a queued message',cloudchannel,datetime.datetime.now() + datetime.timedelta(seconds=10),webhook[0],webhook[1]))
+
         await cloudhouse_webhook.send(cmessage, username=webhook[0], avatar_url=webhook[1])
 
+    # queued message handler
+    for queuedmsg in messagequeue:
+        print(f'checking queued message: {queuedmsg.message} {queuedmsg.when} current time: {datetime.datetime.now()}')
+        if datetime.datetime.now() > queuedmsg.when:
+            print(f'queue time {queuedmsg.when} reached, sending message: {queuedmsg.message}')
+            #if queued message is in cloudhouse channel, send as cloudhouse webhook
+            if queuedmsg.channel == cloudchannel:
+                webhooks = await message.channel.webhooks()
+                cloudhouse_webhook = next((webhook for webhook in webhooks if webhook.name == 'cloudhouse'), None)
+                if not cloudhouse_webhook:
+                    cloudhouse_webhook = await message.channel.create_webhook(name='cloudhouse')
+                await cloudhouse_webhook.send(queuedmsg.message, username=queuedmsg.username, avatar_url=queuedmsg.avatar)
+            else:
+                await message.channel.send(queuedmsg.message)
+
+            messagequeue.remove(queuedmsg)
 
 
 

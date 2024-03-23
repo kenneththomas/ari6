@@ -1,8 +1,10 @@
 # releasenotes
 making a releasenotes file because it is cute. no guarantees that i maintain this at all. use commit history lol
 
-## 8.5.9
+## 8.6-alpha
 - emojiserver hookup
+- queued messages handling
+- allow changing model in claude/gpt sentience functions
 
 ## 8.5.8
 - cleanup reverse translation a little

@@ -99,7 +99,7 @@ async def generate_text_with_timeout_gpt(prompt):
         return "obama"
     
 #basic gpt
-async def generate_text_gpt(prompt,sysprompt='you are Ari, you are posting in a discord channel. you will respond with short informal messages. you will not refer to yourself as an AI.'):
+async def generate_text_gpt(prompt,sysprompt='you are Ari, you are posting in a discord channel. you will respond with short informal messages. you will not refer to yourself as an AI.',gmodel='gpt-3.5-turbo-0125'):
 
     prompt = prompt.replace('!gpt','')
 
@@ -108,7 +108,7 @@ async def generate_text_gpt(prompt,sysprompt='you are Ari, you are posting in a 
         {"role": "user", "content": f"{prompt}"}
         ]
 
-    response = client.chat.completions.create(model="gpt-3.5-turbo-0125",
+    response = client.chat.completions.create(model=gmodel,
     max_tokens=1200,
     temperature=.8,
     messages = full_prompt)
