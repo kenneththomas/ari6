@@ -5,6 +5,9 @@ making a releasenotes file because it is cute. no guarantees that i maintain thi
 - emojiserver hookup
 - queued messages handling
 - allow changing model in claude/gpt sentience functions
+- fix emojiserver history
+- emojiserver force subject
+- delete message from sender if forcesubject was used
 
 ## 8.5.8
 - cleanup reverse translation a little

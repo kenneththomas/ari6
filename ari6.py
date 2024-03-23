@@ -443,6 +443,10 @@ async def on_message(message):
 
     #cloudhouse channel 1163165256093286412
     cloudchannel = client.get_channel(1163165256093286412)
+    #if message started with && delete it
+    if message.content.startswith('&&'):
+        print('used forcesubject - deleting message!')
+        await message.delete()
     if message.channel == cloudchannel:
         print('cloudhouse channel')
         async with message.channel.typing():
@@ -455,6 +459,8 @@ async def on_message(message):
         cloudhouse_webhook = next((webhook for webhook in webhooks if webhook.name == 'cloudhouse'), None)
         if not cloudhouse_webhook:
             cloudhouse_webhook = await cloudchannel.create_webhook(name='cloudhouse')
+
+
 
         # used below to test message queue, it works. can remove this comment when i have actually implemented this somewhere.
         #messagequeue.append(QueuedMessage('this is a queued message',cloudchannel,datetime.datetime.now() + datetime.timedelta(seconds=10),webhook[0],webhook[1]))
