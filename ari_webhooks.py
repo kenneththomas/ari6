@@ -25,4 +25,5 @@ webhook_library = {
     'dasha' : ('nobody_stop_me','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1703086050/outream/dwutolw1i4vzitqkn6rx.jpg','Edgy podcast host Dasha Nekrasova'),
     'kamala' : ('kamala','https://res.cloudinary.com/dr2rzyu6p/image/upload/c_pad,b_auto:predominant,fl_preserve_transparency/v1710424416/kamala_hpghjo.jpg','Kamala Harris, Vice President of the United States'),
     'lamelo ball' : ('lamelo ball','https://cdn.discordapp.com/attachments/205930498034237451/1219068552288669827/breezyexcursion_photo_of_lamelo_ball_f614a2fa-f40e-4224-9e9d-190f97da10b7.png','Lamelo Ball, NBA player'),
+    'luis' : ('luis','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1710891819/noidfrqtvvxxqkme94vg.jpg','friendly puerto rican that works as a spanish teacher and translator'),
 }

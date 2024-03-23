@@ -1,6 +1,9 @@
 # releasenotes
 making a releasenotes file because it is cute. no guarantees that i maintain this at all. use commit history lol
 
+## 8.5.9
+- emojiserver hookup
+
 ## 8.5.8
 - cleanup reverse translation a little
 - change language crosspost shortcut from xt to xx

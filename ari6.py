@@ -12,6 +12,7 @@ import random
 import ari_webhooks as wl
 import uuid
 import ctespn
+import cloudhouse
 
 ari_version = '8.5.8'
 
@@ -428,6 +429,25 @@ async def on_message(message):
         ctespn.sb_parser(data)
         for game in ctespn.storage.values():
             await message.channel.send(ctespn.info_printer(game))
+
+    #cloudhouse channel 1163165256093286412
+    cloudchannel = client.get_channel(1163165256093286412)
+    if message.channel == cloudchannel:
+        print('cloudhouse channel')
+        cloudhouse_message = await cloudhouse.cloudhouse(message.author.name, message.content)
+        #this returns {'webhook':webhook,'message':message}
+        webhook = cloudhouse_message['webhook']
+        cmessage = cloudhouse_message['message']
+        #check if webhook exists if not create it
+        webhooks = await cloudchannel.webhooks()
+        cloudhouse_webhook = next((webhook for webhook in webhooks if webhook.name == 'cloudhouse'), None)
+        if not cloudhouse_webhook:
+            cloudhouse_webhook = await cloudchannel.create_webhook(name='cloudhouse')
+
+        await cloudhouse_webhook.send(cmessage, username=webhook[0], avatar_url=webhook[1])
+
+
+
 
 @client.event
 async def on_reaction_add(reaction, user):

@@ -273,3 +273,22 @@ async def claudex(prompt, model='claude-3-opus-20240229', prompt_addition=None):
 
     return text_content
 
+#cloudhouse claude prompt
+async def ch_claudex(prompt, recentmessages, model='claude-3-opus-20240229'):
+    #call claude with prompt and recent messages
+
+    rm = [{"role": "user", "content": f'{recentmessages}'}]
+
+    response = claude.messages.create(
+        model=model,
+        max_tokens=800,
+        messages=rm,
+        system=f"{prompt}"
+    )
+
+    print(response)
+    text_content = ''.join(block.text for block in response.content)
+    print(text_content)
+
+    return text_content
+
