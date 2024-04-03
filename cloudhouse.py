@@ -84,10 +84,19 @@ async def cloudhouse(user, message, replyto=None):
     return {'webhook':webhook,'message':chresponse}
 
 async def cloudhouse_single(user, message, replyto=None):
-    bestmodel = False
-    forcesubject = None
-    
+    forcesubject = False
     friend = personality.singlechar
+
+
+    # if !setcontext, set forcesubject
+    if message.startswith('!setcontext'):
+        #add all but !setcontext to forcesubject
+        forcesubject = message[11:]
+        print(f'forcesubject: {forcesubject}')
+
+        return {'webhook':'','message':'forcesubject set'}
+
+
 
     #add to chathistory
     #get datetime
@@ -119,6 +128,10 @@ async def cloudhouse_single(user, message, replyto=None):
     cmodel = 'claude-3-opus-20240229'
     print('chosen claudemodel:', cmodel)
     chresponse = await sentience.ch_claudex(prompt,chathistory,cmodel)
+
+    #if first character is a *, regex everything until the next * and remove it
+    if re.match(r'^\*',chresponse):
+        chresponse = re.sub(r'^\*.*?\*', '', chresponse)
 
     #sometimes this responds with the username, if there is a : in the first word, regex to remove the first word
     if re.match(r'^\w+:',chresponse):

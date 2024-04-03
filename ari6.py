@@ -464,8 +464,10 @@ async def on_message(message):
 
         # used below to test message queue, it works. can remove this comment when i have actually implemented this somewhere.
         #messagequeue.append(QueuedMessage('this is a queued message',cloudchannel,datetime.datetime.now() + datetime.timedelta(seconds=10),webhook[0],webhook[1]))
-
-        await cloudhouse_webhook.send(cmessage, username=webhook[0], avatar_url=webhook[1])
+        try:
+            await cloudhouse_webhook.send(cmessage, username=webhook[0], avatar_url=webhook[1])
+        except IndexError:
+            await cloudchannel.send(cmessage)
 
     # queued message handler
     for queuedmsg in messagequeue:

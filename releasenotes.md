@@ -4,6 +4,8 @@ making a releasenotes file because it is cute. no guarantees that i maintain thi
 ## 8.6-alpha.1
 - cloudhouse single
 - track date in cloudhouse single
+- remove stupid claude action sht
+- error handling if cloud doesnt return msg
 
 
 ## 8.6-alpha
