@@ -3,6 +3,7 @@ import random
 import sentience
 import personality
 import re
+import datetime
 
 #object that we return, has webhook and message
 
@@ -81,4 +82,50 @@ async def cloudhouse(user, message, replyto=None):
     chathistory.append(f'{username}: {chresponse}')
 
     return {'webhook':webhook,'message':chresponse}
+
+async def cloudhouse_single(user, message, replyto=None):
+    bestmodel = False
+    forcesubject = None
+    
+    friend = personality.singlechar
+
+    #add to chathistory
+    #get datetime
+    now = datetime.datetime.now()
+    timestamp = now.strftime('%Y-%m-%d %H:%M:%S')
+    chathistory.append(f'[{timestamp}] {user}: {message}')
+    print(f'debug chathistory: {chathistory}')
+
+    # get webhook from either ari_webhooks or personality.pwhl
+    all_webhooks = {**ari_webhooks.webhook_library, **personality.pwhl}
+    try:
+        webhook = all_webhooks[friend]
+    except KeyError:
+        # somebody tried to call a friend that doesn't exist :(
+        friend = random.choice(members)
+        webhook = all_webhooks[friend]
+    username = webhook[0]
+    #debug
+    try:
+        description = webhook[2]
+    except IndexError:
+        print(f'error getting description for {username}')
+        description = ''
+    prompt = f'{personality.cloudhouse_prompt2} information about your character and personality, {username} : {description}'
+    if forcesubject:
+        prompt = f'{prompt} subject of the message: {forcesubject}'
+    print(prompt)
+    # get message
+    cmodel = 'claude-3-opus-20240229'
+    print('chosen claudemodel:', cmodel)
+    chresponse = await sentience.ch_claudex(prompt,chathistory,cmodel)
+
+    #sometimes this responds with the username, if there is a : in the first word, regex to remove the first word
+    if re.match(r'^\w+:',chresponse):
+        chresponse = chresponse.split(':',1)[1]
+
+    chathistory.append(f'{username}: {chresponse}')
+
+    return {'webhook':webhook,'message':chresponse}
+
 

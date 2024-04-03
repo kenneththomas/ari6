@@ -1,6 +1,11 @@
 # releasenotes
 making a releasenotes file because it is cute. no guarantees that i maintain this at all. use commit history lol
 
+## 8.6-alpha.1
+- cloudhouse single
+- track date in cloudhouse single
+
+
 ## 8.6-alpha
 - emojiserver hookup
 - queued messages handling

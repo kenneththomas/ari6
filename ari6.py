@@ -450,7 +450,7 @@ async def on_message(message):
     if message.channel == cloudchannel:
         print('cloudhouse channel')
         async with message.channel.typing():
-            cloudhouse_message = await cloudhouse.cloudhouse(message.author.name, message.content)
+            cloudhouse_message = await cloudhouse.cloudhouse_single(message.author.name, message.content)
         #this returns {'webhook':webhook,'message':message}
         webhook = cloudhouse_message['webhook']
         cmessage = cloudhouse_message['message']
