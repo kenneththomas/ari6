@@ -85,6 +85,7 @@ async def cloudhouse(user, message, replyto=None):
 
 async def cloudhouse_single(user, message, replyto=None):
     forcesubject = False
+    skip_history = False
     friend = personality.singlechar
 
 
@@ -95,10 +96,17 @@ async def cloudhouse_single(user, message, replyto=None):
         print(f'forcesubject: {forcesubject}')
 
         return {'webhook':'','message':'forcesubject set'}
+    
+    #!clearhistory to clear chathistory
+    if message.startswith('!clearhistory'):
+        chathistory.clear()
+        return {'webhook':'','message':'chathistory cleared'}
+    
+    #if message starts with ! in general, skip adding to chathistory
+    if message.startswith('!'):
+        print('skipping history')
+        skip_history = True
 
-
-
-    #add to chathistory
     #get datetime
     now = datetime.datetime.now()
     timestamp = now.strftime('%Y-%m-%d %H:%M:%S')

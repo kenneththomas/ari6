@@ -14,7 +14,7 @@ import uuid
 import ctespn
 import cloudhouse
 
-ari_version = '8.6-alpha'
+ari_version = '8.6-alpha.2'
 
 #object to store queued messages that will be sent in the future, contains message, which channel to send it to, when to send it, webhook username and picture
 class QueuedMessage:
