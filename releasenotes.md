@@ -5,6 +5,9 @@ making a releasenotes file because it is cute. no guarantees that i maintain thi
 - old
 - spotify now playing
 - post album art as separate message so it doesnt show the link to the picture
+- give 1xp for listening to music
+- moved xp flush from 15 to 25
+- print startup time (its about 2.5 seconds on my dev box rn)
 
 ## 8.6-alpha.2
 - clear history
@@ -14,7 +17,6 @@ making a releasenotes file because it is cute. no guarantees that i maintain thi
 - track date in cloudhouse single
 - remove stupid claude action sht
 - error handling if cloud doesnt return msg
-
 
 ## 8.6-alpha
 - emojiserver hookup

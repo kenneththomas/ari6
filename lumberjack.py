@@ -4,7 +4,7 @@ import os
 import sqlite3
 
 # Configuration for batching
-BATCH_SIZE = 15  # Number of messages to accumulate before writing to the database
+BATCH_SIZE = 25  # Number of messages to accumulate before writing to the database
 FLUSH_INTERVAL = timedelta(minutes=5)  # Time to wait before flushing to the database
 
 # Initialize

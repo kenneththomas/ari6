@@ -72,6 +72,11 @@ starttime = datetime.datetime.now()
 async def on_ready():
     print(f'We have logged in as {client.user}')
     mememgr.meme_loader()
+    # find startup time by subtracting current time from starttime
+    rdytime = datetime.datetime.now()
+    start_duration = rdytime - starttime
+    print(f'Bot started in {start_duration}')
+
 
 @client.event
 async def on_message(message):
@@ -167,10 +172,11 @@ async def on_message(message):
                
                     npstring = f'NP: {activity.artist} - {activity.title}'
                     albumart = activity.album_cover_url
-                    print(npstring)
 
                     if message.author not in songlibrary:
+                        print(npstring)
                         songlibrary[message.author] = activity
+                        l.add_xp_user(str(message.author), 1)
                         await barco_webhook.send(npstring, username=message.author.name, avatar_url=message.author.avatar)
                         await barco_webhook.send(albumart, username=message.author.name, avatar_url=message.author.avatar)
                     else:
@@ -178,6 +184,8 @@ async def on_message(message):
                             print('repeat song')
                         else:
                             songlibrary[message.author] = activity
+                            print(npstring)
+                            l.add_xp_user(str(message.author), 1)
                             await barco_webhook.send(npstring, username=message.author.name, avatar_url=message.author.avatar)
                             await barco_webhook.send(albumart, username=message.author.name, avatar_url=message.author.avatar)
 
