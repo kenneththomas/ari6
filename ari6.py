@@ -14,7 +14,7 @@ import uuid
 import ctespn
 import cloudhouse
 
-ari_version = '8.6-alpha.2'
+ari_version = '8.6-alpha.3'
 
 #object to store queued messages that will be sent in the future, contains message, which channel to send it to, when to send it, webhook username and picture
 class QueuedMessage:
@@ -57,6 +57,8 @@ lmcontainer.append(lastmsg)
 experimental_container = []
 
 available_languages = ['spanish','french','italian','arabic','chinese','russian','german','korean','greek','japanese','portuguese']
+
+oldoptions = ['old','😴']
 
 
 starttime = datetime.datetime.now()
@@ -288,7 +290,7 @@ async def on_message(message):
         #append to tweetcontainer
         #if it is a duplicate, message.reply with "old"
         if message.content in tweetcontainer:
-            await message.reply('old')
+            await message.reply(random.choice(oldoptions))
         else:
             tweetcontainer.append(message.content)
 
@@ -319,7 +321,7 @@ async def on_message(message):
         #append to tweetcontainer
         #if it is a duplicate, message.reply with "old"
         if message.content in tweetcontainer:
-            await message.reply('old')
+            await message.reply(random.choice(oldoptions))
         else:
             tweetcontainer.append(message.content)
         #embed fixer
@@ -454,6 +456,7 @@ async def on_message(message):
         #this returns {'webhook':webhook,'message':message}
         webhook = cloudhouse_message['webhook']
         cmessage = cloudhouse_message['message']
+
         #check if webhook exists if not create it
         webhooks = await cloudchannel.webhooks()
         cloudhouse_webhook = next((webhook for webhook in webhooks if webhook.name == 'cloudhouse'), None)
