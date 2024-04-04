@@ -14,7 +14,7 @@ import uuid
 import ctespn
 import cloudhouse
 
-ari_version = '8.6'
+ari_version = '8.6.1'
 
 #object to store queued messages that will be sent in the future, contains message, which channel to send it to, when to send it, webhook username and picture
 class QueuedMessage:
@@ -39,6 +39,7 @@ time_container = []
 translation_enabled = False
 main_enabled = False
 zoomerposting = False
+spotify_enable = True
 
 lasttweet = ''
 claude = False
@@ -92,7 +93,7 @@ async def on_message(message):
     if message.author == client.user:
         return
     
-    global main_enabled
+    global main_enabled, spotify_enable
     global dev_mode
     
     l.log(message)
@@ -156,38 +157,44 @@ async def on_message(message):
         claude = not claude
         await message.channel.send(f'claude is now {claude}')
 
+    #toggler for spotify handling
+    if str(message.content).startswith('!spotify'):
+        spotify_enable = not spotify_enable
+        await message.channel.send(f'Spotify Handling is now {spotify_enable}')
+
     #spotify handling
-    if message.author.activities:
-        for activity in message.author.activities:
-            if activity.type == discord.ActivityType.listening:
-                if activity.name == 'Spotify':
+    if spotify_enable:
+        if message.author.activities:
+            for activity in message.author.activities:
+                if activity.type == discord.ActivityType.listening:
+                    if activity.name == 'Spotify':
 
-                    barcochannel =  client.get_channel(205930498034237451)
-                    #webhook check
-                    webhooks = await barcochannel.webhooks()
-                    barco_webhook = next((webhook for webhook in webhooks if webhook.name == 'barco'), None)
-                    if not barco_webhook:
-                        barco_webhook = await barcochannel.create_webhook(name='barco')
+                        barcochannel =  client.get_channel(205930498034237451)
+                        #webhook check
+                        webhooks = await barcochannel.webhooks()
+                        barco_webhook = next((webhook for webhook in webhooks if webhook.name == 'barco'), None)
+                        if not barco_webhook:
+                            barco_webhook = await barcochannel.create_webhook(name='barco')
 
-               
-                    npstring = f'NP: {activity.artist} - {activity.title}'
-                    albumart = activity.album_cover_url
+                
+                        npstring = f'NP: {activity.artist} - {activity.title}'
+                        albumart = activity.album_cover_url
 
-                    if message.author not in songlibrary:
-                        print(npstring)
-                        songlibrary[message.author] = activity
-                        l.add_xp_user(str(message.author), 1)
-                        await barco_webhook.send(npstring, username=message.author.name, avatar_url=message.author.avatar)
-                        await barco_webhook.send(albumart, username=message.author.name, avatar_url=message.author.avatar)
-                    else:
-                        if songlibrary[message.author] == activity:
-                            print('repeat song')
-                        else:
-                            songlibrary[message.author] = activity
+                        if message.author not in songlibrary:
                             print(npstring)
+                            songlibrary[message.author] = activity
                             l.add_xp_user(str(message.author), 1)
                             await barco_webhook.send(npstring, username=message.author.name, avatar_url=message.author.avatar)
                             await barco_webhook.send(albumart, username=message.author.name, avatar_url=message.author.avatar)
+                        else:
+                            if songlibrary[message.author] == activity:
+                                print('repeat song')
+                            else:
+                                songlibrary[message.author] = activity
+                                print(npstring)
+                                l.add_xp_user(str(message.author), 1)
+                                await barco_webhook.send(npstring, username=message.author.name, avatar_url=message.author.avatar)
+                                await barco_webhook.send(albumart, username=message.author.name, avatar_url=message.author.avatar)
 
     # anything after this will not work in main if main is disabled
     if main_enabled == False:

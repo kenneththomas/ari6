@@ -1,6 +1,9 @@
 # releasenotes
 making a releasenotes file because it is cute. no guarantees that i maintain this at all. use commit history lol
 
+## 8.6.1
+- !spotify toggles now playing 
+
 ## 8.6
 - old
 - spotify now playing
