@@ -14,7 +14,7 @@ import uuid
 import ctespn
 import cloudhouse
 
-ari_version = '8.6-alpha.3'
+ari_version = '8.6'
 
 #object to store queued messages that will be sent in the future, contains message, which channel to send it to, when to send it, webhook username and picture
 class QueuedMessage:
@@ -26,6 +26,7 @@ class QueuedMessage:
         self.avatar = avatar
 
 messagequeue = []
+songlibrary = {}
 
 emoji_storage = {
     'eheu': '<:eheu:233869216002998272>',
@@ -46,9 +47,12 @@ trivia_answer = ''
 trivia_question = ''
 
 intents = discord.Intents.default()
+
+#currently giving all access?
+intents.members = True
 intents.message_content = True
 
-client = discord.Client(intents=intents)
+client = discord.Client(intents=discord.Intents.all())
 
 lastmsg = datetime.datetime.now()
 lmcontainer = []
@@ -147,7 +151,37 @@ async def on_message(message):
         claude = not claude
         await message.channel.send(f'claude is now {claude}')
 
+    #spotify handling
+    if message.author.activities:
+        for activity in message.author.activities:
+            if activity.type == discord.ActivityType.listening:
+                if activity.name == 'Spotify':
 
+                    barcochannel =  client.get_channel(205930498034237451)
+                    #webhook check
+                    webhooks = await barcochannel.webhooks()
+                    barco_webhook = next((webhook for webhook in webhooks if webhook.name == 'barco'), None)
+                    if not barco_webhook:
+                        barco_webhook = await barcochannel.create_webhook(name='barco')
+
+               
+                    npstring = f'NP: {activity.artist} - {activity.title}'
+                    albumart = activity.album_cover_url
+                    print(npstring)
+
+                    if message.author not in songlibrary:
+                        songlibrary[message.author] = activity
+                        await barco_webhook.send(npstring, username=message.author.name, avatar_url=message.author.avatar)
+                        await barco_webhook.send(albumart, username=message.author.name, avatar_url=message.author.avatar)
+                    else:
+                        if songlibrary[message.author] == activity:
+                            print('repeat song')
+                        else:
+                            songlibrary[message.author] = activity
+                            await barco_webhook.send(npstring, username=message.author.name, avatar_url=message.author.avatar)
+                            await barco_webhook.send(albumart, username=message.author.name, avatar_url=message.author.avatar)
+
+    # anything after this will not work in main if main is disabled
     if main_enabled == False:
         if message.channel.id == 205903143471415296:
             if str(message.content).startswith('!'):
@@ -471,6 +505,7 @@ async def on_message(message):
             await cloudhouse_webhook.send(cmessage, username=webhook[0], avatar_url=webhook[1])
         except IndexError:
             await cloudchannel.send(cmessage)
+
 
     # queued message handler
     for queuedmsg in messagequeue:

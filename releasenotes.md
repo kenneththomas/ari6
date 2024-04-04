@@ -1,6 +1,11 @@
 # releasenotes
 making a releasenotes file because it is cute. no guarantees that i maintain this at all. use commit history lol
 
+## 8.6
+- old
+- spotify now playing
+- post album art as separate message so it doesnt show the link to the picture
+
 ## 8.6-alpha.2
 - clear history
 
