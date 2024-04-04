@@ -176,8 +176,18 @@ async def on_message(message):
                         if not barco_webhook:
                             barco_webhook = await barcochannel.create_webhook(name='barco')
 
-                
-                        npstring = f'NP: {activity.artist} - {activity.title}'
+                        features = None
+                        if ';' in str({activity.artist}):
+                            multiple_artists = str(activity.artist).split(';')
+                            song_artist = multiple_artists[0]
+                            features = multiple_artists[1:]
+                        else:
+                            song_artist = activity.artist
+                        npstring = f'NP: {song_artist} - {activity.title}'
+
+                        if features:
+                            npstring += f' (ft. {",".join(features)})'
+
                         albumart = activity.album_cover_url
 
                         if message.author not in songlibrary:
@@ -188,7 +198,7 @@ async def on_message(message):
                             await barco_webhook.send(albumart, username=message.author.name, avatar_url=message.author.avatar)
                         else:
                             if songlibrary[message.author] == activity:
-                                print('repeat song')
+                                print('same song') #idea - print some lyrics from the song... how do we get the lyrics tho?
                             else:
                                 songlibrary[message.author] = activity
                                 print(npstring)

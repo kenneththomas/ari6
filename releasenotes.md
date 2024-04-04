@@ -3,6 +3,7 @@ making a releasenotes file because it is cute. no guarantees that i maintain thi
 
 ## 8.6.1
 - !spotify toggles now playing 
+- if spotify song has multiple artists, make it look better
 
 ## 8.6
 - old
