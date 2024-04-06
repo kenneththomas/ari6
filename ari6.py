@@ -66,9 +66,10 @@ available_languages = ['spanish','french','italian','arabic','chinese','russian'
 
 oldoptions = ['old','😴']
 
-catchannel = client.get_channel(1122326983846678638)
-barcochannel = client.get_channel(205930498034237451)
-cloudhousechannel = client.get_channel(1163165256093286412)
+catchannel = None
+barcochannel = None
+cloudchannel = None
+gatochannel = None
 
 
 starttime = datetime.datetime.now()
@@ -78,15 +79,26 @@ starttime = datetime.datetime.now()
 async def on_ready():
     print(f'We have logged in as {client.user}')
     mememgr.meme_loader()
+
+    print('loading channels')
+    global catchannel, barcochannel, cloudchannel, gatochannel
+    catchannel = client.get_channel(1122326983846678638)
+    barcochannel = client.get_channel(205930498034237451)
+    cloudchannel = client.get_channel(1163165256093286412)
+    gatochannel = client.get_channel(205903143471415296)
+
+
+
     # find startup time by subtracting current time from starttime
     rdytime = datetime.datetime.now()
     start_duration = rdytime - starttime
     print(f'Bot started in {start_duration}')
 
 
+
 @client.event
 async def on_message(message):
-    global catchannel, barcochannel, cloudhousechannel
+    global catchannel, barcochannel, cloudchannel, gatochannel
     global claude
     global lastmsg
     global trivia_answer, trivia_question
@@ -139,7 +151,6 @@ async def on_message(message):
                 tweetlink = message.content.replace('x.com','vxtwitter.com')
                 await message.delete() 
                 if str(message.channel) == 'gato':
-                    catchannel = client.get_channel(205903143471415296)
                     webhooks = await catchannel.webhooks()
                     ari_webhook = next((webhook for webhook in webhooks if webhook.name == 'ari'), None)
                     #pick random webhook from webhook_library
@@ -175,7 +186,6 @@ async def on_message(message):
                 if activity.type == discord.ActivityType.listening:
                     if activity.name == 'Spotify':
 
-                        barcochannel =  client.get_channel(205930498034237451)
                         #webhook check
                         webhooks = await barcochannel.webhooks()
                         barco_webhook = next((webhook for webhook in webhooks if webhook.name == 'barco'), None)
@@ -230,7 +240,6 @@ async def on_message(message):
                 spanish = await sentience.gpt_translation(message.content)
                 #people complained about being double pinged by the bot so remove the ping, regex away (<@142508812073566208>)
                 spanish = re.sub(r'<@\d+>','',str(spanish))
-                catchannel = client.get_channel(1122326983846678638)
 
                 # Create or reuse a single webhook
                 webhooks = await catchannel.webhooks()
@@ -243,12 +252,10 @@ async def on_message(message):
 
         #reverse translation. if there is a post in the spanish channel, translate it back to english
 
-        catchannel = client.get_channel(1122326983846678638)
         if message.channel == catchannel:
             if message.content.startswith('xx'):
                 message.content = message.content[2:]
                 english = await sentience.gpt_translation(message.content, reverse=True)
-                gatochannel = client.get_channel(205903143471415296)
                 webhooks = await gatochannel.webhooks()
                 english_webhook = next((webhook for webhook in webhooks if webhook.name == 'english'), None)
                 if not english_webhook:
@@ -324,7 +331,6 @@ async def on_message(message):
 
     if 'https://twitter.com/' in message.content:
 
-        catchannel = client.get_channel(205903143471415296)
         webhooks = await catchannel.webhooks()
         ari_webhook = next((webhook for webhook in webhooks if webhook.name == 'ari'), None)
         if not ari_webhook:
@@ -354,7 +360,6 @@ async def on_message(message):
     #ELON
     if 'https://x.com/' in message.content:
 
-        catchannel = client.get_channel(205903143471415296)
         webhooks = await catchannel.webhooks()
         ari_webhook = next((webhook for webhook in webhooks if webhook.name == 'ari'), None)
         if not ari_webhook:
@@ -468,7 +473,6 @@ async def on_message(message):
 
     #zoomerposting
     if zoomerposting:
-        barcochannel =  client.get_channel(205930498034237451)
         webhooks = await barcochannel.webhooks()
         barco_webhook = next((webhook for webhook in webhooks if webhook.name == 'barco'), None)
         if not barco_webhook:
@@ -486,7 +490,6 @@ async def on_message(message):
         for game in ctespn.storage.values():
             await message.channel.send(ctespn.info_printer(game))
 
-    cloudchannel = client.get_channel(1163165256093286412)
     #if message started with && delete it
     if message.content.startswith('&&'):
         print('used forcesubject - deleting message!')
