@@ -17,6 +17,8 @@ def nowplaying(user, songinfo):
 
     npstring = f'{song_artist} - {songinfo.title}\n{songinfo.album}'
 
+    print(f'masta_selecta: {user} is listening to {npstring}')
+
     if features:
         # sometimes the track name already has the featured artist in it, in that case we dont need to repeat it
         if features[0] in songinfo.title:

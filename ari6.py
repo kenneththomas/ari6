@@ -195,6 +195,7 @@ async def on_message(message):
                         npstring, albumart = masta_selecta.nowplaying(str(message.author), activity)
                         
                         if npstring:
+                            l.add_xp_user(str(message.author), 1)
                             await barco_webhook.send(npstring, username=message.author.name, avatar_url=message.author.avatar)
                             if albumart:
                                 await barco_webhook.send(albumart, username=message.author.name, avatar_url=message.author.avatar)
