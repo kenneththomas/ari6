@@ -31,7 +31,6 @@ def nowplaying(user, songinfo):
 
     # do not repeat album art - this isnt working
     try:
-        print(f'{songinfo.album} == {songlibrary[user]}')
         oldtrack = songlibrary[user]
         if str({songinfo.album}) in str(oldtrack):
             print('album is the same as the last one so we dont need to post it')
