@@ -1,6 +1,9 @@
 # releasenotes
 making a releasenotes file because it is cute. no guarantees that i maintain this at all. use commit history lol
 
+## 8.6.4.1
+- fix vxtwitter embed which was posting my messages to the wrong room
+
 ## 8.6.4
 - spotify fix attributeerror when user is listening to a local song and artist is not accessible via API
 - migrate spotify_enabled to flipper

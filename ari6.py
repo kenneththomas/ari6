@@ -16,7 +16,7 @@ import cloudhouse
 import modules.masta_selecta as masta_selecta
 import modules.flipper as flipper
 
-ari_version = '8.6.4'
+ari_version = '8.6.4.1'
 
 #object to store queued messages that will be sent in the future, contains message, which channel to send it to, when to send it, webhook username and picture
 class QueuedMessage:
@@ -146,7 +146,7 @@ async def on_message(message):
                 tweetlink = message.content.replace('x.com','vxtwitter.com')
                 await message.delete() 
                 if str(message.channel) == 'gato':
-                    webhooks = await catchannel.webhooks()
+                    webhooks = await gatochannel.webhooks()
                     ari_webhook = next((webhook for webhook in webhooks if webhook.name == 'ari'), None)
                     #pick random webhook from webhook_library
                     personality = random.choice(list(wl.webhook_library.values()))
