@@ -64,7 +64,10 @@ def memes(message):
     mememessages=[] #contains all messages that mememgr will return
 
     if repeater(message):
-        mememessages.append(message)
+        if message.startswith('huh'):
+            mememessages.append('like you\'re doing right now?')
+        else:
+            mememessages.append(message)
 
     #memebox functionality
     if message in memebox.keys():

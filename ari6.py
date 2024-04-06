@@ -13,8 +13,9 @@ import ari_webhooks as wl
 import uuid
 import ctespn
 import cloudhouse
+import modules.masta_selecta as masta_selecta
 
-ari_version = '8.6.1'
+ari_version = '8.6.2'
 
 #object to store queued messages that will be sent in the future, contains message, which channel to send it to, when to send it, webhook username and picture
 class QueuedMessage:
@@ -65,6 +66,10 @@ available_languages = ['spanish','french','italian','arabic','chinese','russian'
 
 oldoptions = ['old','😴']
 
+catchannel = client.get_channel(1122326983846678638)
+barcochannel = client.get_channel(205930498034237451)
+cloudhousechannel = client.get_channel(1163165256093286412)
+
 
 starttime = datetime.datetime.now()
 
@@ -81,6 +86,7 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
+    global catchannel, barcochannel, cloudhousechannel
     global claude
     global lastmsg
     global trivia_answer, trivia_question
@@ -176,35 +182,13 @@ async def on_message(message):
                         if not barco_webhook:
                             barco_webhook = await barcochannel.create_webhook(name='barco')
 
-                        features = None
-                        if ';' in str({activity.artist}):
-                            multiple_artists = str(activity.artist).split(';')
-                            song_artist = multiple_artists[0]
-                            features = multiple_artists[1:]
-                        else:
-                            song_artist = activity.artist
-                        npstring = f'NP: {song_artist} - {activity.title}'
-
-                        if features:
-                            npstring += f' (ft. {",".join(features)})'
-
-                        albumart = activity.album_cover_url
-
-                        if message.author not in songlibrary:
-                            print(npstring)
-                            songlibrary[message.author] = activity
-                            l.add_xp_user(str(message.author), 1)
+                        npstring, albumart = masta_selecta.nowplaying(str(message.author), activity)
+                        
+                        if npstring:
                             await barco_webhook.send(npstring, username=message.author.name, avatar_url=message.author.avatar)
-                            await barco_webhook.send(albumart, username=message.author.name, avatar_url=message.author.avatar)
-                        else:
-                            if songlibrary[message.author] == activity:
-                                print('same song') #idea - print some lyrics from the song... how do we get the lyrics tho?
-                            else:
-                                songlibrary[message.author] = activity
-                                print(npstring)
-                                l.add_xp_user(str(message.author), 1)
-                                await barco_webhook.send(npstring, username=message.author.name, avatar_url=message.author.avatar)
+                            if albumart:
                                 await barco_webhook.send(albumart, username=message.author.name, avatar_url=message.author.avatar)
+
 
     # anything after this will not work in main if main is disabled
     if main_enabled == False:
@@ -502,7 +486,6 @@ async def on_message(message):
         for game in ctespn.storage.values():
             await message.channel.send(ctespn.info_printer(game))
 
-    #cloudhouse channel 1163165256093286412
     cloudchannel = client.get_channel(1163165256093286412)
     #if message started with && delete it
     if message.content.startswith('&&'):

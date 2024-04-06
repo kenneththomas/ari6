@@ -1,6 +1,13 @@
 # releasenotes
 making a releasenotes file because it is cute. no guarantees that i maintain this at all. use commit history lol
 
+## 8.6.2
+- like you're doing right now? (bok request)
+- gonna start doing some cleanup i guess ari6.py is gettin spaghetti
+- spotify sometimes the track already has features in the title, skip that if thats the case
+- dont repeat album art that doesnt work, but i gave up for now its friday
+- preload channels
+
 ## 8.6.1
 - !spotify toggles now playing 
 - if spotify song has multiple artists, make it look better
