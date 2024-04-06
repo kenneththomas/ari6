@@ -16,7 +16,7 @@ import cloudhouse
 import modules.masta_selecta as masta_selecta
 import modules.flipper as flipper
 
-ari_version = '8.6.3'
+ari_version = '8.6.4'
 
 #object to store queued messages that will be sent in the future, contains message, which channel to send it to, when to send it, webhook username and picture
 class QueuedMessage:
@@ -39,7 +39,6 @@ onlyonce = []
 tweetcontainer = []
 time_container = []
 main_enabled = False
-spotify_enable = True
 
 lasttweet = ''
 dev_mode = False
@@ -107,7 +106,7 @@ async def on_message(message):
     if message.author == client.user:
         return
     
-    global main_enabled, spotify_enable
+    global main_enabled
     global dev_mode
     
     l.log(message)
@@ -172,13 +171,8 @@ async def on_message(message):
 
     global lasttweet
 
-    #toggler for spotify handling
-    if str(message.content).startswith('!spotify'):
-        spotify_enable = not spotify_enable
-        await message.channel.send(f'Spotify Handling is now {spotify_enable}')
-
     #spotify handling
-    if spotify_enable:
+    if flipper.spotify_enable:
         if message.author.activities:
             for activity in message.author.activities:
                 if activity.type == discord.ActivityType.listening:

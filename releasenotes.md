@@ -1,6 +1,10 @@
 # releasenotes
 making a releasenotes file because it is cute. no guarantees that i maintain this at all. use commit history lol
 
+## 8.6.4
+- spotify fix attributeerror when user is listening to a local song and artist is not accessible via API
+- migrate spotify_enabled to flipper
+
 ## 8.6.3
 - introduce flipper.py to eventually manage all of the toggles
 - migrate zoomerposting to flipper

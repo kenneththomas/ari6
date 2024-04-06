@@ -3,8 +3,11 @@ songlibrary = {}
 def nowplaying(user, songinfo):
     features = None
 
-
-    artist = str(songinfo.artist)
+    try:
+        artist = str(songinfo.artist)
+    except AttributeError:
+        print('masta_selecta: activity is spotify, but no artist found. probably a local track or ad. skipping.')
+        return None, None
     
 
     if ';' in artist:
