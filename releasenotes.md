@@ -1,6 +1,12 @@
 # releasenotes
 making a releasenotes file because it is cute. no guarantees that i maintain this at all. use commit history lol
 
+## 8.6.3
+- introduce flipper.py to eventually manage all of the toggles
+- migrate zoomerposting to flipper
+- migrate translation_enabled to flipper
+- migrate claude to flipper
+
 ## 8.6.2
 - like you're doing right now? (bok request)
 - gonna start doing some cleanup i guess ari6.py is gettin spaghetti

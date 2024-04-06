@@ -14,8 +14,9 @@ import uuid
 import ctespn
 import cloudhouse
 import modules.masta_selecta as masta_selecta
+import modules.flipper as flipper
 
-ari_version = '8.6.2'
+ari_version = '8.6.3'
 
 #object to store queued messages that will be sent in the future, contains message, which channel to send it to, when to send it, webhook username and picture
 class QueuedMessage:
@@ -37,13 +38,10 @@ emoji_storage = {
 onlyonce = []
 tweetcontainer = []
 time_container = []
-translation_enabled = False
 main_enabled = False
-zoomerposting = False
 spotify_enable = True
 
 lasttweet = ''
-claude = False
 dev_mode = False
 trivia_answer = ''
 trivia_question = ''
@@ -99,10 +97,8 @@ async def on_ready():
 @client.event
 async def on_message(message):
     global catchannel, barcochannel, cloudchannel, gatochannel
-    global claude
     global lastmsg
     global trivia_answer, trivia_question
-    global zoomerposting
     #ignore webhooks
     if message.webhook_id:
         return
@@ -166,13 +162,15 @@ async def on_message(message):
         main_enabled = not main_enabled
         await message.channel.send(f'main is now {main_enabled}')
 
+    #other togglers in flipper
+    if message.content.startswith('!'):
+        togglemsg = flipper.togglemgr(str(message.author), message.content)
+        if togglemsg:
+            await message.channel.send(togglemsg)
+
+
+
     global lasttweet
-
-
-    #toggle claude
-    if str(message.content).startswith('!claude'):
-        claude = not claude
-        await message.channel.send(f'claude is now {claude}')
 
     #toggler for spotify handling
     if str(message.content).startswith('!spotify'):
@@ -220,7 +218,7 @@ async def on_message(message):
                     return
 
                 async with message.channel.typing():
-                    if not claude:
+                    if not flipper.claude:
                         freemsg = await sentience.ai_experimental(experimental_container,'gpt-4-0125-preview')
                     else:    
                         freemsg = await sentience.claudex(experimental_container)
@@ -235,8 +233,7 @@ async def on_message(message):
             await asyncio.sleep(1)
             await message.reply(response_text)
 
-    global translation_enabled
-    if translation_enabled:
+    if flipper.translation_enabled:
         if ct.should_i_translate(message.content,message.channel):
                 spanish = await sentience.gpt_translation(message.content)
                 #people complained about being double pinged by the bot so remove the ping, regex away (<@142508812073566208>)
@@ -270,12 +267,6 @@ async def on_message(message):
                     spanish_webhook = await catchannel.create_webhook(name='spanish')
                 await spanish_webhook.send(cathelp, username='luis', avatar_url='https://res.cloudinary.com/dr2rzyu6p/image/upload/v1710891819/noidfrqtvvxxqkme94vg.jpg')
 
-
-
-    #toggle translation
-    if str(message.content).startswith('!translation'):
-        translation_enabled = not translation_enabled
-        await message.channel.send(f'translation is now {translation_enabled}')
         
     #switch sentience.translate_language if !language is called to change translation language
     if str(message.content).startswith('!language'):
@@ -467,13 +458,9 @@ async def on_message(message):
         else:
             await message.channel.send('u cant do that lol')
 
-    #toggle zoomerposting
-    if message.content == '!zoomerposting':
-        zoomerposting = not zoomerposting
-        await message.channel.send(f'zoomerposting is now {zoomerposting}')
 
     #zoomerposting
-    if zoomerposting:
+    if flipper.zoomerposting:
         webhooks = await barcochannel.webhooks()
         barco_webhook = next((webhook for webhook in webhooks if webhook.name == 'barco'), None)
         if not barco_webhook:
