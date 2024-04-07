@@ -94,7 +94,7 @@ async def cloudhouse_single(user, message, replyto=None):
         user = 'Ken'
 
     if message.startswith('!cheap'):
-        return {'webhook':'','message': flipper.togglemgr(user, message)}
+        return {'webhook':'','message': flipper.chctl(user, message)}
 
     global chathistory
     # if !setcontext, set forcesubject

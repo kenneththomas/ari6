@@ -18,9 +18,12 @@ def togglemgr(user, message):
     elif message == '!spotify':
         spotify_enable = not spotify_enable
         return f'spotify is now {spotify_enable}'
-    #note: this one is for cloudhouse, maybe it should have its own function
-    elif message == '!cheap':
+
+def chctl(user, message):
+    if message == '!cheap':
         cheap = not cheap
         return f'cheap is now {cheap}'
+    else:
+        return '???'
     
     
