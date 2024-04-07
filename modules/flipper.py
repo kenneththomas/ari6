@@ -2,9 +2,10 @@ zoomerposting = False
 translation_enabled = False
 claude = False
 spotify_enable = True
+cheap = True
 
 def togglemgr(user, message):
-    global zoomerposting, translation_enabled, claude, spotify_enable
+    global zoomerposting, translation_enabled, claude, spotify_enable, cheap
     if message == '!zoomerposting':
         zoomerposting = not zoomerposting
         return f'zoomerposting is now {zoomerposting}'
@@ -17,4 +18,9 @@ def togglemgr(user, message):
     elif message == '!spotify':
         spotify_enable = not spotify_enable
         return f'spotify is now {spotify_enable}'
+    #note: this one is for cloudhouse, maybe it should have its own function
+    elif message == '!cheap':
+        cheap = not cheap
+        return f'cheap is now {cheap}'
+    
     

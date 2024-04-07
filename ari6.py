@@ -16,7 +16,7 @@ import cloudhouse
 import modules.masta_selecta as masta_selecta
 import modules.flipper as flipper
 
-ari_version = '8.6.4.1'
+ari_version = '8.6.5'
 
 #object to store queued messages that will be sent in the future, contains message, which channel to send it to, when to send it, webhook username and picture
 class QueuedMessage:

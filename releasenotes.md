@@ -1,6 +1,13 @@
 # releasenotes
 making a releasenotes file because it is cute. no guarantees that i maintain this at all. use commit history lol
 
+## 8.6.5
+- adjust spotify ft placement
+- remove newline when printing now playing in log
+- add partial clear history to cloudhouse
+- toggle opus/haiku in flipper
+- use my name instead of my username for cloudhouse
+
 ## 8.6.4.1
 - fix vxtwitter embed which was posting my messages to the wrong room
 

@@ -18,9 +18,7 @@ def nowplaying(user, songinfo):
     else:
         song_artist = artist
 
-    npstring = f'{song_artist} - {songinfo.title}\n{songinfo.album}'
-
-    print(f'masta_selecta: {user} is listening to {npstring}')
+    npstring = f'{song_artist} - {songinfo.title}'
 
     if features:
         # sometimes the track name already has the featured artist in it, in that case we dont need to repeat it
@@ -31,6 +29,9 @@ def nowplaying(user, songinfo):
             npstring += f' (ft. {",".join(features)})'
 
     albumart = songinfo.album_cover_url
+
+    npstring = npstring + f'\n({songinfo.album})'
+    print(f'masta_selecta: {user} is listening to {npstring}'.replace('\n',' '))
 
     # do not repeat album art - this isnt working
     try:
