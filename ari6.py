@@ -460,8 +460,8 @@ async def on_message(message):
         if not barco_webhook:
             barco_webhook = await barcochannel.create_webhook(name='barco')
         if mememgr.chance(8):
-            async with message.channel.typing():
-                zoomerpost = await sentience.generate_text_gpt(f'{message.content}','respond to messages very briefly in the style of a zoomer male in disbelief, finishing with a skull emoji')
+            async with barcochannel.typing():
+                zoomerpost = await sentience.generate_text_gpt(f'{message.content}','respond to messages very briefly in the style of a zoomer male in disbelief. if there was a funny-sounding phrase in the message you could say \"he said (message)\", the message should finish with a skull emoji')
                 #post as lamelo ball webhook
                 await barco_webhook.send(zoomerpost, username='lamelo ball', avatar_url=wl.webhook_library['lamelo ball'][1])
 

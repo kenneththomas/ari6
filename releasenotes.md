@@ -1,6 +1,13 @@
 # releasenotes
 making a releasenotes file because it is cute. no guarantees that i maintain this at all. use commit history lol
 
+## 8.6.6
+- clearhistory deletes from end instead of beginning, kinda like a retry feature
+- cheap needed to be added to global
+- zoomerposting prompt update
+- zoomerposting only posts in barco, so display typing should only be in barco
+- don't print the whole xp board on xp update
+
 ## 8.6.5
 - adjust spotify ft placement
 - remove newline when printing now playing in log

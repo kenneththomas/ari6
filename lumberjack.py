@@ -57,7 +57,7 @@ def flush_to_db():
     conn = sqlite3.connect(dbfilename)
     c = conn.cursor()
     c.executemany("INSERT INTO logs VALUES (?,?,?,?,?,?)", batch_buffer)
-    print(f'xp updates: {xp_buffer}')
+    #print(f'xp updates: {xp_buffer}')
 
     for user, xp in xp_buffer.items():
         #check if xp has changed. if it has print the change and update the database

@@ -20,6 +20,7 @@ def togglemgr(user, message):
         return f'spotify is now {spotify_enable}'
 
 def chctl(user, message):
+    global cheap
     if message == '!cheap':
         cheap = not cheap
         return f'cheap is now {cheap}'

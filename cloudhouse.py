@@ -105,7 +105,7 @@ async def cloudhouse_single(user, message, replyto=None):
 
         return {'webhook':'','message':'forcesubject set'}
     
-    #!clearhistory to clear chathistory. if integer specified, clear that many messages from start
+    #!clearhistory to clear chathistory. if integer specified, clear that many messages from end
     if message.startswith('!clearhistory'):
         if message == '!clearhistory':
             chathistory.clear()
@@ -113,8 +113,8 @@ async def cloudhouse_single(user, message, replyto=None):
         else:
             try:
                 num = int(message[14:])
-                chathistory = chathistory[num:]
-                return {'webhook':'','message':f'cleared {num} messages from chathistory'}
+                chathistory = chathistory[:-num]
+                return {'webhook':'','message':f'cleared {num} messages from chathistory last message is now {chathistory[-1]}'}
             except ValueError:
                 return {'webhook':'','message':'invalid integer specified'}
     
