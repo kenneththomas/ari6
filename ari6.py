@@ -455,15 +455,26 @@ async def on_message(message):
 
     #zoomerposting
     if flipper.zoomerposting:
-        webhooks = await barcochannel.webhooks()
-        barco_webhook = next((webhook for webhook in webhooks if webhook.name == 'barco'), None)
-        if not barco_webhook:
-            barco_webhook = await barcochannel.create_webhook(name='barco')
-        if mememgr.chance(8):
-            async with barcochannel.typing():
-                zoomerpost = await sentience.generate_text_gpt(f'{message.content}','respond to messages very briefly in the style of a zoomer male in disbelief. if there was a funny-sounding phrase in the message you could say \"he said (message)\", the message should finish with a skull emoji')
-                #post as lamelo ball webhook
-                await barco_webhook.send(zoomerpost, username='lamelo ball', avatar_url=wl.webhook_library['lamelo ball'][1])
+        #if channel is barcochannel
+        if message.channel == barcochannel:
+            if mememgr.chance(8):
+                webhooks = await barcochannel.webhooks()
+                barco_webhook = next((webhook for webhook in webhooks if webhook.name == 'barco'), None)
+                if not barco_webhook:
+                    barco_webhook = await barcochannel.create_webhook(name='barco')
+                async with barcochannel.typing():
+                    zoomerpost = await sentience.generate_text_gpt(f'{message.content}','respond to messages very briefly in the style of a zoomer male in disbelief. if there was a funny-sounding phrase in the message you could say \"he said (message)\", the message should finish with a skull emoji')
+                    #post as lamelo ball webhook
+                    await barco_webhook.send(zoomerpost, username='lamelo ball', avatar_url=wl.webhook_library['lamelo ball'][1])
+        else:
+            if mememgr.chance(42):
+                async with gatochannel.typing():
+                    zoomerpost = await sentience.generate_text_gpt(f'{message.content}','respond to messages very briefly in the style of a zoomer male in disbelief. if there was a funny-sounding phrase in the message you could say \"he said (message)\", the message should finish with a skull emoji')
+                    #send to gatochannel
+                    webhooks = await gatochannel.webhooks()
+                    ari_webhook = next((webhook for webhook in webhooks if webhook.name == 'ari'), None)
+                    await ari_webhook.send(zoomerpost, username='lamelo ball', avatar_url=wl.webhook_library['lamelo ball'][1])
+                
 
     #if message is !ctespn run scoreboard_request and sb_parser
     if message.content == '!ctespn':

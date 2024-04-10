@@ -1,6 +1,10 @@
 # releasenotes
 making a releasenotes file because it is cute. no guarantees that i maintain this at all. use commit history lol
 
+## 8.6.7
+- allow zoomer to post in other channels
+- fix twitter posting to wrong channel
+
 ## 8.6.6
 - clearhistory deletes from end instead of beginning, kinda like a retry feature
 - cheap needed to be added to global
