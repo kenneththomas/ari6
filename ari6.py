@@ -16,7 +16,7 @@ import cloudhouse
 import modules.masta_selecta as masta_selecta
 import modules.flipper as flipper
 
-ari_version = '8.6.5'
+ari_version = '8.6.7'
 
 #object to store queued messages that will be sent in the future, contains message, which channel to send it to, when to send it, webhook username and picture
 class QueuedMessage:
@@ -317,10 +317,10 @@ async def on_message(message):
 
     if 'https://twitter.com/' in message.content:
 
-        webhooks = await catchannel.webhooks()
+        webhooks = await gatochannel.webhooks()
         ari_webhook = next((webhook for webhook in webhooks if webhook.name == 'ari'), None)
         if not ari_webhook:
-            ari_webhook = await catchannel.create_webhook(name='ari')
+            ari_webhook = await gatochannel.create_webhook(name='ari')
     
         #append to tweetcontainer
         #if it is a duplicate, message.reply with "old"
@@ -346,10 +346,10 @@ async def on_message(message):
     #ELON
     if 'https://x.com/' in message.content:
 
-        webhooks = await catchannel.webhooks()
+        webhooks = await gatochannel.webhooks()
         ari_webhook = next((webhook for webhook in webhooks if webhook.name == 'ari'), None)
         if not ari_webhook:
-            ari_webhook = await catchannel.create_webhook(name='ari')
+            ari_webhook = await gatochannel.create_webhook(name='ari')
     
 
         #append to tweetcontainer
