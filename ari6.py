@@ -213,7 +213,7 @@ async def on_message(message):
 
                 async with message.channel.typing():
                     if not flipper.claude:
-                        freemsg = await sentience.ai_experimental(experimental_container,'gpt-4-0125-preview')
+                        freemsg = await sentience.ai_experimental(experimental_container,'gpt-4-turbo-2024-04-09')
                     else:    
                         freemsg = await sentience.claudex(experimental_container)
                     experimental_container.append(f'{freemsg}')
