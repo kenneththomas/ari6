@@ -1,8 +1,12 @@
 # releasenotes
 making a releasenotes file because it is cute. no guarantees that i maintain this at all. use commit history lol
 
+# 8.6.9
+- bot roasts ur music taste
+
 # 8.6.8
 - gpt version bump to gpt-4-turbo-2024-04-09
+
 ## 8.6.7
 - allow zoomer to post in other channels
 - fix twitter posting to wrong channel

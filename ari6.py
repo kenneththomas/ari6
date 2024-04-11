@@ -16,7 +16,7 @@ import cloudhouse
 import modules.masta_selecta as masta_selecta
 import modules.flipper as flipper
 
-ari_version = '8.6.7'
+ari_version = '8.6.9'
 
 #object to store queued messages that will be sent in the future, contains message, which channel to send it to, when to send it, webhook username and picture
 class QueuedMessage:
@@ -191,6 +191,13 @@ async def on_message(message):
                             await barco_webhook.send(npstring, username=message.author.name, avatar_url=message.author.avatar)
                             if albumart:
                                 await barco_webhook.send(albumart, username=message.author.name, avatar_url=message.author.avatar)
+
+                            #roast user's music taste
+                            if mememgr.chance(5):
+                                roast_prompt = f'{message.author.display_name} is listening to {npstring}, roast them for it. you can comment negative things about the artist or make fun of particular lyrics from that song. end with a skull emoji.'
+                                roast = await sentience.generate_text_gpt(roast_prompt,gmodel='gpt-4-turbo-2024-04-09')
+                                #post as lamelo ball webhook
+                                await barco_webhook.send(roast, username='lamelo ball', avatar_url=wl.webhook_library['lamelo ball'][1])
 
 
     # anything after this will not work in main if main is disabled
