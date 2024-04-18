@@ -474,7 +474,7 @@ async def on_message(message):
                     #post as lamelo ball webhook
                     await barco_webhook.send(zoomerpost, username='lamelo ball', avatar_url=wl.webhook_library['lamelo ball'][1])
         else:
-            if mememgr.chance(42):
+            if mememgr.chance(50):
                 async with gatochannel.typing():
                     zoomerpost = await sentience.generate_text_gpt(f'{message.content}','respond to messages very briefly in the style of a zoomer male in disbelief. if there was a funny-sounding phrase in the message you could say \"he said (message)\", the message should finish with a skull emoji')
                     #send to gatochannel

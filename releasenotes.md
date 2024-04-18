@@ -3,6 +3,7 @@ making a releasenotes file because it is cute. no guarantees that i maintain thi
 
 # 8.6.10
 - flipper returns enabled/disabled instead of True/False
+- slightly reduce zoomerposting frequency
 
 # 8.6.9
 - bot roasts ur music taste
