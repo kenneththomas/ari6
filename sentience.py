@@ -33,7 +33,7 @@ async def generate_text(prompt,user_id,personality_context=personality.malik):
     #full_prompt = f"{personality_context} \n {user_conversations[user_id]}"
     full_prompt = [{"role": "user", "content": f"{personality_context.prompt} \n {user_conversations[user_id]}"}]
 
-    response = client.chat.completions.create(model="gpt-4-turbo-2024-04-09",
+    response = client.chat.completions.create(model="gpt-4o",
     max_tokens=200,
     temperature=0.8,
     messages = full_prompt)
@@ -156,7 +156,7 @@ async def generate_text_gpt_translation(prompt):
 
     return generated_text
 
-async def trivia_gpt(prompt,trivia_model='gpt-4-turbo-2024-04-09'):
+async def trivia_gpt(prompt,trivia_model='gpt-4o'):
 
     full_prompt = [
         {"role": "user", "content": f"{prompt}"}

@@ -1,6 +1,9 @@
 # releasenotes
 making a releasenotes file because it is cute. no guarantees that i maintain this at all. use commit history lol
 
+# 8.6.11
+- use gpt-o wherever gpt-4 turbo was being used before
+
 # 8.6.10
 - flipper returns enabled/disabled instead of True/False
 - slightly reduce zoomerposting frequency
