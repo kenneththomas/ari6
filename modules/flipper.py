@@ -3,6 +3,8 @@ translation_enabled = False
 claude = False
 spotify_enable = True
 cheap = True
+zp_last_msg_author = ''
+zp_msg = ''
 
 def togglemgr(user, message):
     global zoomerposting, translation_enabled, claude, spotify_enable, cheap

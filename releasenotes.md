@@ -1,17 +1,23 @@
 # releasenotes
 making a releasenotes file because it is cute. no guarantees that i maintain this at all. use commit history lol
 
-# 8.6.11
+## 8.6.12
+- lamelo reacts to messages sometimes
+- lamelo gets more context by combining msgs when same author posts more than once in a row
+- use gpt-4o for zoomerposting messages
+- fix bug where other websites ending in x.com (like complex.com) were trying to do the vxtwitter fix
+
+## 8.6.11
 - use gpt-o wherever gpt-4 turbo was being used before
 
-# 8.6.10
+## 8.6.10
 - flipper returns enabled/disabled instead of True/False
 - slightly reduce zoomerposting frequency
 
-# 8.6.9
+## 8.6.9
 - bot roasts ur music taste
 
-# 8.6.8
+## 8.6.8
 - gpt version bump to gpt-4-turbo-2024-04-09
 
 ## 8.6.7
