@@ -1,6 +1,9 @@
 # releasenotes
 making a releasenotes file because it is cute. no guarantees that i maintain this at all. use commit history lol
 
+## 8.6.14
+- remove oldest 3 msgs from bot msg container if more than 2000 characters
+
 ## 8.6.13
 - reduce spotify roast chance from 1/5 to 1/10
 - temporarily admincheck toot feature as its my personal account rn

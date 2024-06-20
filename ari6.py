@@ -16,7 +16,7 @@ import cloudhouse
 import modules.masta_selecta as masta_selecta
 import modules.flipper as flipper
 
-ari_version = '8.6.13'
+ari_version = '8.6.14'
 
 #object to store queued messages that will be sent in the future, contains message, which channel to send it to, when to send it, webhook username and picture
 class QueuedMessage:
@@ -126,6 +126,13 @@ async def on_message(message):
 
     if len(experimental_container) > 10:
         experimental_container.pop(0)
+
+    # we also want to clear this up if theres some bigass messages
+    total_length = sum(len(s) for s in experimental_container)
+    if total_length > 2000:
+        print('containers p big, lets remove some stuff')
+        #remove oldest 3 messages
+        experimental_container = experimental_container[3:]
 
     if str(message.content).startswith('!version'):
         await message.channel.send(ari_version)
