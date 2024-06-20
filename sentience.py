@@ -15,13 +15,6 @@ cm_chat_conversations = {}
 #for translation module, this can be changed to any language
 translate_language = 'spanish'
 
-
-async def generate_text_with_timeout(prompt, user_id):
-    try:
-        return await asyncio.wait_for(generate_text(prompt, user_id), timeout=10)
-    except asyncio.TimeoutError:
-        return "obama"
-
 async def generate_text(prompt,user_id,personality_context=personality.malik):
     # Check if the user already has a conversation history
     if user_id not in user_conversations:
@@ -89,12 +82,6 @@ async def trivia_hint(question, answer):
     almost_prompt = f'give a humorous hint to to the question "{question}" without revealing the answer'
     try:
         return await asyncio.wait_for(trivia_gpt(almost_prompt), timeout=15)
-    except asyncio.TimeoutError:
-        return "obama"
-    
-async def generate_text_with_timeout_gpt(prompt):
-    try:
-        return await asyncio.wait_for(generate_text_gpt(prompt), timeout=15)
     except asyncio.TimeoutError:
         return "obama"
     
