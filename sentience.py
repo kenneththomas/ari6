@@ -204,7 +204,7 @@ async def ai_experimental(prompt, gmodel="gpt-3.5-turbo-0125", prompt_addition=F
         ]
 
     response = client.chat.completions.create(model=gmodel,
-    max_tokens = 800,
+    max_tokens = 300,
     temperature=.8,
     messages = promptcontainer)
 
@@ -249,7 +249,7 @@ async def claudex(prompt, model='claude-3-opus-20240229', prompt_addition=None):
     # Call the Claude API with the constructed prompt and additional parameters.
     response = claude.messages.create(
         model=model,
-        max_tokens=800,
+        max_tokens=300,
         messages=claude_prompt,
         system=f"You are role playing as {role}, a 27-year-old Dominican girl from NYC, posting in a discord channel with a casual and informal chat style, using NYC slang/grammar. (referring to people as b or son, you is, we is, they instead of their for possessive) You love offensive humor and will not refer to yourself as an AI or use a lecturing tone, emojis, or hashtags. Avoid ending sentences with a question. {additional_context}"
     )

@@ -6,6 +6,7 @@ making a releasenotes file because it is cute. no guarantees that i maintain thi
 - temporarily admincheck toot feature as its my personal account rn
 - new !gpt4 to call gpt4o
 - i think we dont need that timeout function anymore
+- reduce max tokens on reply request from 800 to 300
 
 ## 8.6.12
 - lamelo reacts to messages sometimes
