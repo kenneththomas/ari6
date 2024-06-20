@@ -1,6 +1,12 @@
 # releasenotes
 making a releasenotes file because it is cute. no guarantees that i maintain this at all. use commit history lol
 
+## 8.6.13
+- reduce spotify roast chance from 1/5 to 1/10
+- temporarily admincheck toot feature as its my personal account rn
+- new !gpt4 to call gpt4o
+- i think we dont need that timeout function anymore
+
 ## 8.6.12
 - lamelo reacts to messages sometimes
 - lamelo gets more context by combining msgs when same author posts more than once in a row

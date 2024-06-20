@@ -16,7 +16,7 @@ import cloudhouse
 import modules.masta_selecta as masta_selecta
 import modules.flipper as flipper
 
-ari_version = '8.6.12'
+ari_version = '8.6.13'
 
 #object to store queued messages that will be sent in the future, contains message, which channel to send it to, when to send it, webhook username and picture
 class QueuedMessage:
@@ -193,7 +193,7 @@ async def on_message(message):
                                 await barco_webhook.send(albumart, username=message.author.name, avatar_url=message.author.avatar)
 
                             #roast user's music taste
-                            if mememgr.chance(5):
+                            if mememgr.chance(10):
                                 roast_prompt = f'{message.author.display_name} is listening to {npstring}, roast them for it. you can comment negative things about the artist or make fun of particular lyrics from that song. end with a skull emoji.'
                                 roast = await sentience.generate_text_gpt(roast_prompt,gmodel='gpt-4o')
                                 #post as lamelo ball webhook
@@ -229,8 +229,11 @@ async def on_message(message):
                 return
     
         #basic gpt
+        gmodel = 'gpt-3.5-turbo'
         if message.content.startswith('!gpt'):
-            response_text = await sentience.generate_text_with_timeout_gpt(message.content)
+            if message.content.startswith('!gpt4'):
+                gmodel = 'gpt-4o'
+            response_text = await sentience.generate_text_gpt(message.content,gmodel=gmodel)
             await asyncio.sleep(1)
             await message.reply(response_text)
 
@@ -371,6 +374,9 @@ async def on_message(message):
 
     #darn tootin
     if message.content.startswith('!toot'):
+        #temporary admin check as this toots to my personal account
+        if not ct.admincheck(str(message.author)):
+            await message.channel.send('u cant do that lol')
         toot = message.content.replace('!toot','')
         tootlist = aritooter.tootcontrol(toot)
         for tootmsg in tootlist:

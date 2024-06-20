@@ -101,6 +101,7 @@ async def generate_text_with_timeout_gpt(prompt):
 #basic gpt
 async def generate_text_gpt(prompt,sysprompt='you are Ari, you are posting in a discord channel. you will respond with short informal messages. you will not refer to yourself as an AI.',gmodel='gpt-3.5-turbo-0125'):
 
+    prompt = prompt.replace('!gpt4','')
     prompt = prompt.replace('!gpt','')
 
     full_prompt = [
