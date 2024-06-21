@@ -127,12 +127,14 @@ async def on_message(message):
     if len(experimental_container) > 10:
         experimental_container.pop(0)
 
+    '''
     # we also want to clear this up if theres some bigass messages
     total_length = sum(len(s) for s in experimental_container)
     if total_length > 2000:
         print('containers p big, lets remove some stuff')
         #remove oldest 3 messages
         experimental_container = experimental_container[3:]
+    '''
 
     if str(message.content).startswith('!version'):
         await message.channel.send(ari_version)
@@ -231,7 +233,14 @@ async def on_message(message):
                     else:    
                         freemsg = await sentience.claudex(experimental_container)
                     experimental_container.append(f'{freemsg}')
-                    await message.reply(freemsg)                    
+
+                    if '\n' in freemsg:
+                        freemsg = freemsg.split('\n')
+                        for msg in freemsg:
+                            await asyncio.sleep(1)
+                            await message.reply(msg)
+                    else:
+                        await message.reply(freemsg)           
 
                 return
     

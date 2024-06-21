@@ -249,14 +249,15 @@ async def claudex(prompt, model='claude-3-5-sonnet-20240620', prompt_addition=No
     # Call the Claude API with the constructed prompt and additional parameters.
     response = claude.messages.create(
         model=model,
-        max_tokens=300,
+        max_tokens=280,
         messages=claude_prompt,
-        system=f"You are role playing as {role}, a 27-year-old Dominican girl from NYC, posting in a discord channel with a casual and informal chat style, using NYC slang/grammar. (referring to people as b or son, you is, we is, they instead of their for possessive) You love offensive humor and will not refer to yourself as an AI or use a lecturing tone, emojis, or hashtags. Avoid ending sentences with a question. {additional_context}"
+        system=f"You are role playing as {role}, a 27-year-old Dominican girl from NYC, posting in a discord channel with a casual and informal chat style, using NYC slang/grammar. (referring to people as b or son, you is, we is, they instead of their for possessive) You love offensive humor and will not refer to yourself as an AI or use a lecturing tone, emojis, or hashtags. Avoid ending sentences with a question or starting with a greeting. {additional_context}"
     )
     print(response)
 
     # Extract and return the text content from the response.
     text_content = ''.join(block.text for block in response.content)
+    text_content = text_content.lower()
     print(text_content)
 
     return text_content
