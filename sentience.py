@@ -216,7 +216,7 @@ async def ai_experimental(prompt, gmodel="gpt-3.5-turbo-0125", prompt_addition=F
 
     return generated_text
 
-async def claudex(prompt, model='claude-3-opus-20240229', prompt_addition=None):
+async def claudex(prompt, model='claude-3-5-sonnet-20240620', prompt_addition=None):
     """
     Converts a list of messages into a format suitable for the Claude API.
     If 'prompt_addition' is specified, it sets the role to that value; otherwise, defaults to 'ari'.
@@ -262,7 +262,7 @@ async def claudex(prompt, model='claude-3-opus-20240229', prompt_addition=None):
     return text_content
 
 #cloudhouse claude prompt
-async def ch_claudex(prompt, recentmessages, model='claude-3-opus-20240229'):
+async def ch_claudex(prompt, recentmessages, model='claude-3-5-sonnet-20240620'):
     #call claude with prompt and recent messages
 
     rm = [{"role": "user", "content": f'{recentmessages}'}]

@@ -3,6 +3,7 @@ making a releasenotes file because it is cute. no guarantees that i maintain thi
 
 ## 8.6.14
 - remove oldest 3 msgs from bot msg container if more than 2000 characters
+- move from claude 3 opus to claude 3.5 sonnet
 
 ## 8.6.13
 - reduce spotify roast chance from 1/5 to 1/10
