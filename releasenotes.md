@@ -1,6 +1,10 @@
 # releasenotes
 making a releasenotes file because it is cute. no guarantees that i maintain this at all. use commit history lol
 
+## 8.7
+- default claude
+- update claude messaging format so claude knows what it wrote vs what the chat wrote
+
 ## 8.6.14
 - remove oldest 3 msgs from bot msg container if more than 2000 characters (commented out for now)
 - move from claude 3 opus to claude 3.5 sonnet

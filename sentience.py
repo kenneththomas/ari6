@@ -281,3 +281,54 @@ async def ch_claudex(prompt, recentmessages, model='claude-3-5-sonnet-20240620')
 
     return text_content
 
+
+async def claudex2(cxstorage, model='claude-3-5-sonnet-20240620', prompt_addition=None):
+
+    role = 'ari'
+    print(cxstorage)
+    # Call the Claude API with the constructed prompt and additional parameters.
+    response = claude.messages.create(
+        model=model,
+        max_tokens=280,
+        messages=cxstorage,
+        system=f"You are role playing as {role}, a 27-year-old Dominican girl from NYC, posting in a discord channel with a casual and informal chat style, using NYC slang/grammar. (referring to people as b or son, you is, we is, they instead of their for possessive) You love offensive humor and will not refer to yourself as an AI or use a lecturing tone, emojis, or hashtags. Avoid ending sentences with a question or starting with a greeting."
+    )
+    print(response)
+
+    # Extract and return the text content from the response.
+    text_content = ''.join(block.text for block in response.content)
+    text_content = text_content.lower()
+    print(text_content)
+    
+    cxstorage.append({"role": "assistant", "content": f'{text_content}'})
+
+    return text_content
+
+def claudeify(cxstorage):
+    # Reformat msg history for Claude
+    claude_messages = []
+    
+    for i, msg in enumerate(cxstorage):
+        if i == 0 and msg['role'] != 'user':
+            # If the first message is not a user message, create a dummy user message
+            claude_messages.append({
+                'role': 'user',
+                'content': 'Start of conversation'
+            })
+        
+        if msg['role'] == 'user':
+            if claude_messages and claude_messages[-1]['role'] == 'user':
+                claude_messages[-1]['content'] += f"\n{msg['content']}"
+            else:
+                claude_messages.append(msg)
+        else:
+            claude_messages.append(msg)
+    
+    # If after processing, there are no user messages, add a dummy user message
+    if not claude_messages or claude_messages[0]['role'] != 'user':
+        claude_messages.insert(0, {
+            'role': 'user',
+            'content': 'Start of conversation'
+        })
+    
+    return claude_messages

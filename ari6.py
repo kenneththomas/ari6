@@ -16,7 +16,7 @@ import cloudhouse
 import modules.masta_selecta as masta_selecta
 import modules.flipper as flipper
 
-ari_version = '8.6.14'
+ari_version = '8.7'
 
 #object to store queued messages that will be sent in the future, contains message, which channel to send it to, when to send it, webhook username and picture
 class QueuedMessage:
@@ -58,6 +58,7 @@ lmcontainer = []
 lmcontainer.append(lastmsg)
 
 experimental_container = []
+cxstorage = []
 
 available_languages = ['spanish','french','italian','arabic','chinese','russian','german','korean','greek','japanese','portuguese']
 
@@ -111,6 +112,10 @@ async def on_message(message):
     
     l.log(message)
     experimental_container.append(f'{message.author.display_name}: {message.content}')
+    cxstorage.append({
+            'role': 'user',
+            'content': f"{message.author.display_name}: {message.content}"
+        })
 
     #toggle dev mode, include admin check
     if str(message.content).startswith('!devmode'):
@@ -126,6 +131,9 @@ async def on_message(message):
 
     if len(experimental_container) > 10:
         experimental_container.pop(0)
+
+    if len(cxstorage) > 10:
+        cxstorage.pop(0)
 
     '''
     # we also want to clear this up if theres some bigass messages
@@ -230,10 +238,15 @@ async def on_message(message):
                 async with message.channel.typing():
                     if not flipper.claude:
                         freemsg = await sentience.ai_experimental(experimental_container,'gpt-4o')
-                    else:    
-                        freemsg = await sentience.claudex(experimental_container)
-                    experimental_container.append(f'{freemsg}')
-                    
+                        experimental_container.append(f'{freemsg}')
+                    else:
+                        print(f'converting to claude format: {cxstorage}')
+                        cxstorage_formatted = sentience.claudeify(cxstorage)
+                        freemsg = await sentience.claudex2(cxstorage_formatted)
+                        cxstorage.append({
+                            'role': 'assistant',
+                            'content': f"{freemsg}"
+                        })
                     await message.reply(freemsg)           
 
                 return

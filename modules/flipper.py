@@ -1,6 +1,6 @@
 zoomerposting = False
 translation_enabled = False
-claude = False
+claude = True
 spotify_enable = True
 cheap = True
 zp_last_msg_author = ''
