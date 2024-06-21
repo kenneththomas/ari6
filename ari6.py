@@ -233,14 +233,8 @@ async def on_message(message):
                     else:    
                         freemsg = await sentience.claudex(experimental_container)
                     experimental_container.append(f'{freemsg}')
-
-                    if '\n' in freemsg:
-                        freemsg = freemsg.split('\n')
-                        for msg in freemsg:
-                            await asyncio.sleep(1)
-                            await message.reply(msg)
-                    else:
-                        await message.reply(freemsg)           
+                    
+                    await message.reply(freemsg)           
 
                 return
     
