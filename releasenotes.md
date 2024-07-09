@@ -1,5 +1,8 @@
 # releasenotes
-making a releasenotes file because it is cute. no guarantees that i maintain this at all. use commit history lol
+
+## 8.7.3
+- use add_xp_user function in the basic post message award
+- u cant do that lol
 
 ## 8.7.2
 - top 10 xp

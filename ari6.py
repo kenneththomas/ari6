@@ -16,7 +16,7 @@ import cloudhouse
 import modules.masta_selecta as masta_selecta
 import modules.flipper as flipper
 
-ari_version = '8.7.2'
+ari_version = '8.7.3'
 
 #object to store queued messages that will be sent in the future, contains message, which channel to send it to, when to send it, webhook username and picture
 class QueuedMessage:
@@ -38,7 +38,7 @@ emoji_storage = {
 onlyonce = []
 tweetcontainer = []
 time_container = []
-main_enabled = False
+main_enabled = True
 
 lasttweet = ''
 dev_mode = False
@@ -123,7 +123,8 @@ async def on_message(message):
             dev_mode = not dev_mode
             await message.channel.send(f'dev mode is now {dev_mode}')
         else:
-            await message.channel.send('u cant do that lol')
+            cantdothat = await sentience.ucantdothat(message.author, message.content)
+            await message.reply(cantdothat)
 
     #if in dev_mode dont run any of the following code
     if dev_mode:
@@ -408,7 +409,8 @@ async def on_message(message):
     if message.content.startswith('!toot'):
         #temporary admin check as this toots to my personal account
         if not ct.admincheck(str(message.author)):
-            await message.channel.send('u cant do that lol')
+            cantdothat = await sentience.ucantdothat(message.author, message.content)
+            await message.reply(cantdothat)
         toot = message.content.replace('!toot','')
         tootlist = aritooter.tootcontrol(toot)
         for tootmsg in tootlist:
@@ -479,7 +481,8 @@ async def on_message(message):
     if message.content.startswith('!savequestion'):
         #check if user is admin
         if not ct.admincheck(str(message.author)):
-            await message.channel.send('u cant do that lol')
+            cantdothat = await sentience.ucantdothat(message.author, message.content)
+            await message.reply(cantdothat)
             return
         short_uuid = message.content.replace('!savequestion','').strip()
         if short_uuid in l.newquestion:
@@ -499,7 +502,8 @@ async def on_message(message):
             except:
                 await message.channel.send('Invalid batch size')
         else:
-            await message.channel.send('u cant do that lol')
+            cantdothat = await sentience.ucantdothat(message.author, message.content)
+            await message.reply(cantdothat)
 
 
     #zoomerposting

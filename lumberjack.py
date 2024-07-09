@@ -123,9 +123,7 @@ def log(msg):
             xp_buffer[sender] = 0
         conn.close()
 
-    # add 1 xp to the sender
-    # TODO: add a way to adjust xp gain
-    xp_buffer[sender] += 1
+    add_xp_user(sender, 1)
     
     # Check if it's time to flush the buffer
     if len(batch_buffer) >= BATCH_SIZE or (now - last_write_time) >= FLUSH_INTERVAL:

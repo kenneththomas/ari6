@@ -286,3 +286,7 @@ def claudeify(cxstorage):
         })
     
     return claude_messages
+
+async def ucantdothat(user, msg):
+    prompt = f'{user} tried to run a bot command and they do not have permission to do so. "{msg}" and tell them to stop but in like a exaggerated funny karen kind of way. use text only.'
+    return await generate_text_gpt(prompt)
