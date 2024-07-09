@@ -202,12 +202,21 @@ async def on_message(message):
                             barco_webhook = await barcochannel.create_webhook(name='barco')
 
                         npstring, albumart = masta_selecta.nowplaying(str(message.author), activity)
+                        if message.content == '!np':
+                            #hacky - if you do !np it could be a dupe, so force it to return with allowrepeat
+                            npstring, albumart = masta_selecta.nowplaying(str(message.author), activity, allowrepeat=True)
                         
                         if npstring:
                             l.add_xp_user(str(message.author), 1)
-                            await barco_webhook.send(npstring, username=message.author.name, avatar_url=message.author.avatar)
-                            if albumart:
-                                await barco_webhook.send(albumart, username=message.author.name, avatar_url=message.author.avatar)
+                            # was message !np?
+                            if message.content == '!np':
+                                await message.channel.send(npstring)
+                                if albumart:
+                                    await message.channel.send(albumart)
+                            else:
+                                await barco_webhook.send(npstring, username=message.author.name, avatar_url=message.author.avatar)
+                                if albumart:
+                                    await barco_webhook.send(albumart, username=message.author.name, avatar_url=message.author.avatar)
 
                             #roast user's music taste
                             if mememgr.chance(10):

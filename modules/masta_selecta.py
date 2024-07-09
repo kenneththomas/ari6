@@ -1,6 +1,6 @@
 songlibrary = {}
 
-def nowplaying(user, songinfo):
+def nowplaying(user, songinfo, allowrepeat=False):
     features = None
 
     try:
@@ -44,6 +44,8 @@ def nowplaying(user, songinfo):
 
     if user not in songlibrary.keys() or npstring != songlibrary[user]:
         songlibrary[user] = npstring
+        return (npstring, albumart)
+    elif allowrepeat:
         return (npstring, albumart)
     else:
         return None, None

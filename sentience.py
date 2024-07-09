@@ -216,52 +216,6 @@ async def ai_experimental(prompt, gmodel="gpt-3.5-turbo-0125", prompt_addition=F
 
     return generated_text
 
-async def claudex(prompt, model='claude-3-5-sonnet-20240620', prompt_addition=None):
-    """
-    Converts a list of messages into a format suitable for the Claude API.
-    If 'prompt_addition' is specified, it sets the role to that value; otherwise, defaults to 'ari'.
-    Additionally, checks for specific members mentioned in the messages to add context.
-
-    :param prompt: List of strings, where each string is "user: message".
-    :param model: Model name to be used with Claude.
-    :param prompt_addition: Optional; Additional role to be used in the prompt.
-    :return: The response text content from the Claude API.
-    """
-    role = prompt_addition if prompt_addition else 'ari'
-
-    # Compile additional context based on members mentioned in the prompt.
-    additional_context = ''
-    for member, context in personality.additional_context.items():
-        for message in prompt:
-            if member in message:
-                count = message.count(member)
-                # Add context with a probability proportional to count.
-                if random.randint(1, 10) <= count and context not in additional_context:
-                    print(f'Adding additional context: {context}')
-                    additional_context += f'{context} \n'
-
-    # Combine all messages into a single string for the prompt.
-    combined_messages = ' \n'.join(prompt)
-
-    # Construct the Claude prompt.
-    claude_prompt = [{"role": "user", "content": combined_messages}]
-
-    # Call the Claude API with the constructed prompt and additional parameters.
-    response = claude.messages.create(
-        model=model,
-        max_tokens=280,
-        messages=claude_prompt,
-        system=f"You are role playing as {role}, a 27-year-old Dominican girl from NYC, posting in a discord channel with a casual and informal chat style, using NYC slang/grammar. (referring to people as b or son, you is, we is, they instead of their for possessive) You love offensive humor and will not refer to yourself as an AI or use a lecturing tone, emojis, or hashtags. Avoid ending sentences with a question or starting with a greeting. {additional_context}"
-    )
-    print(response)
-
-    # Extract and return the text content from the response.
-    text_content = ''.join(block.text for block in response.content)
-    text_content = text_content.lower()
-    print(text_content)
-
-    return text_content
-
 #cloudhouse claude prompt
 async def ch_claudex(prompt, recentmessages, model='claude-3-5-sonnet-20240620'):
     #call claude with prompt and recent messages

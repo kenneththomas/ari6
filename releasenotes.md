@@ -1,6 +1,11 @@
 # releasenotes
 making a releasenotes file because it is cute. no guarantees that i maintain this at all. use commit history lol
 
+## 8.7.1
+- remove claudex original function
+- !np also shows nowplaying
+- allow repeat functionality in masta_selecta
+
 ## 8.7
 - default claude
 - update claude messaging format so claude knows what it wrote vs what the chat wrote
