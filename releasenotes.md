@@ -1,6 +1,9 @@
 # releasenotes
 making a releasenotes file because it is cute. no guarantees that i maintain this at all. use commit history lol
 
+## 8.7.2
+- top 10 xp
+
 ## 8.7.1
 - remove claudex original function
 - !np also shows nowplaying

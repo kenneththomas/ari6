@@ -144,3 +144,12 @@ def add_xp_user(user, xp):
     if user in xp_buffer:
         xp_buffer[user] += xp
         return
+    
+def get_top_10_xp_users():
+    top_10 = sorted(xp_buffer.items(), key=lambda item: item[1], reverse=True)[:10]
+    max_user_len = max(len(user) for user, xp in top_10)
+    max_xp_len = max(len(str(xp)) for user, xp in top_10)
+    
+    top_10_str = "\n".join([f"`{i+1:2}. {user:<{max_user_len}} : {xp:>{max_xp_len}}`" 
+                            for i, (user, xp) in enumerate(top_10)])
+    return f"**Top 10 XP Users:**\n{top_10_str}"

@@ -16,7 +16,7 @@ import cloudhouse
 import modules.masta_selecta as masta_selecta
 import modules.flipper as flipper
 
-ari_version = '8.7'
+ari_version = '8.7.2'
 
 #object to store queued messages that will be sent in the future, contains message, which channel to send it to, when to send it, webhook username and picture
 class QueuedMessage:
@@ -430,6 +430,10 @@ async def on_message(message):
             if xp:
                 await message.channel.send(f'{user} has {xp} xp')
 
+    # top 10 xp users
+    if message.content == '!top':
+        top_users = l.get_top_10_xp_users()
+        await message.channel.send(top_users)
 
     if message.content == '!trivia':
         #random question
