@@ -68,6 +68,7 @@ catchannel = None
 barcochannel = None
 cloudchannel = None
 gatochannel = None
+botchannel = None
 
 
 starttime = datetime.datetime.now()
@@ -79,13 +80,12 @@ async def on_ready():
     mememgr.meme_loader()
 
     print('loading channels')
-    global catchannel, barcochannel, cloudchannel, gatochannel
+    global catchannel, barcochannel, cloudchannel, gatochannel, botchannel
     catchannel = client.get_channel(1122326983846678638)
     barcochannel = client.get_channel(205930498034237451)
     cloudchannel = client.get_channel(1163165256093286412)
     gatochannel = client.get_channel(205903143471415296)
-
-
+    botchannel = client.get_channel(613942696763195412)
 
     # find startup time by subtracting current time from starttime
     rdytime = datetime.datetime.now()
@@ -322,6 +322,42 @@ async def on_message(message):
             sentience.translate_language = new_language
         else:
             await message.channel.send(f'{new_language} is not a supported language')
+
+    # FREE THE BOT
+    if message.channel == botchannel:
+        async with message.channel.typing():
+            print(f'converting to claude format: {cxstorage}')
+            cxstorage_formatted = sentience.claudeify(cxstorage)
+            freemsg = await sentience.claudex2(cxstorage_formatted)
+            cxstorage.append({
+                'role': 'assistant',
+                'content': f"{freemsg}"
+            })
+            await message.channel.send(freemsg)
+            return
+
+    if mememgr.chance(75):
+        #webhook check for botchannel
+        webhooks = await botchannel.webhooks()
+        bot_webhook = next((webhook for webhook in webhooks if webhook.name == 'bot'), None)
+        if not bot_webhook:
+            bot_webhook = await botchannel.create_webhook(name='bot')
+
+        #pick random webhook from webhook_library
+        webhook = random.choice(list(wl.webhook_library.values()))
+
+        print(f'{webhook[0]} {webhook[1]} {webhook[2]}')
+
+        async with botchannel.typing():
+            print(f'converting to claude format: {cxstorage}')
+            cxstorage_formatted = sentience.claudeify(cxstorage)
+            freemsg = await sentience.claudex2_tmp(cxstorage_formatted, prompt_addition=webhook[2])
+            cxstorage.append({
+                'role': 'assistant',
+                'content': f"{webhook[0]}: {freemsg}"
+            })
+            await bot_webhook.send(freemsg, username=webhook[0], avatar_url=webhook[1])
+            return
 
     # end AI block
 

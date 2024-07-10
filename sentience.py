@@ -258,6 +258,28 @@ async def claudex2(cxstorage, model='claude-3-5-sonnet-20240620', prompt_additio
 
     return text_content
 
+async def claudex2_tmp(cxstorage, model='claude-3-5-sonnet-20240620', prompt_addition=None):
+
+    role = 'ari'
+    print(cxstorage)
+    # Call the Claude API with the constructed prompt and additional parameters.
+    response = claude.messages.create(
+        model=model,
+        max_tokens=280,
+        messages=cxstorage,
+        system=f"You are role playing as {prompt_addition}, posting in a groupchat with a casual and informal chat style. Messages should be short and casual, like a real groupchat. You will not refer to yourself as an AI or use a lecturing tone, emojis, or hashtags. Avoid starting messages with a greeting."
+    )
+    print(response)
+
+    # Extract and return the text content from the response.
+    text_content = ''.join(block.text for block in response.content)
+    text_content = text_content.lower()
+    print(text_content)
+    
+    cxstorage.append({"role": "assistant", "content": f'{text_content}'})
+
+    return text_content
+
 def claudeify(cxstorage):
     # Reformat msg history for Claude
     claude_messages = []

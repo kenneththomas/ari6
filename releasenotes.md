@@ -3,6 +3,8 @@
 ## 8.7.3
 - use add_xp_user function in the basic post message award
 - u cant do that lol
+- free bot channel demo
+- default main on
 
 ## 8.7.2
 - top 10 xp

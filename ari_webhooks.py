@@ -14,7 +14,7 @@ language_webhooks = {
 webhook_library = {
     'asian_ariana' : ('asianfacing ariana grande', 'https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702838375/etzmyo2jjca7kq91lglm.png','Ariana Grande'),
     'xi' : ('xi jinping', 'https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702838484/ydr6ftugfuy5kxis4igj.jpg','Xi Jinping'),
-    'musicsmusic' : ('musicsmusic','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702771014/outream/wnzefyt9pihnarjzarku.png','A german guy'),
+    'musicsmusic' : ('musicsmusic','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702771014/outream/wnzefyt9pihnarjzarku.png','A guy who lives in germany. He can communicate in english ok. He tends to ask very personal and direct questions.'),
     'obama' : ('obama','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702786300/outream/xqjtn4ukkwbopfnkzwfm.jpg','Barack Obama, former president.'),
     'brandon' : ('brandon','https://cdn.midjourney.com/4c3839c1-ba1c-4d41-af41-6cf3b62ea614/0_0.webp','Joe Biden, current president.'),
     #'rachel' : ('rachel','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1702786482/j4dblijgfimq219yqcyj.png','a typical Jewish American Princess'),
