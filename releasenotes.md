@@ -1,5 +1,9 @@
 # releasenotes
 
+## 8.7.4
+- replace gpt-3.5 with gpt-4o-mini
+- reduce chance of bot response in who-is-joey
+
 ## 8.7.3
 - use add_xp_user function in the basic post message award
 - u cant do that lol

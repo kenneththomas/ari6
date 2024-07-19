@@ -86,7 +86,7 @@ async def trivia_hint(question, answer):
         return "obama"
     
 #basic gpt
-async def generate_text_gpt(prompt,sysprompt='you are Ari, you are posting in a discord channel. you will respond with short informal messages. you will not refer to yourself as an AI.',gmodel='gpt-3.5-turbo-0125'):
+async def generate_text_gpt(prompt,sysprompt='you are Ari, you are posting in a discord channel. you will respond with short informal messages. you will not refer to yourself as an AI.',gmodel='gpt-4o-mini'):
 
     prompt = prompt.replace('!gpt4','')
     prompt = prompt.replace('!gpt','')
@@ -135,7 +135,7 @@ async def generate_text_gpt_translation(prompt):
         {"role": "user", "content": f"{prompt}"}
         ]
 
-    response = client.chat.completions.create(model="gpt-3.5-turbo-0125",
+    response = client.chat.completions.create(model="gpt-4o-mini",
     max_tokens=1200,
     temperature=.8,
     messages = full_prompt)
@@ -160,7 +160,7 @@ async def trivia_gpt(prompt,trivia_model='gpt-4o'):
     return generated_text
 
 
-async def ai_experimental(prompt, gmodel="gpt-3.5-turbo-0125", prompt_addition=False):
+async def ai_experimental(prompt, gmodel="gpt-4o-mini", prompt_addition=False):
 
     #in prompt we receive a list of messages. each item is user: message, convert it into prompt. if user is ari, then role is system'
 
