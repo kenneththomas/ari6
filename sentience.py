@@ -6,6 +6,7 @@ import asyncio
 import random
 import anthropic
 claude = anthropic.Anthropic(api_key=maricon.anthropic_key)
+import re
 
 
 # Initialize a dictionary to store conversation history for each user
@@ -262,6 +263,7 @@ async def claudex2_tmp(cxstorage, model='claude-3-5-sonnet-20240620', prompt_add
 
     role = 'ari'
     print(cxstorage)
+    
     # Call the Claude API with the constructed prompt and additional parameters.
     response = claude.messages.create(
         model=model,
@@ -312,3 +314,37 @@ def claudeify(cxstorage):
 async def ucantdothat(user, msg):
     prompt = f'{user} tried to run a bot command and they do not have permission to do so. "{msg}" and tell them to stop but in like a exaggerated funny karen kind of way. use text only.'
     return await generate_text_gpt(prompt)
+
+previously_viewed_images = []
+
+async def view_image(message):
+    #extract first image url from message with regex based on image file extensions
+    image = re.search(r'(https?://\S+\.(?:png|jpe?g|gif))', message)
+    if image:
+        print(f'found image {image.group(1)}')
+        if image.group(1) in previously_viewed_images:
+            print('view_image: we have already seen this image!')
+            return False
+        previously_viewed_images.append(image.group(1))
+        response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": "What's in this image?"},
+                {
+                "type": "image_url",
+                "image_url": {
+                    "url": f"{image.group(1)}",
+                    "detail" : "low",
+                },
+                },
+            ],
+            }
+        ],
+        max_tokens=300,
+        )
+        print(response.choices[0])
+    else:
+        return False

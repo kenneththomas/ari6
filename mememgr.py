@@ -129,9 +129,8 @@ def battlerap_cleanup(message):
 def emoji_reactor(message,author):
     emojilist = []
     # this function will return a list of emojis to react with
-    # if the message only contains bari, 20% chance to add the 😳 emoji and wave emoji to the list
     if message == 'bari':
-        if chance(5):
+        if chance(10):
             emojilist.append('😳')
             emojilist.append('👋')
     # if the message starts with anyone, 20% chance to add the u emoji to the list

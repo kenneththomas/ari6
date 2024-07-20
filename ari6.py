@@ -15,8 +15,9 @@ import ctespn
 import cloudhouse
 import modules.masta_selecta as masta_selecta
 import modules.flipper as flipper
+import modules.joey as joey
 
-ari_version = '8.7.4'
+ari_version = '8.7.5'
 
 #object to store queued messages that will be sent in the future, contains message, which channel to send it to, when to send it, webhook username and picture
 class QueuedMessage:
@@ -262,7 +263,7 @@ async def on_message(message):
                 return
     
         #basic gpt
-        gmodel = 'gpt-3.5-turbo'
+        gmodel = 'gpt-4o-mini'
         if message.content.startswith('!gpt'):
             if message.content.startswith('!gpt4'):
                 gmodel = 'gpt-4o'
@@ -507,11 +508,11 @@ async def on_message(message):
             await message.channel.send('Invalid format, use !addquestion question,answer')
             return
         question, answer = [item.strip() for item in new_trivia.split(',')]
-        short_uuid = str(uuid.uuid4())[:5]
+        question_id = str(uuid.uuid4())[:5]
 
         l.trivia_questions[question] = answer
-        l.newquestion[short_uuid] = [question,answer]
-        await message.channel.send(f'Added {question} to trivia questions.\nbreez can save this question with !savequestion {short_uuid}')
+        l.newquestion[question_id] = [question,answer]
+        await message.channel.send(f'Added {question} to trivia questions.\nbreez can save this question with !savequestion {question_id}')
 
     # save trivia question to lumberjack trivia_questions dictionary
     if message.content.startswith('!savequestion'):
@@ -520,13 +521,16 @@ async def on_message(message):
             cantdothat = await sentience.ucantdothat(message.author, message.content)
             await message.reply(cantdothat)
             return
-        short_uuid = message.content.replace('!savequestion','').strip()
-        if short_uuid in l.newquestion:
-            question, answer = l.newquestion[short_uuid]
+        question_id = message.content.replace('!savequestion','').strip()
+        if question_id in l.newquestion:
+            question, answer = l.newquestion[question_id]
             l.questions_to_save[question] = answer
             await message.channel.send(f'Saved {question} to trivia questions')
         else:
-            await message.channel.send(f'{short_uuid} not found')
+            await message.channel.send(f'{question_id} not found')
+
+    if message.content == '!triviahelp':
+        await message.channel.send(joey.help_message)
 
     #adjust l.BATCH_SIZE with !batch $number
     if message.content.startswith('!batch'):
@@ -630,7 +634,6 @@ async def on_message(message):
                 await message.channel.send(queuedmsg.message)
 
             messagequeue.remove(queuedmsg)
-
 
 
 @client.event

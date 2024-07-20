@@ -1,5 +1,13 @@
 # releasenotes
 
+## 8.7.5
+- view_image in sentience
+- update one of the 3.5-turbo to gpt-4o-mini that was missed in the last one
+- rebrand "short_uuid" to "question_id"
+- added joey module, eventually we will move all of the trivia stuff to this module
+- add !triviahelp command
+
+
 ## 8.7.4
 - replace gpt-3.5 with gpt-4o-mini
 - reduce chance of bot response in who-is-joey
