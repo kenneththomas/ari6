@@ -1,5 +1,8 @@
 # releasenotes
 
+## 8.8
+- context through csv file
+
 ## 8.7.5
 - view_image in sentience
 - update one of the 3.5-turbo to gpt-4o-mini that was missed in the last one

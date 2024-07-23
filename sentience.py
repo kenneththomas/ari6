@@ -7,6 +7,7 @@ import random
 import anthropic
 claude = anthropic.Anthropic(api_key=maricon.anthropic_key)
 import re
+import csv
 
 
 # Initialize a dictionary to store conversation history for each user
@@ -91,6 +92,16 @@ async def generate_text_gpt(prompt,sysprompt='you are Ari, you are posting in a 
 
     prompt = prompt.replace('!gpt4','')
     prompt = prompt.replace('!gpt','')
+
+    # Track processed words to avoid adding context multiple times
+    processed_words = set()
+
+    # Check if prompt has a word in context keys, if so, add context to sysprompt
+    for word in context.keys():
+        if word in prompt and word not in processed_words:
+            print(f'identified context word {word}')
+            sysprompt = sysprompt + context[word]
+            processed_words.add(word)
 
     full_prompt = [
         {"role": "system", "content": f"{sysprompt}"},
@@ -242,11 +253,24 @@ async def claudex2(cxstorage, model='claude-3-5-sonnet-20240620', prompt_additio
     role = 'ari'
     print(cxstorage)
     # Call the Claude API with the constructed prompt and additional parameters.
+
+    systemprompt = f"You are role playing as {role}, a 27-year-old Dominican girl from NYC, posting in a discord channel with a casual and informal chat style, using NYC slang/grammar. (referring to people as b or son, you is, we is, they instead of their for possessive) You love offensive humor and will not refer to yourself as an AI or use a lecturing tone, emojis, or hashtags. keep messages brief."
+
+    #cxstorage is a list, check each value for words in context. dont repeat
+    processed_words = set()
+
+    for message in cxstorage:
+        for key in context.keys():
+            if key in message['content'] and key not in processed_words:
+                print(f'adding context word {key}')
+                systemprompt = systemprompt + context[key]
+                processed_words.add(key)
+
     response = claude.messages.create(
         model=model,
         max_tokens=280,
         messages=cxstorage,
-        system=f"You are role playing as {role}, a 27-year-old Dominican girl from NYC, posting in a discord channel with a casual and informal chat style, using NYC slang/grammar. (referring to people as b or son, you is, we is, they instead of their for possessive) You love offensive humor and will not refer to yourself as an AI or use a lecturing tone, emojis, or hashtags. Avoid ending sentences with a question or starting with a greeting."
+        system=systemprompt
     )
     print(response)
 
@@ -348,3 +372,19 @@ async def view_image(message):
         print(response.choices[0])
     else:
         return False
+
+context = {}
+
+def load_context():
+    print('\"You think you just fell out of a coconut tree? You exist in the context of all in which you live and what came before you.\" - Kamala Harris')
+    with open('resources/easycontext.csv', 'r') as file:
+        reader = csv.reader(file)
+        # skip header, field 0 is trigger phrases, field 1 is context, field 2 is status, only load if status is active
+        for row in reader:
+            if row[2] == 'active':
+                context[row[0]] = row[1]
+
+    print('loaded context')
+    print(context)
+
+load_context()
