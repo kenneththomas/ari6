@@ -1,5 +1,8 @@
 # releasenotes
 
+## 8.8.1
+- polychrome
+
 ## 8.8
 - context through csv file
 
