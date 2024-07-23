@@ -88,25 +88,28 @@ async def trivia_hint(question, answer):
         return "obama"
     
 #basic gpt
-async def generate_text_gpt(prompt,sysprompt='you are Ari, you are posting in a discord channel. you will respond with short informal messages. you will not refer to yourself as an AI.',gmodel='gpt-4o-mini'):
+async def generate_text_gpt(prompt, sysprompt='you are Ari, you are posting in a discord channel. you will respond with short informal messages. you will not refer to yourself as an AI.', gmodel='gpt-4o-mini'):
 
-    prompt = prompt.replace('!gpt4','')
-    prompt = prompt.replace('!gpt','')
+    prompt = prompt.replace('!gpt4', '')
+    prompt = prompt.replace('!gpt', '')
 
-    # Track processed words to avoid adding context multiple times
-    processed_words = set()
+    # Track processed phrases to avoid adding context multiple times
+    processed_phrases = set()
 
-    # Check if prompt has a word in context keys, if so, add context to sysprompt
-    for word in context.keys():
-        if word in prompt and word not in processed_words:
-            print(f'identified context word {word}')
-            sysprompt = sysprompt + context[word]
-            processed_words.add(word)
+    # Convert prompt to lowercase for case-insensitive matching
+    prompt_lower = prompt.lower()
+
+    # Check if prompt has a phrase in context keys, if so, add context to sysprompt
+    for phrase in context.keys():
+        if phrase.lower() in prompt_lower and phrase.lower() not in processed_phrases:
+            print(f'identified context phrase {phrase}')
+            sysprompt = sysprompt + context[phrase]
+            processed_phrases.add(phrase.lower())
 
     full_prompt = [
         {"role": "system", "content": f"{sysprompt}"},
         {"role": "user", "content": f"{prompt}"}
-        ]
+    ]
 
     response = client.chat.completions.create(model=gmodel,
     max_tokens=1200,
@@ -260,11 +263,12 @@ async def claudex2(cxstorage, model='claude-3-5-sonnet-20240620', prompt_additio
     processed_words = set()
 
     for message in cxstorage:
+        message_content_lower = message['content'].lower()
         for key in context.keys():
-            if key in message['content'] and key not in processed_words:
+            if key.lower() in message_content_lower and key.lower() not in processed_words:
                 print(f'adding context word {key}')
                 systemprompt = systemprompt + context[key]
-                processed_words.add(key)
+                processed_words.add(key.lower())
 
     response = claude.messages.create(
         model=model,

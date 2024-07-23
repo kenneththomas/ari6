@@ -1,5 +1,8 @@
 # releasenotes
 
+## 8.8.2
+- fix case sensitivity in context
+
 ## 8.8.1
 - polychrome
 
