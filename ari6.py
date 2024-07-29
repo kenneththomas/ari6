@@ -17,7 +17,7 @@ import modules.masta_selecta as masta_selecta
 import modules.flipper as flipper
 import modules.joey as joey
 
-ari_version = '8.7.5'
+ari_version = '8.8.3'
 
 #object to store queued messages that will be sent in the future, contains message, which channel to send it to, when to send it, webhook username and picture
 class QueuedMessage:
@@ -61,7 +61,7 @@ lmcontainer.append(lastmsg)
 experimental_container = []
 cxstorage = []
 
-available_languages = ['spanish','french','italian','arabic','chinese','russian','german','korean','greek','japanese','portuguese']
+available_languages = ['spanish','french','italian','arabic','chinese','russian','german','korean','greek','japanese','portuguese','hebrew']
 
 oldoptions = ['old','😴']
 

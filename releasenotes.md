@@ -1,5 +1,8 @@
 # releasenotes
 
+## 8.8.3
+- add hebrew to translation support
+
 ## 8.8.2
 - fix case sensitivity in context
 
