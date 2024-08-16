@@ -236,9 +236,10 @@ async def on_message(message):
             return
 
 
-    if 'chat clip this' in message.content.lower():
+    if message.content.startswith('chat clip this'):
         clipmsg = experimental_container[-5:]
-        clipmsg = '\n'.join(clipmsg)
+        #exclude the last message since its just chat clip this
+        clipmsg = '\n'.join(clipmsg[:-1])
 
         tootlist = aritooter.tootcontrol(clipmsg)
         for tootmsg in tootlist:
