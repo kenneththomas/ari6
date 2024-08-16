@@ -235,41 +235,51 @@ async def on_message(message):
                 print(f'seems like someone is trying to run a command! main disabled tho lol')
             return
 
+
+    if 'chat clip this' in message.content.lower():
+        clipmsg = experimental_container[-5:]
+        clipmsg = '\n'.join(clipmsg)
+
+        tootlist = aritooter.tootcontrol(clipmsg)
+        for tootmsg in tootlist:
+            await message.channel.send(tootmsg)
+
     #start AI block
 
-    if True:
-        if message.reference:
-            if message.reference.resolved.author == client.user:
-
-                #check if that reply had a vxtwitter link in it, if it did, dont reply
-                if 'vxtwitter.com' in message.reference.resolved.content:
-                    print('DEBUG: not responding to vxtwitter link that was probably posted by me')
-                    return
-
-                async with message.channel.typing():
-                    if not flipper.claude:
-                        freemsg = await sentience.ai_experimental(experimental_container,'gpt-4o')
-                        experimental_container.append(f'{freemsg}')
-                    else:
-                        print(f'converting to claude format: {cxstorage}')
-                        cxstorage_formatted = sentience.claudeify(cxstorage)
-                        freemsg = await sentience.claudex2(cxstorage_formatted)
-                        cxstorage.append({
-                            'role': 'assistant',
-                            'content': f"{freemsg}"
-                        })
-                    await message.reply(freemsg)           
-
-                return
+    triggerphrases = ['is this rizz']
     
-        #basic gpt
-        gmodel = 'gpt-4o-mini'
-        if message.content.startswith('!gpt'):
-            if message.content.startswith('!gpt4'):
-                gmodel = 'gpt-4o'
-            response_text = await sentience.generate_text_gpt(message.content,gmodel=gmodel)
-            await asyncio.sleep(1)
-            await message.reply(response_text)
+    if (message.reference and message.reference.resolved.author == client.user) or \
+       any(trigger in message.content.lower() for trigger in triggerphrases):
+        
+        # Check if the referenced message contains a vxtwitter link
+        if message.reference and 'vxtwitter.com' in message.reference.resolved.content:
+            print('DEBUG: not responding to vxtwitter link that was probably posted by me')
+            return
+
+        async with message.channel.typing():
+            if not flipper.claude:
+                freemsg = await sentience.ai_experimental(experimental_container,'gpt-4o')
+                experimental_container.append(f'{freemsg}')
+            else:
+                print(f'converting to claude format: {cxstorage}')
+                cxstorage_formatted = sentience.claudeify(cxstorage)
+                freemsg = await sentience.claudex2(cxstorage_formatted)
+                cxstorage.append({
+                    'role': 'assistant',
+                    'content': f"{freemsg}"
+                })
+            await message.reply(freemsg)           
+
+        return
+    
+    #basic gpt
+    gmodel = 'gpt-4o-mini'
+    if message.content.startswith('!gpt'):
+        if message.content.startswith('!gpt4'):
+            gmodel = 'gpt-4o'
+        response_text = await sentience.generate_text_gpt(message.content,gmodel=gmodel)
+        await asyncio.sleep(1)
+        await message.reply(response_text)
 
     if flipper.translation_enabled:
         if ct.should_i_translate(message.content,message.channel):

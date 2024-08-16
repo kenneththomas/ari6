@@ -1,5 +1,9 @@
 # releasenotes
 
+## 8.8.4
+- chat, is this rizz??
+- chat clip this
+
 ## 8.8.3
 - add hebrew to translation support
 
