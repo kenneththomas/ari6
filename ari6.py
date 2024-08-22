@@ -17,7 +17,7 @@ import modules.masta_selecta as masta_selecta
 import modules.flipper as flipper
 import modules.joey as joey
 
-ari_version = '8.8.3'
+ari_version = '8.8.5'
 
 #object to store queued messages that will be sent in the future, contains message, which channel to send it to, when to send it, webhook username and picture
 class QueuedMessage:
@@ -237,7 +237,15 @@ async def on_message(message):
 
 
     if message.content.startswith('chat clip this'):
-        clipmsg = experimental_container[-5:]
+        # Split the message to check for a custom number
+        parts = message.content.split()
+        
+        # Default to 5 messages, or use the specified number (up to 10)
+        num_messages = 5
+        if len(parts) > 3 and parts[3].isdigit():
+            num_messages = min(int(parts[3]), 10)
+        
+        clipmsg = experimental_container[-num_messages:]
         #exclude the last message since its just chat clip this
         clipmsg = '\n'.join(clipmsg[:-1])
 

@@ -1,5 +1,12 @@
 # releasenotes
 
+## 8.8.5
+- clip previous x messages
+
+## 8.8.4-hotfix
+- needs to be exact match for chat clip this
+- 
+
 ## 8.8.4
 - chat, is this rizz??
 - chat clip this
