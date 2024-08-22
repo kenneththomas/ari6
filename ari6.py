@@ -245,8 +245,9 @@ async def on_message(message):
         if len(parts) > 3 and parts[3].isdigit():
             num_messages = min(int(parts[3]), 10)
         
-        clipmsg = experimental_container[-num_messages:]
-        #exclude the last message since its just chat clip this
+        # Add 1 to include the command message, which we'll remove later
+        clipmsg = experimental_container[-(num_messages + 1):]
+        # Exclude the last message since it's the command itself
         clipmsg = '\n'.join(clipmsg[:-1])
 
         tootlist = aritooter.tootcontrol(clipmsg)
