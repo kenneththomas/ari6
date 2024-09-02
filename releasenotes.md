@@ -1,5 +1,8 @@
 # releasenotes
 
+## 8.8.6
+- post sample of clipped message and provide ability to confirm or deny
+
 ## 8.8.5
 - clip previous x messages
 
