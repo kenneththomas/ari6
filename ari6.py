@@ -232,8 +232,6 @@ async def on_message(message):
                 print(f'seems like someone is trying to run a command! main disabled tho lol')
             return
 
-    #demo
-    print(f'experimental container: {experimental_container}')
     if message.content.startswith('chat clip this'):
         await chat_clipper.handle_chat_clip(message, experimental_container)
 
@@ -340,6 +338,7 @@ async def on_message(message):
             await message.channel.send(freemsg)
             return
 
+    '''
     if mememgr.chance(300):
         #webhook check for botchannel
         webhooks = await botchannel.webhooks()
@@ -362,6 +361,7 @@ async def on_message(message):
             })
             await bot_webhook.send(freemsg, username=webhook[0], avatar_url=webhook[1])
             return
+    '''
 
     # end AI block
 

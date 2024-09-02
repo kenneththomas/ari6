@@ -3,6 +3,7 @@
 ## 8.8.7
 - filter clip
 - remove emoji storage as its not used anywhere
+- disable random bot responses in joey for now
 
 ## 8.8.6
 - post sample of clipped message and provide ability to confirm or deny
@@ -12,7 +13,6 @@
 
 ## 8.8.4-hotfix
 - needs to be exact match for chat clip this
-- 
 
 ## 8.8.4
 - chat, is this rizz??
