@@ -1,5 +1,9 @@
 # releasenotes
 
+## 8.8.7
+- filter clip
+- remove emoji storage as its not used anywhere
+
 ## 8.8.6
 - post sample of clipped message and provide ability to confirm or deny
 

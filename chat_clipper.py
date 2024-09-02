@@ -10,11 +10,12 @@ def clip_messages(content, experimental_container):
     num_messages = 5
     if len(parts) > 3 and parts[3].isdigit():
         num_messages = min(int(parts[3]), 10)
-    
-    # Add 1 to include the command message, which we'll remove later
-    clipmsg = experimental_container[-(num_messages + 1):]
-    # Exclude the last message since it's the command itself
-    clipmsg = '\n'.join(clipmsg[:-1])
+    elif len(parts) > 3:
+        filterwords = parts[3].split(',')
+        experimental_container = [msg for msg in experimental_container if any(item.lower() in msg.lower() for item in filterwords) and msg.strip()]
+    # Remove empty messages, exclude the last message (command), and limit to the specified number
+    clipmsg = [msg for msg in experimental_container[:-1] if msg.strip()][-num_messages:]
+    clipmsg = '\n'.join(clipmsg)
 
     return clipmsg
 

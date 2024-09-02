@@ -19,7 +19,7 @@ import modules.joey as joey
 import chat_clipper
 from discord.ui import Button, View
 
-ari_version = '8.8.6'
+ari_version = '8.8.7'
 
 #object to store queued messages that will be sent in the future, contains message, which channel to send it to, when to send it, webhook username and picture
 class QueuedMessage:
@@ -33,11 +33,6 @@ class QueuedMessage:
 messagequeue = []
 songlibrary = {}
 
-emoji_storage = {
-    'eheu': '<:eheu:233869216002998272>',
-    'breez': '<:breez:230153282264236033>',
-    'bari': '<:bariblack:638105381549375515>'
-}
 onlyonce = []
 tweetcontainer = []
 time_container = []
@@ -237,7 +232,8 @@ async def on_message(message):
                 print(f'seems like someone is trying to run a command! main disabled tho lol')
             return
 
-
+    #demo
+    print(f'experimental container: {experimental_container}')
     if message.content.startswith('chat clip this'):
         await chat_clipper.handle_chat_clip(message, experimental_container)
 
