@@ -1,5 +1,5 @@
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 import asyncio
 import requests
 from dataclasses import dataclass
@@ -60,7 +60,7 @@ class CFBScoreboard:
         self.parse_scoreboard_data(scoreboard_data)
 
     def create_game_embed(self, game_info: GameInfo) -> discord.Embed:
-        embed = discord.Embed(title="CFB Game Update", color=0x0099ff)
+        embed = discord.Embed(title="scoreboard", color=0x0099ff)
         embed.add_field(name=game_info.team1, value=game_info.team1_score, inline=True)
         embed.add_field(name=game_info.team2, value=game_info.team2_score, inline=True)
         embed.add_field(name="Game Status", value=f"{game_info.downDistanceText}\n{game_info.time_qtr}", inline=False)
@@ -69,15 +69,40 @@ class CFBScoreboard:
         embed.set_footer(text=f"Game ID: {game_info.id} | Updated at {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         return embed
 
+    async def update_game_message(self, channel, message_id, game_info):
+        try:
+            message = await channel.fetch_message(message_id)
+            embed = self.create_game_embed(game_info)
+            await message.edit(embed=embed)
+        except discord.errors.NotFound:
+            # Message not found, send a new one
+            embed = self.create_game_embed(game_info)
+            await channel.send(embed=embed)
+
 intents = discord.Intents.default()
 intents.message_content = True
 
 bot = commands.Bot(command_prefix='!', intents=intents)
 cfb_scoreboard = CFBScoreboard()
 
+# Dictionary to store the last message ID for each game
+game_messages = {}
+
 @bot.event
 async def on_ready():
     print(f'We have logged in as {bot.user}')
+    update_scores.start()
+
+@tasks.loop(seconds=90)
+async def update_scores():
+    cfb_scoreboard.fetch_and_parse_data()
+    
+    for game_id, game_info in cfb_scoreboard.storage.items():
+        if game_id in game_messages:
+            channel_id, message_id = game_messages[game_id]
+            channel = bot.get_channel(channel_id)
+            if channel:
+                await cfb_scoreboard.update_game_message(channel, message_id, game_info)
 
 @bot.command(name='cfb')
 async def cfb_scores(ctx):
@@ -87,9 +112,10 @@ async def cfb_scores(ctx):
         await ctx.send("No active games found.")
         return
 
-    for game_info in cfb_scoreboard.storage.values():
+    for game_id, game_info in cfb_scoreboard.storage.items():
         embed = cfb_scoreboard.create_game_embed(game_info)
-        await ctx.send(embed=embed)
+        message = await ctx.send(embed=embed)
+        game_messages[game_id] = (ctx.channel.id, message.id)
         await asyncio.sleep(1)  # To avoid hitting rate limits
 
 @bot.command(name='cfbhelp')
