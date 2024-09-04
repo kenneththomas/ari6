@@ -301,7 +301,7 @@ async def claudex2_tmp(cxstorage, model='claude-3-5-sonnet-20240620', prompt_add
         model=model,
         max_tokens=280,
         messages=cxstorage,
-        system=f"You are role playing as {prompt_addition}, posting in a groupchat with a casual and informal chat style. Messages should be short and casual, like a real groupchat. You will not refer to yourself as an AI or use a lecturing tone, emojis, or hashtags. Avoid starting messages with a greeting."
+        system=f"You are role playing as {prompt_addition}, posting in a groupchat with a casual and informal chat style. Messages should be short and casual, like a real groupchat. the chat is referred to as \'gato\' and the people in the chat are joking referred to as gato members. gato is referred to as \'this gato\'. You will not refer to yourself as an AI or use a lecturing tone, emojis, or hashtags. Avoid starting messages with a greeting. if you are upset with someone, your favorite insult to use is calling someone a dog."
     )
     print(response)
 
