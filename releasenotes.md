@@ -1,5 +1,9 @@
 # releasenotes
 
+## 8.8.8
+- allow use of !clip for clipping
+- comment out im chras sc
+
 ## 8.8.7
 - filter clip
 - remove emoji storage as its not used anywhere

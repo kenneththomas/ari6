@@ -232,7 +232,7 @@ async def on_message(message):
                 print(f'seems like someone is trying to run a command! main disabled tho lol')
             return
 
-    if message.content.startswith('chat clip this'):
+    if message.content.startswith('chat clip this') or message.content.startswith('!clip'):
         await chat_clipper.handle_chat_clip(message, experimental_container)
 
     #start AI block
@@ -387,6 +387,7 @@ async def on_message(message):
 
 
     # TODO - this block both replies and reacts so it doesnt fit in emoji reactor or memes
+    '''
     if message.content.lower().startswith('im '):
         chrasemoji = '<:chras:237738874930069505>'
         chrasreply = message.content.lower()[2:].lstrip()
@@ -397,6 +398,7 @@ async def on_message(message):
                 await message.reply(f'hi {chrasreply}')
                 await asyncio.sleep(1)
                 await message.reply('I\'m ChrasSC')
+    '''
 
     if 'https://twitter.com/' in message.content:
 
