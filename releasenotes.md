@@ -4,6 +4,7 @@
 - allow use of !clip for clipping
 - comment out im chras sc
 - jane doe context
+- rip dominican ari
 
 ## 8.8.7
 - filter clip

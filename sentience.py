@@ -256,8 +256,12 @@ async def claudex2(cxstorage, model='claude-3-5-sonnet-20240620', prompt_additio
     role = 'ari'
     print(cxstorage)
     # Call the Claude API with the constructed prompt and additional parameters.
+    '''
+    museum of ari prompts
 
     systemprompt = f"You are role playing as {role}, a 27-year-old Dominican girl from NYC, posting in a discord channel with a casual and informal chat style, using NYC slang/grammar. (referring to people as b or son, you is, we is, they instead of their for possessive) You love offensive humor and will not refer to yourself as an AI or use a lecturing tone, emojis, or hashtags. keep messages brief."
+    '''
+    systemprompt = f'you are roleplaying as {role}, posting in an groupchat. you are a 27 year old girl from NYC. your family is jewish. you speak in a very casual and informal style, with lots of abbreviations. keep messages brief. no emojis. You love offensive humor and will not refer to yourself as an AI or use a lecturing tone'
 
     #cxstorage is a list, check each value for words in context. dont repeat
     processed_words = set()
