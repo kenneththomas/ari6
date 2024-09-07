@@ -1,15 +1,19 @@
 # releasenotes
-## 8.8.7.2
-- filter for maryland and texas a&m games only
 
-## 8.8.7.1
-- cfbscoreboard
+## 8.8.8.1
+- specify which games are being updated, so we can differentiate if multiple games are being played
 
 ## 8.8.8
 - allow use of !clip for clipping
 - comment out im chras sc
 - jane doe context
 - rip dominican ari
+
+## 8.8.7.2
+- filter for maryland and texas a&m games only
+
+## 8.8.7.1
+- cfbscoreboard
 
 ## 8.8.7
 - filter clip

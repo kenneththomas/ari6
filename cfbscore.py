@@ -26,7 +26,7 @@ class CFBScoreboard:
     def __init__(self):
         self.storage: Dict[str, GameInfo] = {}
         self.last_plays: Dict[str, str] = {}
-        self.teams_to_watch = ["Maryland", "Texas A&M"]  # List of teams to watch
+        self.teams_to_watch = ["Maryland", "Texas A&M","Michigan","Georgia Tech","Notre Dame","Georgia","Alabama","Iowa"]  # List of teams to watch
 
     def fetch_scoreboard_data(self) -> dict:
         response = requests.get(self.API_URL)
@@ -59,14 +59,32 @@ class CFBScoreboard:
 
     def fetch_and_parse_data(self) -> None:
         scoreboard_data = self.fetch_scoreboard_data()
-        self.parse_scoreboard_data(scoreboard_data)
-
-        filtered_games = {}
-        for game_id, game_info in self.storage.items():
-            if game_info.home_team in self.teams_to_watch or game_info.away_team in self.teams_to_watch:
-                filtered_games[game_id] = game_info
+        self.storage.clear()
         
-        self.storage = filtered_games
+        for event in scoreboard_data.get('events', []):
+            competition = event['competitions'][0]
+            team1, team2 = competition['competitors']
+            
+            game_info = GameInfo(
+                id=event['id'],
+                team1=team1['team']['shortDisplayName'],
+                team2=team2['team']['shortDisplayName'],
+                last_play=competition.get('situation', {}).get('lastPlay', {}).get('text', 'No last play available'),
+                team1_score=team1.get('score', '0'),
+                team2_score=team2.get('score', '0'),
+                downDistanceText=competition.get('situation', {}).get('downDistanceText', 'No down and distance available'),
+                time_qtr=event['status']['type']['detail'],
+                team1_logo=team1['team'].get('logo', ''),
+                team2_logo=team2['team'].get('logo', '')
+            )
+            
+            if game_info.team1 in self.teams_to_watch or game_info.team2 in self.teams_to_watch:
+                self.storage[game_info.id] = game_info
+        
+        # Debug print
+        print(f"Games found after filtering: {len(self.storage)}")
+        for game_id, game_info in self.storage.items():
+            print(f"Game ID: {game_id}, Teams: {game_info.team1} vs {game_info.team2}")
 
     def create_game_embed(self, game_info: GameInfo) -> discord.Embed:
         embed = discord.Embed(title="scoreboard", color=0x0099ff)
@@ -86,7 +104,7 @@ class CFBScoreboard:
             
             # Post last play as a separate message only if it's different
             if game_info.last_play and game_info.last_play != self.last_plays.get(game_info.id):
-                await channel.send(f"{game_info.last_play}")
+                await channel.send(f"**{game_info.team1} vs {game_info.team2}**: {game_info.last_play}")
                 self.last_plays[game_info.id] = game_info.last_play
         except discord.errors.NotFound:
             # Message not found, send a new one
@@ -121,14 +139,19 @@ async def update_scores():
 
 @bot.command(name='cfb')
 async def cfb_scores(ctx):
+    print("Fetching and parsing data...")
     cfb_scoreboard.fetch_and_parse_data()
+    
+    print(f"Teams we're watching: {cfb_scoreboard.teams_to_watch}")
     
     if not cfb_scoreboard.storage:
         await ctx.send("No active games found for the specified teams.")
+        print("No games found after filtering.")
         await ctx.message.delete()
         return
 
     for game_id, game_info in cfb_scoreboard.storage.items():
+        print(f"Sending embed for game: {game_info.team1} vs {game_info.team2}")
         embed = cfb_scoreboard.create_game_embed(game_info)
         message = await ctx.send(embed=embed)
         game_messages[game_id] = (ctx.channel.id, message.id)
