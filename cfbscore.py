@@ -12,6 +12,8 @@ class GameInfo:
     id: str
     team1: str
     team2: str
+    team1_abbrev: str
+    team2_abbrev: str
     last_play: str
     team1_score: str
     team2_score: str
@@ -46,6 +48,8 @@ class CFBScoreboard:
                 id=event['id'],
                 team1=team1['team']['displayName'],
                 team2=team2['team']['displayName'],
+                team1_abbrev=team1['team']['shortDisplayName'],
+                team2_abbrev=team2['team']['shortDisplayName'],
                 last_play=competition.get('situation', {}).get('lastPlay', {}).get('text', 'No last play available'),
                 team1_score=team1['score'],
                 team2_score=team2['score'],
@@ -69,6 +73,8 @@ class CFBScoreboard:
                 id=event['id'],
                 team1=team1['team']['shortDisplayName'],
                 team2=team2['team']['shortDisplayName'],
+                team1_abbrev=team1['team']['abbreviation'],
+                team2_abbrev=team2['team']['abbreviation'],
                 last_play=competition.get('situation', {}).get('lastPlay', {}).get('text', 'No last play available'),
                 team1_score=team1.get('score', '0'),
                 team2_score=team2.get('score', '0'),
@@ -106,7 +112,7 @@ class CFBScoreboard:
             if (game_info.last_play and 
                 game_info.last_play != self.last_plays.get(game_info.id) and 
                 game_info.last_play != "No last play available"):
-                await channel.send(f"**{game_info.team1} vs {game_info.team2}**: {game_info.last_play}")
+                await channel.send(f"**{game_info.team1_abbrev} vs {game_info.team2_abbrev}**: {game_info.last_play}")
                 self.last_plays[game_info.id] = game_info.last_play
         except discord.errors.NotFound:
             # Message not found, send a new one
