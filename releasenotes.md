@@ -1,4 +1,9 @@
 # releasenotes
+## 8.8.7.2
+- filter for maryland and texas a&m games only
+
+## 8.8.7.1
+- cfbscoreboard
 
 ## 8.8.7
 - filter clip

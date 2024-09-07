@@ -25,6 +25,8 @@ class CFBScoreboard:
 
     def __init__(self):
         self.storage: Dict[str, GameInfo] = {}
+        self.last_plays: Dict[str, str] = {}
+        self.teams_to_watch = ["Maryland", "Texas A&M"]  # List of teams to watch
 
     def fetch_scoreboard_data(self) -> dict:
         response = requests.get(self.API_URL)
@@ -59,6 +61,13 @@ class CFBScoreboard:
         scoreboard_data = self.fetch_scoreboard_data()
         self.parse_scoreboard_data(scoreboard_data)
 
+        filtered_games = {}
+        for game_id, game_info in self.storage.items():
+            if game_info.home_team in self.teams_to_watch or game_info.away_team in self.teams_to_watch:
+                filtered_games[game_id] = game_info
+        
+        self.storage = filtered_games
+
     def create_game_embed(self, game_info: GameInfo) -> discord.Embed:
         embed = discord.Embed(title="scoreboard", color=0x0099ff)
         embed.add_field(name=game_info.team1, value=game_info.team1_score, inline=True)
@@ -74,10 +83,16 @@ class CFBScoreboard:
             message = await channel.fetch_message(message_id)
             embed = self.create_game_embed(game_info)
             await message.edit(embed=embed)
+            
+            # Post last play as a separate message only if it's different
+            if game_info.last_play and game_info.last_play != self.last_plays.get(game_info.id):
+                await channel.send(f"{game_info.last_play}")
+                self.last_plays[game_info.id] = game_info.last_play
         except discord.errors.NotFound:
             # Message not found, send a new one
             embed = self.create_game_embed(game_info)
-            await channel.send(embed=embed)
+            new_message = await channel.send(embed=embed)
+            game_messages[game_info.id] = (channel.id, new_message.id)
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -93,7 +108,7 @@ async def on_ready():
     print(f'We have logged in as {bot.user}')
     update_scores.start()
 
-@tasks.loop(seconds=90)
+@tasks.loop(seconds=15)
 async def update_scores():
     cfb_scoreboard.fetch_and_parse_data()
     
@@ -109,7 +124,8 @@ async def cfb_scores(ctx):
     cfb_scoreboard.fetch_and_parse_data()
     
     if not cfb_scoreboard.storage:
-        await ctx.send("No active games found.")
+        await ctx.send("No active games found for the specified teams.")
+        await ctx.message.delete()
         return
 
     for game_id, game_info in cfb_scoreboard.storage.items():
@@ -117,6 +133,8 @@ async def cfb_scores(ctx):
         message = await ctx.send(embed=embed)
         game_messages[game_id] = (ctx.channel.id, message.id)
         await asyncio.sleep(1)  # To avoid hitting rate limits
+    
+    await ctx.message.delete()
 
 @bot.command(name='cfbhelp')
 async def cfb_help(ctx):
