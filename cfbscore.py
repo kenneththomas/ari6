@@ -102,8 +102,10 @@ class CFBScoreboard:
             embed = self.create_game_embed(game_info)
             await message.edit(embed=embed)
             
-            # Post last play as a separate message only if it's different
-            if game_info.last_play and game_info.last_play != self.last_plays.get(game_info.id):
+            # Post last play as a separate message only if it's different and not "No last play available"
+            if (game_info.last_play and 
+                game_info.last_play != self.last_plays.get(game_info.id) and 
+                game_info.last_play != "No last play available"):
                 await channel.send(f"**{game_info.team1} vs {game_info.team2}**: {game_info.last_play}")
                 self.last_plays[game_info.id] = game_info.last_play
         except discord.errors.NotFound:
