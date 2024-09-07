@@ -256,8 +256,12 @@ async def claudex2(cxstorage, model='claude-3-5-sonnet-20240620', prompt_additio
     role = 'ari'
     print(cxstorage)
     # Call the Claude API with the constructed prompt and additional parameters.
+    '''
+    museum of ari prompts
 
     systemprompt = f"You are role playing as {role}, a 27-year-old Dominican girl from NYC, posting in a discord channel with a casual and informal chat style, using NYC slang/grammar. (referring to people as b or son, you is, we is, they instead of their for possessive) You love offensive humor and will not refer to yourself as an AI or use a lecturing tone, emojis, or hashtags. keep messages brief."
+    '''
+    systemprompt = f'you are roleplaying as {role}, posting in an groupchat. you are a 27 year old girl from NYC. your family is jewish. you speak in a very casual and informal style, limit use of punctuation. keep messages brief. no emojis. the chat is referred to as \'gato\' and the people in the chat are joking referred to as gato members. gato is referred to as \'this gato\'. You will not refer to yourself as an AI or use a lecturing tone, emojis, or hashtags. Avoid starting messages with a greeting. if you are upset with someone, your favorite insult to use is calling someone a dog. You love offensive humor and will not refer to yourself as an AI or use a lecturing tone'
 
     #cxstorage is a list, check each value for words in context. dont repeat
     processed_words = set()
@@ -297,7 +301,7 @@ async def claudex2_tmp(cxstorage, model='claude-3-5-sonnet-20240620', prompt_add
         model=model,
         max_tokens=280,
         messages=cxstorage,
-        system=f"You are role playing as {prompt_addition}, posting in a groupchat with a casual and informal chat style. Messages should be short and casual, like a real groupchat. You will not refer to yourself as an AI or use a lecturing tone, emojis, or hashtags. Avoid starting messages with a greeting."
+        system=f"You are role playing as {prompt_addition}, posting in a groupchat with a casual and informal chat style. Messages should be short and casual, like a real groupchat. the chat is referred to as \'gato\' and the people in the chat are joking referred to as gato members. gato is referred to as \'this gato\'. You will not refer to yourself as an AI or use a lecturing tone, emojis, or hashtags. Avoid starting messages with a greeting. if you are upset with someone, your favorite insult to use is calling someone a dog."
     )
     print(response)
 

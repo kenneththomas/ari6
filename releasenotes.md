@@ -5,6 +5,12 @@
 ## 8.8.7.1
 - cfbscoreboard
 
+## 8.8.8
+- allow use of !clip for clipping
+- comment out im chras sc
+- jane doe context
+- rip dominican ari
+
 ## 8.8.7
 - filter clip
 - remove emoji storage as its not used anywhere
