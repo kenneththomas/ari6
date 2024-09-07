@@ -3,7 +3,7 @@ from discord.ext import commands, tasks
 import asyncio
 import requests
 from dataclasses import dataclass
-from typing import Dict
+from typing import Dict, List
 import datetime
 import maricon
 
@@ -31,9 +31,32 @@ class CFBScoreboard:
         self.teams_to_watch = ["Maryland", "Texas A&M","Michigan","Georgia Tech","Notre Dame","Georgia","Alabama","Iowa"]  # List of teams to watch
 
     def fetch_scoreboard_data(self) -> dict:
-        response = requests.get(self.API_URL)
+        params = {
+            'limit': 100,  # Increase the limit to fetch more games
+            'groups': '80',  # FBS games
+        }
+        team_ids = self.get_team_ids()
+        if team_ids:
+            params['teams'] = ','.join(team_ids)
+        
+        response = requests.get(self.API_URL, params=params)
         response.raise_for_status()
         return response.json()
+
+    def get_team_ids(self) -> List[str]:
+        # This method should return a list of ESPN team IDs for the teams we're watching
+        # You'll need to manually find and add these IDs
+        team_id_map = {
+            "Maryland": "120",
+            "Texas A&M": "245",
+            "Michigan": "130",
+            "Georgia Tech": "59",
+            "Notre Dame": "87",
+            "Georgia": "61",
+            "Alabama": "333",
+            "Iowa": "2294"
+        }
+        return [team_id_map[team] for team in self.teams_to_watch if team in team_id_map]
 
     def parse_scoreboard_data(self, scoreboard_data: dict) -> None:
         self.storage.clear()
