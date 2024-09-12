@@ -239,7 +239,7 @@ async def on_message(message):
                 print(f'seems like someone is trying to run a command! main disabled tho lol')
             return
 
-    if message.content.startswith('chat clip this') or message.content.startswith('!clip'):
+    if message.content.startswith('!clip'):
         await chat_clipper.handle_chat_clip(message, experimental_container)
 
     #start AI block

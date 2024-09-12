@@ -6,25 +6,36 @@ from discord import ButtonStyle
 def clip_messages(content, experimental_container):
     parts = content.split()
     
-    # Default to 5 messages, or use the specified number (up to 10)
-    num_messages = 5
-    if len(parts) > 3 and parts[3].isdigit():
-        num_messages = min(int(parts[3]), 10)
-    elif len(parts) > 3:
-        filterwords = parts[3].split(',')
-        experimental_container = [msg for msg in experimental_container if any(item.lower() in msg.lower() for item in filterwords) and msg.strip()]
+    # Exclude the command message (assumed to be the last one)
+    messages = experimental_container[:-1]
     
-    # Remove empty messages, exclude the last message (command), and limit to the specified number
-    messages = [msg.strip() for msg in experimental_container[:-1] if msg.strip()][-num_messages:]
+    # Remove empty messages
+    messages = [msg.strip() for msg in messages if msg.strip()]
+    
+    # Default to 5 messages
+    num_messages = 5
+    
+    if len(parts) > 1:
+        if parts[1].isdigit():
+            num_messages = min(int(parts[1]), 10)
+        else:
+            filterwords = parts[1].split(',')
+            messages = [
+                msg for msg in messages 
+                if any(item.lower() in msg.lower() for item in filterwords)
+            ]
+    
+    # Limit to the specified number
+    messages = messages[-num_messages:]
     
     # Create the filtered clipmsg for posting
     filtered_clipmsg = '\n'.join(messages)
     
     # Format the messages for display
-    formatted_messages = []
-    for i, msg in enumerate(messages, 1):
-        formatted_msg = f"**Message {i}:**\n```\n{msg}\n```"
-        formatted_messages.append(formatted_msg)
+    formatted_messages = [
+        f"**Message {i}:**\n```\n{msg}\n```" 
+        for i, msg in enumerate(messages, 1)
+    ]
     
     formatted_clipmsg = '\n\n'.join(formatted_messages)
     return filtered_clipmsg, formatted_clipmsg
