@@ -1,5 +1,8 @@
 # releasenotes
 
+## 8.8.9
+- experimental container memory management
+
 ## 8.8.8.1
 - specify which games are being updated, so we can differentiate if multiple games are being played
 
