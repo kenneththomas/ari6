@@ -19,7 +19,7 @@ import modules.joey as joey
 import chat_clipper
 from discord.ui import Button, View
 
-ari_version = '8.8.9'
+ari_version = '8.8.9-alpha'
 
 #object to store queued messages that will be sent in the future, contains message, which channel to send it to, when to send it, webhook username and picture
 class QueuedMessage:
@@ -95,7 +95,7 @@ async def on_ready():
 @client.event
 async def on_message(message):
     global catchannel, barcochannel, cloudchannel, gatochannel
-    global lastmsg
+    global lastmsg, experimental_container
     global trivia_answer, trivia_question
     #ignore webhooks
     if message.webhook_id:
@@ -134,8 +134,8 @@ async def on_message(message):
     #experimental container can get quite large even with less than 10 messages, if there are more than 500 words across all messages clear the memory
     maxlength = 500
     total_length = sum(len(s) for s in experimental_container)
-    print(f'ALERT: exceeded maxlength {maxlength}, clearing container')
     if total_length > maxlength:
+        print(f'ALERT: exceeded maxlength {maxlength}, clearing container')
         experimental_container = []
 
     if len(cxstorage) > 10:
