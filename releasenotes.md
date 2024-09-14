@@ -1,7 +1,13 @@
 # releasenotes
 
+<<<<<<< HEAD
 # 8.8.8.2
 - more robust team finding
+=======
+## 8.8.9
+- experimental container memory management
+- clip improvements
+>>>>>>> 819f42ecd5761b4797ff49daf26ceabd784b0af0
 
 ## 8.8.8.1
 - specify which games are being updated, so we can differentiate if multiple games are being played
