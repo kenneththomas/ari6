@@ -28,7 +28,7 @@ class CFBScoreboard:
     def __init__(self):
         self.storage: Dict[str, GameInfo] = {}
         self.last_plays: Dict[str, str] = {}
-        self.teams_to_watch = ["Maryland", "Texas A&M","Michigan","Georgia Tech","Notre Dame","Georgia","Alabama","Iowa"]  # List of teams to watch
+        self.teams_to_watch = ["Maryland", "Texas A&M","Michigan","Georgia Tech","Notre Dame","Georgia","Alabama","Ohio State"]  # List of teams to watch
 
     def fetch_scoreboard_data(self) -> dict:
         params = {
@@ -48,13 +48,13 @@ class CFBScoreboard:
         # You'll need to manually find and add these IDs
         team_id_map = {
             "Maryland": "120",
-            "Texas A&M": "245",
-            "Michigan": "130",
-            "Georgia Tech": "59",
+            #"Texas A&M": "245",
+            #"Michigan": "130",
+            #"Georgia Tech": "59",
             "Notre Dame": "87",
-            "Georgia": "61",
+            #"Georgia": "61",
             "Alabama": "333",
-            "Iowa": "2294"
+            "Ohio State": "194",
         }
         return [team_id_map[team] for team in self.teams_to_watch if team in team_id_map]
 
@@ -186,7 +186,7 @@ async def cfb_scores(ctx):
         embed = cfb_scoreboard.create_game_embed(game_info)
         message = await ctx.send(embed=embed)
         game_messages[game_id] = (ctx.channel.id, message.id)
-        await asyncio.sleep(1)  # To avoid hitting rate limits
+        await asyncio.sleep(2)  # To avoid hitting rate limits
     
     await ctx.message.delete()
 

@@ -1,5 +1,8 @@
 # releasenotes
 
+# 8.8.8.2
+- more robust team finding
+
 ## 8.8.8.1
 - specify which games are being updated, so we can differentiate if multiple games are being played
 
