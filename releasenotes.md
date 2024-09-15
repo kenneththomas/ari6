@@ -1,5 +1,9 @@
 # releasenotes
 
+## 8.8.9.1
+- sleep during updates to avoid rate limits
+- remove trump getting shot context cuz bot wont stop talking about it
+
 ## 8.8.9
 - experimental container memory management
 - clip improvements

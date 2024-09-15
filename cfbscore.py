@@ -166,6 +166,7 @@ async def update_scores():
             channel_id, message_id = game_messages[game_id]
             channel = bot.get_channel(channel_id)
             if channel:
+                await asyncio.sleep(2)
                 await cfb_scoreboard.update_game_message(channel, message_id, game_info)
 
 @bot.command(name='cfb')
