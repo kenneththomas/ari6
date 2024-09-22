@@ -19,7 +19,7 @@ import modules.joey as joey
 import chat_clipper
 from discord.ui import Button, View
 
-ari_version = '8.8.9-alpha'
+ari_version = '8.8.10'
 
 #object to store queued messages that will be sent in the future, contains message, which channel to send it to, when to send it, webhook username and picture
 class QueuedMessage:
@@ -225,7 +225,7 @@ async def on_message(message):
                                     await barco_webhook.send(albumart, username=message.author.name, avatar_url=message.author.avatar)
 
                             #roast user's music taste
-                            if mememgr.chance(10):
+                            if mememgr.chance(40):
                                 roast_prompt = f'{message.author.display_name} is listening to {npstring}, roast them for it. you can comment negative things about the artist or make fun of particular lyrics from that song. end with a skull emoji.'
                                 roast = await sentience.generate_text_gpt(roast_prompt,gmodel='gpt-4o')
                                 #post as lamelo ball webhook
@@ -275,6 +275,10 @@ async def on_message(message):
     if message.content.startswith('!gpt'):
         if message.content.startswith('!gpt4'):
             gmodel = 'gpt-4o'
+        if flipper.precheck:
+            if 'yes' in await sentience.precheck(message.content):
+                await message.reply('popsicle')
+                return
         response_text = await sentience.generate_text_gpt(message.content,gmodel=gmodel)
         await asyncio.sleep(1)
         await message.reply(response_text)

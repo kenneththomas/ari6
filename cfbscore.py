@@ -28,7 +28,8 @@ class CFBScoreboard:
     def __init__(self):
         self.storage: Dict[str, GameInfo] = {}
         self.last_plays: Dict[str, str] = {}
-        self.teams_to_watch = ["Maryland", "Texas A&M","Michigan","Georgia Tech","Notre Dame","Georgia","Alabama","Ohio State"]  # List of teams to watch
+        self.teams_to_watch = ["Maryland", "Texas A&M","Michigan","Georgia Tech","Notre Dame","Georgia","Alabama","Ohio State"]
+        self.teams_to_watch = ['Texas A&M']
 
     def fetch_scoreboard_data(self) -> dict:
         params = {
@@ -167,6 +168,7 @@ async def update_scores():
             channel = bot.get_channel(channel_id)
             if channel:
                 await asyncio.sleep(2)
+                print(f'updating game {game_id}: {game_info.team1} vs {game_info.team2} {game_info.last_play}')
                 await cfb_scoreboard.update_game_message(channel, message_id, game_info)
 
 @bot.command(name='cfb')

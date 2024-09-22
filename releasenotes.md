@@ -1,5 +1,9 @@
 # releasenotes
 
+## 8.8.10
+- significantly reduce spotify roast frequency
+- recommendations on what to eat (popsicle)
+
 ## 8.8.9.1
 - sleep during updates to avoid rate limits
 - remove trump getting shot context cuz bot wont stop talking about it

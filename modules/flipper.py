@@ -3,11 +3,12 @@ translation_enabled = False
 claude = True
 spotify_enable = True
 cheap = True
+precheck = True
 zp_last_msg_author = ''
 zp_msg = ''
 
 def togglemgr(user, message):
-    global zoomerposting, translation_enabled, claude, spotify_enable, cheap
+    global zoomerposting, translation_enabled, claude, spotify_enable, cheap, precheck
     if message == '!zoomerposting':
         zoomerposting = not zoomerposting
         return f'zoomerposting is now {bool_to_str(zoomerposting)}'
@@ -20,6 +21,9 @@ def togglemgr(user, message):
     elif message == '!spotify':
         spotify_enable = not spotify_enable
         return f'spotify is now {bool_to_str(spotify_enable)}'
+    elif message == '!precheck':
+        precheck = not precheck
+        return f'precheck is now {bool_to_str(precheck)}'
 
 def chctl(user, message):
     global cheap

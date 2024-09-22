@@ -8,6 +8,7 @@ import anthropic
 claude = anthropic.Anthropic(api_key=maricon.anthropic_key)
 import re
 import csv
+import time
 
 
 # Initialize a dictionary to store conversation history for each user
@@ -394,5 +395,30 @@ def load_context():
 
     print('loaded context')
     print(context)
+
+async def precheck(prompt):
+    start_time = time.time()
+
+    full_prompt = [
+        {"role": "system", "content": "is this message asking what to eat, respond yes or no"},
+        {"role": "user", "content": f"{prompt}"}
+    ]
+
+    response = client.chat.completions.create(
+        model='gpt-4o-mini',
+        max_tokens=300,
+        temperature=0.8,
+        messages=full_prompt
+    )
+
+    print(response)
+    generated_text = response.choices[0].message.content.strip().lower()
+
+    end_time = time.time()
+    execution_time = end_time - start_time
+    print(f"Precheck execution time: {execution_time:.2f} seconds")
+
+    return generated_text
+
 
 load_context()
