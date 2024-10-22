@@ -19,7 +19,7 @@ import modules.joey as joey
 import chat_clipper
 from discord.ui import Button, View
 
-ari_version = '8.8.10'
+ari_version = '8.8.12'
 
 #object to store queued messages that will be sent in the future, contains message, which channel to send it to, when to send it, webhook username and picture
 class QueuedMessage:
@@ -266,7 +266,15 @@ async def on_message(message):
                     'role': 'assistant',
                     'content': f"{freemsg}"
                 })
-            await message.reply(freemsg)           
+            
+            # Split and send message
+            if freemsg.count('\n') < 6:
+                for line in freemsg.split('\n'):
+                    if line.strip():
+                        await asyncio.sleep(random.uniform(0.8, 2.3))
+                        await message.channel.send(line)
+            else:
+                await message.reply(freemsg)
 
         return
     
@@ -677,3 +685,4 @@ async def on_message_delete(message):
     print(f'[{datetime.datetime.now()}] {message.author.name} deleted message: {message.content}')
 
 client.run(maricon.bottoken)
+

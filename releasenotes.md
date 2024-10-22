@@ -1,5 +1,8 @@
 # releasenotes
 
+## 8.8.12
+- msg splitting
+
 ## 8.8.11
 - claude version bump
 
