@@ -132,7 +132,7 @@ async def on_message(message):
         experimental_container.pop(0)
 
     #experimental container can get quite large even with less than 10 messages, if there are more than 500 words across all messages clear the memory
-    maxlength = 500
+    maxlength = 1000
     total_length = sum(len(s) for s in experimental_container)
     if total_length > maxlength:
         print(f'ALERT: exceeded maxlength {maxlength}, clearing container')
@@ -346,7 +346,15 @@ async def on_message(message):
                 'role': 'assistant',
                 'content': f"{freemsg}"
             })
-            await message.channel.send(freemsg)
+            #check how many newlines there are in the message. if its less than 6, its probably unintentional and we can post them one at a time
+            if freemsg.count('\n') < 6:
+                for line in freemsg.split('\n'):
+                    await asyncio.sleep(random.uniform(0.1,1.3))
+                    #skip blank lines
+                    if line.strip():
+                        await message.channel.send(line)
+            else:
+                await message.channel.send(freemsg)
             return
 
     '''

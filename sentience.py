@@ -233,7 +233,7 @@ async def ai_experimental(prompt, gmodel="gpt-4o-mini", prompt_addition=False):
     return generated_text
 
 #cloudhouse claude prompt
-async def ch_claudex(prompt, recentmessages, model='claude-3-5-sonnet-20240620'):
+async def ch_claudex(prompt, recentmessages, model='claude-3-5-sonnet-20241022'):
     #call claude with prompt and recent messages
 
     rm = [{"role": "user", "content": f'{recentmessages}'}]
@@ -252,7 +252,7 @@ async def ch_claudex(prompt, recentmessages, model='claude-3-5-sonnet-20240620')
     return text_content
 
 
-async def claudex2(cxstorage, model='claude-3-5-sonnet-20240620', prompt_addition=None):
+async def claudex2(cxstorage, model='claude-3-5-sonnet-20241022', prompt_addition=None):
 
     role = 'ari'
     print(cxstorage)
@@ -292,7 +292,7 @@ async def claudex2(cxstorage, model='claude-3-5-sonnet-20240620', prompt_additio
 
     return text_content
 
-async def claudex2_tmp(cxstorage, model='claude-3-5-sonnet-20240620', prompt_addition=None):
+async def claudex2_tmp(cxstorage, model='claude-3-5-sonnet-20241022', prompt_addition=None):
 
     role = 'ari'
     print(cxstorage)

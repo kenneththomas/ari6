@@ -1,5 +1,8 @@
 # releasenotes
 
+## 8.8.11
+- claude version bump
+
 ## 8.8.10
 - significantly reduce spotify roast frequency
 - recommendations on what to eat (popsicle)
