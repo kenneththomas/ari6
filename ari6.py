@@ -19,7 +19,7 @@ import modules.joey as joey
 import chat_clipper
 from discord.ui import Button, View
 
-ari_version = '8.8.12'
+ari_version = '8.8.13'
 
 #object to store queued messages that will be sent in the future, contains message, which channel to send it to, when to send it, webhook username and picture
 class QueuedMessage:
