@@ -19,7 +19,7 @@ import modules.joey as joey
 import chat_clipper
 from discord.ui import Button, View
 
-ari_version = '8.8.13'
+ari_version = '8.8.14'
 
 #object to store queued messages that will be sent in the future, contains message, which channel to send it to, when to send it, webhook username and picture
 class QueuedMessage:
@@ -271,7 +271,7 @@ async def on_message(message):
             if freemsg.count('\n') < 6:
                 for line in freemsg.split('\n'):
                     if line.strip():
-                        await asyncio.sleep(random.uniform(0.8, 2.3))
+                        await asyncio.sleep(random.uniform(1, 4.3))
                         await message.channel.send(line)
             else:
                 await message.reply(freemsg)
@@ -357,7 +357,7 @@ async def on_message(message):
             #check how many newlines there are in the message. if its less than 6, its probably unintentional and we can post them one at a time
             if freemsg.count('\n') < 6:
                 for line in freemsg.split('\n'):
-                    await asyncio.sleep(random.uniform(0.1,1.3))
+                    await asyncio.sleep(random.uniform(0.1,2.0))
                     #skip blank lines
                     if line.strip():
                         await message.channel.send(line)

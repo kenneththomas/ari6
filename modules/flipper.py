@@ -3,7 +3,7 @@ translation_enabled = False
 claude = True
 spotify_enable = True
 cheap = True
-precheck = True
+precheck = False
 zp_last_msg_author = ''
 zp_msg = ''
 
