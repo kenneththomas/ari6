@@ -1,5 +1,8 @@
 # releasenotes
 
+## 8.9.1
+- dont double post twitter links posted by myself
+
 ## 8.9
 - this is crazy dude
 

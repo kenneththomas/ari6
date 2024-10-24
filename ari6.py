@@ -179,6 +179,7 @@ async def on_message(message):
                     await ari_webhook.send(f'{message.author.display_name} posted:\n {tweetlink}', username=username, avatar_url=avatar)
                 else:
                     await message.channel.send(f"{message.author.display_name} posted:\n {tweetlink}")
+                return
 
     #toggle main_enabled with !main
     if str(message.content) == '!main':
@@ -324,7 +325,7 @@ async def on_message(message):
         else:
             await message.channel.send(f'{new_language} is not a supported language')
 
-    # Replace the bot channel logic with:
+
     if message.channel == botchannel:
         await response_handler.handle_bot_channel_message(message, cxstorage, gatochannel)
         return
