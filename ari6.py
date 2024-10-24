@@ -18,6 +18,7 @@ import modules.flipper as flipper
 import modules.joey as joey
 import chat_clipper
 from discord.ui import Button, View
+from modules.trivia_handler import TriviaHandler
 
 ari_version = '8.8.14'
 
@@ -70,6 +71,8 @@ botchannel = None
 
 
 starttime = datetime.datetime.now()
+
+trivia_handler = TriviaHandler()
 
 
 @client.event
@@ -412,21 +415,6 @@ async def on_message(message):
         for emoj in emoji:
             await message.add_reaction(emoj)
 
-
-    # TODO - this block both replies and reacts so it doesnt fit in emoji reactor or memes
-    '''
-    if message.content.lower().startswith('im '):
-        chrasemoji = '<:chras:237738874930069505>'
-        chrasreply = message.content.lower()[2:].lstrip()
-        if mememgr.chance(12):
-            await asyncio.sleep(2)
-            await message.add_reaction(chrasemoji)
-            if mememgr.chance(6):
-                await message.reply(f'hi {chrasreply}')
-                await asyncio.sleep(1)
-                await message.reply('I\'m ChrasSC')
-    '''
-
     if 'https://twitter.com/' in message.content:
 
         webhooks = await gatochannel.webhooks()
@@ -506,63 +494,19 @@ async def on_message(message):
         top_users = l.get_top_10_xp_users()
         await message.channel.send(top_users)
 
+    # Trivia commands
     if message.content == '!trivia':
-        #random question
-        trivia_question = random.choice(list(l.trivia_questions.keys()))
-        trivia_answer = l.trivia_questions[trivia_question]
-        async with message.channel.typing():
-            host_question = await sentience.ask_trivia_question(trivia_question)
-            await message.channel.send(f'{host_question}')
-
-
-    # trivia hint
-    if message.content == '!hint':
-        if trivia_answer != '':
-            hint = await sentience.trivia_hint(trivia_question, trivia_answer)
-            await message.channel.send(f'{hint}')
-
-    # if message is answer to trivia question, give xp
-    if message.content.lower() == trivia_answer.lower():
-        # if trivia answer is blank, dont do anything
-        if trivia_answer != '':
-            trivia_answer = ''
-            l.add_xp_user(str(message.author), 3)
-            async with message.channel.typing():
-                congratulatory_msg = await sentience.congratulate_trivia_winner(str(message.author),trivia_question,trivia_answer)
-                await message.channel.send(f'{congratulatory_msg}')
-
-    # add trivia question to lumberjack trivia_questions dictionary
-    if message.content.startswith('!addquestion'):
-        new_trivia = message.content.replace('!addquestion','').strip()
-        #split by ,
-        #validation, if not 2 items, return
-        if len(new_trivia.split(',')) != 2:
-            await message.channel.send('Invalid format, use !addquestion question,answer')
-            return
-        question, answer = [item.strip() for item in new_trivia.split(',')]
-        question_id = str(uuid.uuid4())[:5]
-
-        l.trivia_questions[question] = answer
-        l.newquestion[question_id] = [question,answer]
-        await message.channel.send(f'Added {question} to trivia questions.\nbreez can save this question with !savequestion {question_id}')
-
-    # save trivia question to lumberjack trivia_questions dictionary
-    if message.content.startswith('!savequestion'):
-        #check if user is admin
-        if not ct.admincheck(str(message.author)):
-            cantdothat = await sentience.ucantdothat(message.author, message.content)
-            await message.reply(cantdothat)
-            return
-        question_id = message.content.replace('!savequestion','').strip()
-        if question_id in l.newquestion:
-            question, answer = l.newquestion[question_id]
-            l.questions_to_save[question] = answer
-            await message.channel.send(f'Saved {question} to trivia questions')
-        else:
-            await message.channel.send(f'{question_id} not found')
-
-    if message.content == '!triviahelp':
-        await message.channel.send(joey.help_message)
+        await trivia_handler.handle_trivia_command(message)
+    elif message.content == '!hint':
+        await trivia_handler.handle_trivia_hint(message)
+    elif message.content.startswith('!addquestion'):
+        await trivia_handler.add_trivia_question(message)
+    elif message.content.startswith('!savequestion'):
+        await trivia_handler.save_trivia_question(message)
+    elif message.content == '!triviahelp':
+        await trivia_handler.show_help(message)
+    else:
+        await trivia_handler.check_trivia_answer(message)
 
     #adjust l.BATCH_SIZE with !batch $number
     if message.content.startswith('!batch'):

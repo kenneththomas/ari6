@@ -2,6 +2,8 @@
 
 ## 8.8.14
 - increase sleep time between messages
+- xp logic cleanup
+- trivia cleanup
 
 ## 8.8.13
 - zithers rolled

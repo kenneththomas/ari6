@@ -59,17 +59,18 @@ def flush_to_db():
     c.executemany("INSERT INTO logs VALUES (?,?,?,?,?,?)", batch_buffer)
     #print(f'xp updates: {xp_buffer}')
 
+    # Update all changed XP values in one batch
+    xp_updates = []
     for user, xp in xp_buffer.items():
-        #check if xp has changed. if it has print the change and update the database
-        try:
-            if xp != previous_xp_buffer[user]:
-                print(f'XP change for {user}: {previous_xp_buffer[user]} -> {xp}')
-                c.execute("INSERT OR REPLACE INTO xp VALUES (?,?)", (user, xp))
-                previous_xp_buffer[user] = xp
-        except KeyError:
-            print(f'XP change for {user}: 0 -> {xp}')
-            c.execute("INSERT OR REPLACE INTO xp VALUES (?,?)", (user, xp))
-            previous_xp_buffer[user] = xp
+        if user not in previous_xp_buffer or xp != previous_xp_buffer[user]:
+            print(f'XP change for {user}: {previous_xp_buffer.get(user, 0)} -> {xp}')
+            xp_updates.append((user, xp))
+    
+    if xp_updates:
+        c.executemany("INSERT OR REPLACE INTO xp VALUES (?,?)", xp_updates)
+        # Update previous_xp_buffer after all changes are committed
+        previous_xp_buffer.update({user: xp for user, xp in xp_updates})
+    
     #save trivia questions
     for question, answer in questions_to_save.items():
         print(f'Saving trivia question: {question} {answer}')
