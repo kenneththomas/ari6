@@ -151,15 +151,6 @@ async def on_message(message):
     if len(cxstorage) > 10:
         cxstorage.pop(0)
 
-    '''
-    # we also want to clear this up if theres some bigass messages
-    total_length = sum(len(s) for s in experimental_container)
-    if total_length > 2000:
-        print('containers p big, lets remove some stuff')
-        #remove oldest 3 messages
-        experimental_container = experimental_container[3:]
-    '''
-
     if str(message.content).startswith('!version'):
         await message.channel.send(ari_version)
 
@@ -199,8 +190,6 @@ async def on_message(message):
         togglemsg = flipper.togglemgr(str(message.author), message.content)
         if togglemsg:
             await message.channel.send(togglemsg)
-
-
 
     global lasttweet
 
@@ -535,12 +524,8 @@ async def on_message(message):
         print(f'checking queued message: {queuedmsg.message} {queuedmsg.when} current time: {datetime.datetime.now()}')
         if datetime.datetime.now() > queuedmsg.when:
             print(f'queue time {queuedmsg.when} reached, sending message: {queuedmsg.message}')
-            #if queued message is in cloudhouse channel, send as cloudhouse webhook
             if queuedmsg.channel == cloudchannel:
-                webhooks = await message.channel.webhooks()
-                cloudhouse_webhook = next((webhook for webhook in webhooks if webhook.name == 'cloudhouse'), None)
-                if not cloudhouse_webhook:
-                    cloudhouse_webhook = await message.channel.create_webhook(name='cloudhouse')
+                cloudhouse_webhook = await get_or_create_webhook(queuedmsg.channel, 'cloudhouse')
                 await cloudhouse_webhook.send(queuedmsg.message, username=queuedmsg.username, avatar_url=queuedmsg.avatar)
             else:
                 await message.channel.send(queuedmsg.message)
