@@ -5,10 +5,11 @@ import sentience
 from discord.ui import Button, View
 
 class ResponseView(View):
-    def __init__(self, responses, target_channel):
+    def __init__(self, responses, target_channel, cxstorage):
         super().__init__(timeout=300)  # 5 minute timeout
         self.responses = responses
         self.target_channel = target_channel
+        self.cxstorage = cxstorage  # Store cxstorage as instance variable
 
     @discord.ui.button(label="Send A", style=discord.ButtonStyle.green)
     async def send_a_callback(self, interaction: discord.Interaction, button: Button):
@@ -40,7 +41,7 @@ class ResponseView(View):
             embed.add_field(name="Option A", value=responses[0], inline=False)
             embed.add_field(name="Option B", value=responses[1], inline=False)
             
-            new_view = ResponseView(responses, self.target_channel)
+            new_view = ResponseView(responses, self.target_channel, self.cxstorage)
             await interaction.message.edit(embed=embed, view=new_view)
 
     @discord.ui.button(label="Reject", style=discord.ButtonStyle.red)
@@ -89,5 +90,5 @@ async def handle_bot_channel_message(message, cxstorage, gatochannel):
         embed.add_field(name="Option A", value=responses[0], inline=False)
         embed.add_field(name="Option B", value=responses[1], inline=False)
         
-        view = ResponseView(responses, gatochannel)
+        view = ResponseView(responses, gatochannel, cxstorage)
         await message.channel.send(embed=embed, view=view)
