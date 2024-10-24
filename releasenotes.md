@@ -1,5 +1,8 @@
 # releasenotes
 
+## 8.9
+- this is crazy dude
+
 ## 8.8.14
 - increase sleep time between messages
 - xp logic cleanup

@@ -17,10 +17,10 @@ import modules.masta_selecta as masta_selecta
 import modules.flipper as flipper
 import modules.joey as joey
 import chat_clipper
-from discord.ui import Button, View
 from modules.trivia_handler import TriviaHandler
+import modules.response_handler as response_handler
 
-ari_version = '8.8.14'
+ari_version = '8.9'
 
 #object to store queued messages that will be sent in the future, contains message, which channel to send it to, when to send it, webhook username and picture
 class QueuedMessage:
@@ -324,26 +324,10 @@ async def on_message(message):
         else:
             await message.channel.send(f'{new_language} is not a supported language')
 
-    # FREE THE BOT
+    # Replace the bot channel logic with:
     if message.channel == botchannel:
-        async with message.channel.typing():
-            print(f'converting to claude format: {cxstorage}')
-            cxstorage_formatted = sentience.claudeify(cxstorage)
-            freemsg = await sentience.claudex2(cxstorage_formatted)
-            cxstorage.append({
-                'role': 'assistant',
-                'content': f"{freemsg}"
-            })
-            #check how many newlines there are in the message. if its less than 6, its probably unintentional and we can post them one at a time
-            if freemsg.count('\n') < 6:
-                for line in freemsg.split('\n'):
-                    await asyncio.sleep(random.uniform(0.1,2.0))
-                    #skip blank lines
-                    if line.strip():
-                        await message.channel.send(line)
-            else:
-                await message.channel.send(freemsg)
-            return
+        await response_handler.handle_bot_channel_message(message, cxstorage, gatochannel)
+        return
 
     # end AI block
 
