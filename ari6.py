@@ -210,13 +210,7 @@ async def on_message(message):
             for activity in message.author.activities:
                 if activity.type == discord.ActivityType.listening:
                     if activity.name == 'Spotify':
-
-                        #webhook check
-                        webhooks = await barcochannel.webhooks()
-                        barco_webhook = next((webhook for webhook in webhooks if webhook.name == 'barco'), None)
-                        if not barco_webhook:
-                            barco_webhook = await barcochannel.create_webhook(name='barco')
-
+                        barco_webhook = await get_or_create_webhook(barcochannel, 'barco')
                         npstring, albumart = masta_selecta.nowplaying(str(message.author), activity)
                         if message.content == '!np':
                             #hacky - if you do !np it could be a dupe, so force it to return with allowrepeat
@@ -315,17 +309,11 @@ async def on_message(message):
             if message.content.startswith('xx'):
                 message.content = message.content[2:]
                 english = await sentience.gpt_translation(message.content, reverse=True)
-                webhooks = await gatochannel.webhooks()
-                english_webhook = next((webhook for webhook in webhooks if webhook.name == 'english'), None)
-                if not english_webhook:
-                    english_webhook = await gatochannel.create_webhook(name='english')
+                english_webhook = await get_or_create_webhook(gatochannel, 'english')
                 await english_webhook.send(english, username=message.author.name, avatar_url=message.author.avatar)
             else:
                 cathelp = await sentience.generate_text_gpt(f'{message.content}','you are a helpful spanish teacher that is helpful with grammar and vocabulary. if you see words in quotations, translate from english to spanish or vice versa.')
-                webhooks = await catchannel.webhooks()
-                spanish_webhook = next((webhook for webhook in webhooks if webhook.name == 'spanish'), None)
-                if not spanish_webhook:
-                    spanish_webhook = await catchannel.create_webhook(name='spanish')
+                spanish_webhook = await get_or_create_webhook(catchannel, 'spanish')
                 await spanish_webhook.send(cathelp, username='luis', avatar_url='https://res.cloudinary.com/dr2rzyu6p/image/upload/v1710891819/noidfrqtvvxxqkme94vg.jpg')
 
         
@@ -333,14 +321,14 @@ async def on_message(message):
     if str(message.content).startswith('!language'):
         new_language = str(message.content).replace('!language','').strip()
         if new_language in available_languages:
-            #use webhook if it exists
             if new_language in wl.language_webhooks.keys():
-                # pick random webhook from language_webhooks[new_language] then get username and avatar from webhook_library
-                # send message with username and avatar
+                spanish_webhook = await get_or_create_webhook(catchannel, 'spanish')
                 translator = random.choice(wl.language_webhooks[new_language])
                 translator_name = wl.webhook_library[translator][0]
                 translator_avatar = wl.webhook_library[translator][1]
-                await spanish_webhook.send(f'#cat language changed to {new_language}', username=translator_name, avatar_url=translator_avatar) 
+                await spanish_webhook.send(f'#cat language changed to {new_language}', 
+                                         username=translator_name, 
+                                         avatar_url=translator_avatar)
             else:
                 await message.channel.send(f'#cat language changed to {new_language}')
             sentience.translate_language = new_language
@@ -412,22 +400,12 @@ async def on_message(message):
 
     #ELON
     if 'https://x.com/' in message.content:
-
-        webhooks = await gatochannel.webhooks()
-        ari_webhook = next((webhook for webhook in webhooks if webhook.name == 'ari'), None)
-        if not ari_webhook:
-            ari_webhook = await gatochannel.create_webhook(name='ari')
-    
-
-        #append to tweetcontainer
-        #if it is a duplicate, message.reply with "old"
-        if message.content in tweetcontainer:
-            await message.reply(random.choice(oldoptions))
-        else:
-            tweetcontainer.append(message.content)
-        #embed fixer
-            
-
+        if str(message.channel) == 'gato':
+            ari_webhook = await get_or_create_webhook(gatochannel, 'ari')
+            personality = random.choice(list(wl.webhook_library.values()))
+            username = personality[0]
+            avatar = personality[1]
+            await ari_webhook.send(f'{message.author.display_name} posted:\n {tweetlink}', username=username, avatar_url=avatar)
 
     #darn tootin
     if message.content.startswith('!toot'):
@@ -541,20 +519,11 @@ async def on_message(message):
         print('cloudhouse channel')
         async with message.channel.typing():
             cloudhouse_message = await cloudhouse.cloudhouse_single(message.author.name, message.content)
-        #this returns {'webhook':webhook,'message':message}
         webhook = cloudhouse_message['webhook']
         cmessage = cloudhouse_message['message']
 
-        #check if webhook exists if not create it
-        webhooks = await cloudchannel.webhooks()
-        cloudhouse_webhook = next((webhook for webhook in webhooks if webhook.name == 'cloudhouse'), None)
-        if not cloudhouse_webhook:
-            cloudhouse_webhook = await cloudchannel.create_webhook(name='cloudhouse')
+        cloudhouse_webhook = await get_or_create_webhook(cloudchannel, 'cloudhouse')
 
-
-
-        # used below to test message queue, it works. can remove this comment when i have actually implemented this somewhere.
-        #messagequeue.append(QueuedMessage('this is a queued message',cloudchannel,datetime.datetime.now() + datetime.timedelta(seconds=10),webhook[0],webhook[1]))
         try:
             await cloudhouse_webhook.send(cmessage, username=webhook[0], avatar_url=webhook[1])
         except IndexError:
