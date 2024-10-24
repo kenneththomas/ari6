@@ -20,7 +20,7 @@ import chat_clipper
 from modules.trivia_handler import TriviaHandler
 import modules.response_handler as response_handler
 
-ari_version = '8.9'
+ari_version = '8.9.1'
 
 #object to store queued messages that will be sent in the future, contains message, which channel to send it to, when to send it, webhook username and picture
 class QueuedMessage:
@@ -352,7 +352,8 @@ async def on_message(message):
         for emoj in emoji:
             await message.add_reaction(emoj)
 
-    if 'https://twitter.com/' in message.content:
+    #ELON
+    if 'https://x.com/' in message.content:
         ari_webhook = await get_or_create_webhook(gatochannel, 'ari')
         
         if message.content in tweetcontainer:
@@ -360,26 +361,15 @@ async def on_message(message):
         else:
             tweetcontainer.append(message.content)
             
-            if 'vxtwitter.com' not in message.content:
-                if 'twitter.com' in message.content:
-                    tweetlink = message.content.replace('twitter.com', 'vxtwitter.com')
-                    await message.delete()
-                    if str(message.channel) == 'gato':
-                        personality = random.choice(list(wl.webhook_library.values()))
-                        await ari_webhook.send(f'{message.author.display_name} posted:\n {tweetlink}', 
-                                             username=personality[0], 
-                                             avatar_url=personality[1])
-                    else:
-                        await message.channel.send(f"{message.author.display_name} posted:\n {tweetlink}")
-
-    #ELON
-    if 'https://x.com/' in message.content:
-        if str(message.channel) == 'gato':
-            ari_webhook = await get_or_create_webhook(gatochannel, 'ari')
-            personality = random.choice(list(wl.webhook_library.values()))
-            username = personality[0]
-            avatar = personality[1]
-            await ari_webhook.send(f'{message.author.display_name} posted:\n {tweetlink}', username=username, avatar_url=avatar)
+            if str(message.channel) == 'gato':
+                tweetlink = message.content.replace('x.com', 'vxtwitter.com')
+                await message.delete()
+                personality = random.choice(list(wl.webhook_library.values()))
+                username = personality[0]
+                avatar = personality[1]
+                await ari_webhook.send(f'{message.author.display_name} posted:\n {tweetlink}', username=username, avatar_url=avatar)
+            else:
+                await message.channel.send(f"{message.author.display_name} posted:\n {tweetlink}")
 
     #darn tootin
     if message.content.startswith('!toot'):
