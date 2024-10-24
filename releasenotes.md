@@ -4,6 +4,7 @@
 - increase sleep time between messages
 - xp logic cleanup
 - trivia cleanup
+- remove some unused sentience functions
 
 ## 8.8.13
 - zithers rolled

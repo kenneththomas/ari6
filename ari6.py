@@ -368,31 +368,6 @@ async def on_message(message):
                 await message.channel.send(freemsg)
             return
 
-    '''
-    if mememgr.chance(300):
-        #webhook check for botchannel
-        webhooks = await botchannel.webhooks()
-        bot_webhook = next((webhook for webhook in webhooks if webhook.name == 'bot'), None)
-        if not bot_webhook:
-            bot_webhook = await botchannel.create_webhook(name='bot')
-
-        #pick random webhook from webhook_library
-        webhook = random.choice(list(wl.webhook_library.values()))
-
-        print(f'{webhook[0]} {webhook[1]} {webhook[2]}')
-
-        async with botchannel.typing():
-            print(f'converting to claude format: {cxstorage}')
-            cxstorage_formatted = sentience.claudeify(cxstorage)
-            freemsg = await sentience.claudex2_tmp(cxstorage_formatted, prompt_addition=webhook[2])
-            cxstorage.append({
-                'role': 'assistant',
-                'content': f"{webhook[0]}: {freemsg}"
-            })
-            await bot_webhook.send(freemsg, username=webhook[0], avatar_url=webhook[1])
-            return
-    '''
-
     # end AI block
 
     # banned words
