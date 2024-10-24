@@ -74,6 +74,13 @@ starttime = datetime.datetime.now()
 
 trivia_handler = TriviaHandler()
 
+async def get_or_create_webhook(channel, webhook_name):
+    """Get existing webhook or create a new one if it doesn't exist"""
+    webhooks = await channel.webhooks()
+    webhook = next((webhook for webhook in webhooks if webhook.name == webhook_name), None)
+    if not webhook:
+        webhook = await channel.create_webhook(name=webhook_name)
+    return webhook
 
 @client.event
 async def on_ready():
@@ -295,19 +302,12 @@ async def on_message(message):
         await message.reply(response_text)
 
     if flipper.translation_enabled:
-        if ct.should_i_translate(message.content,message.channel):
-                spanish = await sentience.gpt_translation(message.content)
-                #people complained about being double pinged by the bot so remove the ping, regex away (<@142508812073566208>)
-                spanish = re.sub(r'<@\d+>','',str(spanish))
-
-                # Create or reuse a single webhook
-                webhooks = await catchannel.webhooks()
-                spanish_webhook = next((webhook for webhook in webhooks if webhook.name == 'spanish'), None)
-
-                if not spanish_webhook:
-                    spanish_webhook = await catchannel.create_webhook(name='spanish')
-
-                await spanish_webhook.send(spanish, username=message.author.name, avatar_url=message.author.avatar)
+        if ct.should_i_translate(message.content, message.channel):
+            spanish = await sentience.gpt_translation(message.content)
+            spanish = re.sub(r'<@\d+>', '', str(spanish))
+            
+            spanish_webhook = await get_or_create_webhook(catchannel, 'spanish')
+            await spanish_webhook.send(spanish, username=message.author.name, avatar_url=message.author.avatar)
 
         #reverse translation. if there is a post in the spanish channel, translate it back to english
 
@@ -391,32 +391,24 @@ async def on_message(message):
             await message.add_reaction(emoj)
 
     if 'https://twitter.com/' in message.content:
-
-        webhooks = await gatochannel.webhooks()
-        ari_webhook = next((webhook for webhook in webhooks if webhook.name == 'ari'), None)
-        if not ari_webhook:
-            ari_webhook = await gatochannel.create_webhook(name='ari')
-    
-        #append to tweetcontainer
-        #if it is a duplicate, message.reply with "old"
+        ari_webhook = await get_or_create_webhook(gatochannel, 'ari')
+        
         if message.content in tweetcontainer:
             await message.reply(random.choice(oldoptions))
         else:
             tweetcontainer.append(message.content)
-
-        #embed fixer
-        if 'vxtwitter.com' not in message.content:
-            if 'twitter.com' in message.content:
-                tweetlink = message.content.replace('twitter.com','vxtwitter.com')
-                await message.delete()  # delete the original message
-                if str(message.channel) == 'gato':
-                    #pick random webhook from webhook_library
-                    personality = random.choice(list(wl.webhook_library.values()))
-                    username = personality[0]
-                    avatar = personality[1]
-                    await ari_webhook.send(f'{message.author.display_name} posted:\n {tweetlink}', username=username, avatar_url=avatar)
-                else:
-                    await message.channel.send(f"{message.author.display_name} posted:\n {tweetlink}")
+            
+            if 'vxtwitter.com' not in message.content:
+                if 'twitter.com' in message.content:
+                    tweetlink = message.content.replace('twitter.com', 'vxtwitter.com')
+                    await message.delete()
+                    if str(message.channel) == 'gato':
+                        personality = random.choice(list(wl.webhook_library.values()))
+                        await ari_webhook.send(f'{message.author.display_name} posted:\n {tweetlink}', 
+                                             username=personality[0], 
+                                             avatar_url=personality[1])
+                    else:
+                        await message.channel.send(f"{message.author.display_name} posted:\n {tweetlink}")
 
     #ELON
     if 'https://x.com/' in message.content:
@@ -604,4 +596,3 @@ async def on_message_delete(message):
     print(f'[{datetime.datetime.now()}] {message.author.name} deleted message: {message.content}')
 
 client.run(maricon.bottoken)
-

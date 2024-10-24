@@ -5,6 +5,7 @@
 - xp logic cleanup
 - trivia cleanup
 - remove some unused sentience functions
+- webhooks cleanup
 
 ## 8.8.13
 - zithers rolled
