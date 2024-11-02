@@ -399,3 +399,17 @@ async def precheck(prompt):
 
 
 load_context()
+
+async def assistant_claude(messages, system_prompt, model='claude-3-5-sonnet-20241022'):
+    response = claude.messages.create(
+        model=model,
+        max_tokens=800,
+        messages=messages,
+        system=system_prompt
+    )
+
+    # Extract and return the text content from the response
+    text_content = ''.join(block.text for block in response.content)
+    print(f"Assistant response: {text_content}")
+    
+    return text_content
