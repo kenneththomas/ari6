@@ -1,6 +1,10 @@
 import sentience
 import personality
 import datetime
+import asyncio
+import random
+
+ast_cxstorage = []
 
 class PersonalAssistant:
     def __init__(self):
@@ -82,9 +86,21 @@ class PersonalAssistant:
         
         # Get webhook and send response
         webhook = await self.get_or_create_webhook(message.channel)
-        await webhook.send(
-            content=response,
-            username=self.webhook_username,
-            avatar_url=self.webhook_avatar
-        )
+
+        # Split and send message based on newlines
+        if response.count('\n') < 6:
+            for line in response.split('\n'):
+                if line.strip():  # Only send non-empty lines
+                    await asyncio.sleep(random.uniform(1, 4.3))
+                    await webhook.send(
+                        content=line,
+                        username=self.webhook_username,
+                        avatar_url=self.webhook_avatar
+                    )
+        else:
+            await webhook.send(
+                content=response,
+                username=self.webhook_username,
+                avatar_url=self.webhook_avatar
+            )
         return None
