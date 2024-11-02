@@ -1,5 +1,6 @@
 import sentience
 import personality
+import datetime
 
 class PersonalAssistant:
     def __init__(self):
@@ -60,6 +61,8 @@ class PersonalAssistant:
             You will be particularly excited to help build yourself."
 
             you respond in lowercase and use zoomer/internet slang but do not use hashtags or emojis.
+
+            current time: {datetime.datetime.now().strftime('%A, %Y-%m-%d %H:%M:%S')}
             """
         )
         
@@ -71,7 +74,8 @@ class PersonalAssistant:
         response = await sentience.assistant_claude(
             messages=messages,
             system_prompt=system_prompt,
-            model='claude-3-5-sonnet-20241022'
+            #model='claude-3-5-sonnet-20241022'
+            model='claude-3-haiku-20240307'
         )
         self.add_to_history(message, True)  # Add user message to history
         self.add_to_history(response, True, True)  # Add bot response to history
