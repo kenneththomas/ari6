@@ -12,7 +12,7 @@ class PersonalAssistant:
         self.assistant_history = []
         self.max_history = 10
         self.webhook_name = "assistant"
-        self.webhook_avatar = "https://res.cloudinary.com/dr2rzyu6p/image/upload/v1724037683/court-0_2_nxjg1j.jpg"
+        self.webhook_avatar = "https://res.cloudinary.com/dr2rzyu6p/image/upload/v1730599540/court-0_2_nxjg1j_ycpknw.jpg"
         self.webhook_username = "courtney"
         self.ast_cxstorage = []
         self.allowed_users = ['breezyexcursion']  # Easy to modify this list later
@@ -94,6 +94,8 @@ class PersonalAssistant:
         
         # Get response using formatted messages
         response = await sentience.assistant_claude(messages=formatted_messages, system_prompt=system_prompt, model='claude-3-haiku-20240307')
+        
+        ##model='claude-3-haiku-20240307' to test and be a bit cheaper
         
         # Add messages to history
         self.add_to_history(message, True)  # Add user message

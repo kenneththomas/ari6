@@ -116,9 +116,12 @@ async def on_message(message):
         return
 
     # Add personal assistant handling
-    personal_assistant.add_to_history(message)
+    # if channel is assistant, add to history
+    if str(message.channel) == 'assistant':
+        personal_assistant.add_to_history(message)
     assistant_response = await personal_assistant.handle_message(message)
     if assistant_response:
+        # we should be using webhooks so typically the response will be handled inside the function
         await message.reply(assistant_response)
         return
 

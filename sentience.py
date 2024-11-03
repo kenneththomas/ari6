@@ -404,6 +404,23 @@ async def precheck(prompt):
 load_context()
 
 async def assistant_claude(messages, system_prompt, model='claude-3-5-sonnet-20241022'):
+    # Check messages for context keywords
+    processed_words = set()
+    additional_context = ''
+    
+    # Scan through all messages for context keywords
+    for message in messages:
+        message_content_lower = message['content'].lower()
+        for key in context.keys():
+            if key.lower() in message_content_lower and key.lower() not in processed_words:
+                print(f'adding context word {key}')
+                additional_context += context[key]
+                processed_words.add(key.lower())
+    
+    # Add any found context to the system prompt
+    if additional_context:
+        system_prompt = system_prompt + additional_context
+
     response = claude.messages.create(
         model=model,
         max_tokens=280,
