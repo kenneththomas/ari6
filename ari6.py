@@ -19,6 +19,7 @@ import modules.joey as joey
 import chat_clipper
 from modules.trivia_handler import TriviaHandler
 import modules.response_handler as response_handler
+import modules.personal_assistant as pa
 
 ari_version = '8.9.1'
 
@@ -74,6 +75,9 @@ starttime = datetime.datetime.now()
 
 trivia_handler = TriviaHandler()
 
+# Add after other global variables
+personal_assistant = pa.PersonalAssistant()
+
 async def get_or_create_webhook(channel, webhook_name):
     """Get existing webhook or create a new one if it doesn't exist"""
     webhooks = await channel.webhooks()
@@ -109,6 +113,16 @@ async def on_message(message):
     global trivia_answer, trivia_question
     #ignore webhooks
     if message.webhook_id:
+        return
+
+    # Add personal assistant handling
+    # if channel is assistant, add to history
+    if str(message.channel) == 'assistant':
+        personal_assistant.add_to_history(message)
+    assistant_response = await personal_assistant.handle_message(message)
+    if assistant_response:
+        # we should be using webhooks so typically the response will be handled inside the function
+        await message.reply(assistant_response)
         return
 
     global sentience_personality

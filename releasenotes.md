@@ -1,5 +1,8 @@
 # releasenotes
 
+## 8.9.2
+- assistant
+
 ## 8.9.1
 - dont double post twitter links posted by myself
 
