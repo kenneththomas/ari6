@@ -406,7 +406,7 @@ load_context()
 async def assistant_claude(messages, system_prompt, model='claude-3-5-sonnet-20241022'):
     response = claude.messages.create(
         model=model,
-        max_tokens=800,
+        max_tokens=280,
         messages=messages,
         system=system_prompt
     )

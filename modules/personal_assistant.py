@@ -4,7 +4,6 @@ import datetime
 import asyncio
 import random
 
-ast_cxstorage = []
 
 class PersonalAssistant:
     def __init__(self):
@@ -15,14 +14,32 @@ class PersonalAssistant:
         self.webhook_name = "assistant"
         self.webhook_avatar = "https://res.cloudinary.com/dr2rzyu6p/image/upload/v1724037683/court-0_2_nxjg1j.jpg"
         self.webhook_username = "courtney"
+        self.ast_cxstorage = []
+        self.allowed_users = ['breezyexcursion']  # Easy to modify this list later
+        self.store_all_users = False  # Flag to toggle storing all users
 
     def add_to_history(self, message, is_assistant_channel=False, is_bot_response=False):
         """Add message to appropriate history list"""
         if is_bot_response:
             entry = f'Assistant: {message}'
+            self.ast_cxstorage.append({
+                'role': 'assistant',
+                'content': message
+            })
         else:
             entry = f'{message.author.display_name}: {message.content}'
+            # Only add to cxstorage if it's from allowed users or if store_all_users is True
+            if self.store_all_users or str(message.author) in self.allowed_users:
+                self.ast_cxstorage.append({
+                    'role': 'user',
+                    'content': f"{message.author.display_name}: {message.content}"
+                })
         
+        # Maintain max size of ast_cxstorage
+        if len(self.ast_cxstorage) > self.max_history:
+            self.ast_cxstorage.pop(0)
+
+        # Regular history management continues as before
         self.chat_history.append(entry)
         if len(self.chat_history) > self.max_history:
             self.chat_history.pop(0)
@@ -48,10 +65,7 @@ class PersonalAssistant:
         if message.channel.id != self.assistant_channel_id:
             return None
 
-        # Generate response using more focused context
-        context = "\n".join(self.assistant_history)
-        
-        messages = [{"role": "user", "content": f"Previous conversation:\n{context}\n\nRespond to breezyexcursion: {message.content}"}]
+        # Use ast_cxstorage for context instead of assistant_history
         system_prompt = (
             f"""You are {self.webhook_username}, Ken (breezyexcursion, but call him ken/kendawg/other nicknames in chat)'s AI assistant.
 
@@ -72,17 +86,18 @@ class PersonalAssistant:
         
         # Debug print
         print("\n=== ASSISTANT PROMPT ===")
-        print(messages)
+        print(self.ast_cxstorage)
         print("======================\n")
         
-        response = await sentience.assistant_claude(
-            messages=messages,
-            system_prompt=system_prompt,
-            #model='claude-3-5-sonnet-20241022'
-            model='claude-3-haiku-20240307'
-        )
-        self.add_to_history(message, True)  # Add user message to history
-        self.add_to_history(response, True, True)  # Add bot response to history
+        # Convert storage format using claudeify
+        formatted_messages = sentience.claudeify(self.ast_cxstorage)
+        
+        # Get response using formatted messages
+        response = await sentience.assistant_claude(messages=formatted_messages, system_prompt=system_prompt, model='claude-3-haiku-20240307')
+        
+        # Add messages to history
+        self.add_to_history(message, True)  # Add user message
+        self.add_to_history(response, True, True)  # Add bot response
         
         # Get webhook and send response
         webhook = await self.get_or_create_webhook(message.channel)
