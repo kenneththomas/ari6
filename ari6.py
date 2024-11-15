@@ -391,6 +391,7 @@ async def on_message(message):
         if not ct.admincheck(str(message.author)):
             cantdothat = await sentience.ucantdothat(message.author, message.content)
             await message.reply(cantdothat)
+            return
         toot = message.content.replace('!toot','')
         tootlist = aritooter.tootcontrol(toot)
         for tootmsg in tootlist:
