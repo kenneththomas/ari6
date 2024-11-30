@@ -1,5 +1,6 @@
 from mastodon import Mastodon
 import maricon
+from atproto import Client
 #import twitter
 
 '''
@@ -10,20 +11,23 @@ Mastodon.create_app(
 )
 '''
 
-mastodon = Mastodon(
-    client_id = 'ari5_clientcred.secret',
-    api_base_url = 'https://mastodon.social'
+# Initialize Bluesky client
+bsky = Client()
+# You'll need to login before posting
+bsky.login(
+    maricon.bskyuser,  # replace with your handle
+    maricon.bskypass         # use an app-specific password from your Bluesky settings
 )
-mastodon.log_in(
-    maricon.mastouser,
-    maricon.mastopassword,
-    to_file = 'ari5_usercred.secret'
-)
-
 
 def tootcontrol(message):
     outputmsg = []
     print('tooting message {}'.format(message))
-    ourtoot = mastodon.toot(message)
-    outputmsg.append(ourtoot['url'])
+    
+    # Add Bluesky post
+    try:
+        bsky_post = bsky.send_post(text=message)
+        outputmsg.append(f"https://bsky.app/profile/{bsky.me.did}/post/{bsky_post.uri.split('/')[-1]}")
+    except Exception as e:
+        print(f"Bluesky post failed: {e}")
+    
     return outputmsg
