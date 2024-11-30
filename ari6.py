@@ -78,6 +78,8 @@ trivia_handler = TriviaHandler()
 # Add after other global variables
 personal_assistant = pa.PersonalAssistant()
 
+summon_timeout = 30  # Default timeout in seconds
+
 async def get_or_create_webhook(channel, webhook_name):
     """Get existing webhook or create a new one if it doesn't exist"""
     webhooks = await channel.webhooks()
@@ -521,6 +523,31 @@ async def on_message(message):
                 await message.channel.send(queuedmsg.message)
 
             messagequeue.remove(queuedmsg)
+
+    # Add summon command
+    if message.content.startswith('!summon'):
+        # Check if user is trying to change timeout
+        if ct.admincheck(str(message.author)) and len(message.content.split()) > 1:
+            try:
+                new_timeout = int(message.content.split()[1])
+                global summon_timeout
+                summon_timeout = new_timeout
+                await message.channel.send(f"Summon timeout set to {new_timeout} seconds")
+                return
+            except ValueError:
+                await message.channel.send("Invalid timeout value")
+                return
+
+        # Delete the summon command immediately
+        await message.delete()
+        # Send a temporary message that can be replied to
+        temp_msg = await message.channel.send(f"💭 I'm listening... (this message will delete itself in {summon_timeout}s)")
+        # Schedule message deletion
+        await asyncio.sleep(summon_timeout)
+        try:
+            await temp_msg.delete()
+        except:
+            print("Message already deleted or not found")
 
 
 @client.event
