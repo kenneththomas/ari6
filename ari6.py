@@ -386,13 +386,13 @@ async def on_message(message):
                 await message.channel.send(f"{message.author.display_name} posted:\n {tweetlink}")
 
     #darn tootin
-    if message.content.startswith('!toot'):
+    if message.content.startswith('!skeet'):
         #temporary admin check as this toots to my personal account
         if not ct.admincheck(str(message.author)):
             cantdothat = await sentience.ucantdothat(message.author, message.content)
             await message.reply(cantdothat)
             return
-        toot = message.content.replace('!toot','')
+        toot = message.content.replace('!skeet','').lstrip()
         tootlist = aritooter.tootcontrol(toot)
         for tootmsg in tootlist:
             await message.channel.send(tootmsg)
