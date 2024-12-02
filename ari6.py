@@ -136,9 +136,11 @@ async def on_message(message):
     
     l.log(message)
     experimental_container.append(f'{message.author.display_name}: {message.content}')
-    cxstorage.append({
+    message_content = f"{message.author.display_name}: {message.content}"
+    if not any(msg['content'] == message_content for msg in cxstorage):
+        cxstorage.append({
             'role': 'user',
-            'content': f"{message.author.display_name}: {message.content}"
+            'content': message_content
         })
 
     #toggle dev mode, include admin check
@@ -398,6 +400,16 @@ async def on_message(message):
         tootlist = aritooter.tootcontrol(toot)
         for tootmsg in tootlist:
             await message.channel.send(tootmsg)
+
+    # auto skeeter
+    if mememgr.chance(150):
+        print('---auto skeeter---')
+        print(cxstorage)
+        print('---')
+        cxstorage_formatted = sentience.claudeify(cxstorage)
+        skeet = await sentience.claudex2(cxstorage_formatted)
+        aritooter.tootcontrol(skeet)
+        print('posted skeet')
 
     # tell me how much xp i have call get_xp_user
     if message.content.startswith('!xp'):
