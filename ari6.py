@@ -402,7 +402,7 @@ async def on_message(message):
             await message.channel.send(tootmsg)
 
     # auto skeeter
-    if mememgr.chance(150):
+    if flipper.auto_skeeter > 0 and mememgr.chance(flipper.auto_skeeter):
         print('---auto skeeter---')
         print(cxstorage)
         print('---')

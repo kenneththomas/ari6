@@ -4,11 +4,12 @@ claude = True
 spotify_enable = True
 cheap = True
 precheck = False
+auto_skeeter = 0
 zp_last_msg_author = ''
 zp_msg = ''
 
 def togglemgr(user, message):
-    global zoomerposting, translation_enabled, claude, spotify_enable, cheap, precheck
+    global zoomerposting, translation_enabled, claude, spotify_enable, cheap, precheck, auto_skeeter
     if message == '!zoomerposting':
         zoomerposting = not zoomerposting
         return f'zoomerposting is now {bool_to_str(zoomerposting)}'
@@ -24,6 +25,17 @@ def togglemgr(user, message):
     elif message == '!precheck':
         precheck = not precheck
         return f'precheck is now {bool_to_str(precheck)}'
+    elif message.startswith('!autoskeeter'):
+        parts = message.split()
+        if len(parts) == 1:  # Just !autoskeeter with no number
+            auto_skeeter = 0
+            return 'auto skeeter is now disabled'
+        try:
+            chance = int(parts[1])
+            auto_skeeter = chance
+            return f'auto skeeter chance is now 1/{chance}'
+        except ValueError:
+            return 'Invalid chance value. Please use a number.'
 
 def chctl(user, message):
     global cheap
