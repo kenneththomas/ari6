@@ -20,19 +20,12 @@ import chat_clipper
 from modules.trivia_handler import TriviaHandler
 import modules.response_handler as response_handler
 import modules.personal_assistant as pa
+from modules.message_queue import MessageQueue
+from modules.translator import Translator
 
 ari_version = '8.9.1'
 
-#object to store queued messages that will be sent in the future, contains message, which channel to send it to, when to send it, webhook username and picture
-class QueuedMessage:
-    def __init__(self, message, channel, when, username, avatar):
-        self.message = message
-        self.channel = channel
-        self.when = when
-        self.username = username
-        self.avatar = avatar
-
-messagequeue = []
+message_queue = MessageQueue()
 songlibrary = {}
 
 onlyonce = []
@@ -60,8 +53,6 @@ lmcontainer.append(lastmsg)
 experimental_container = []
 cxstorage = []
 
-available_languages = ['spanish','french','italian','arabic','chinese','russian','german','korean','greek','japanese','portuguese','hebrew']
-
 oldoptions = ['old','😴']
 
 catchannel = None
@@ -79,6 +70,8 @@ trivia_handler = TriviaHandler()
 personal_assistant = pa.PersonalAssistant()
 
 summon_timeout = 30  # Default timeout in seconds
+
+translator = Translator()
 
 async def get_or_create_webhook(channel, webhook_name):
     """Get existing webhook or create a new one if it doesn't exist"""
@@ -303,46 +296,14 @@ async def on_message(message):
         await asyncio.sleep(1)
         await message.reply(response_text)
 
+    # Translation handling
     if flipper.translation_enabled:
         if ct.should_i_translate(message.content, message.channel):
-            spanish = await sentience.gpt_translation(message.content)
-            spanish = re.sub(r'<@\d+>', '', str(spanish))
-            
-            spanish_webhook = await get_or_create_webhook(catchannel, 'spanish')
-            await spanish_webhook.send(spanish, username=message.author.name, avatar_url=message.author.avatar)
+            await translator.handle_translation(message, get_or_create_webhook, catchannel, gatochannel)
 
-        #reverse translation. if there is a post in the spanish channel, translate it back to english
-
-        if message.channel == catchannel:
-            if message.content.startswith('xx'):
-                message.content = message.content[2:]
-                english = await sentience.gpt_translation(message.content, reverse=True)
-                english_webhook = await get_or_create_webhook(gatochannel, 'english')
-                await english_webhook.send(english, username=message.author.name, avatar_url=message.author.avatar)
-            else:
-                cathelp = await sentience.generate_text_gpt(f'{message.content}','you are a helpful spanish teacher that is helpful with grammar and vocabulary. if you see words in quotations, translate from english to spanish or vice versa.')
-                spanish_webhook = await get_or_create_webhook(catchannel, 'spanish')
-                await spanish_webhook.send(cathelp, username='luis', avatar_url='https://res.cloudinary.com/dr2rzyu6p/image/upload/v1710891819/noidfrqtvvxxqkme94vg.jpg')
-
-        
-    #switch sentience.translate_language if !language is called to change translation language
+    # Language change command
     if str(message.content).startswith('!language'):
-        new_language = str(message.content).replace('!language','').strip()
-        if new_language in available_languages:
-            if new_language in wl.language_webhooks.keys():
-                spanish_webhook = await get_or_create_webhook(catchannel, 'spanish')
-                translator = random.choice(wl.language_webhooks[new_language])
-                translator_name = wl.webhook_library[translator][0]
-                translator_avatar = wl.webhook_library[translator][1]
-                await spanish_webhook.send(f'#cat language changed to {new_language}', 
-                                         username=translator_name, 
-                                         avatar_url=translator_avatar)
-            else:
-                await message.channel.send(f'#cat language changed to {new_language}')
-            sentience.translate_language = new_language
-        else:
-            await message.channel.send(f'{new_language} is not a supported language')
-
+        await translator.handle_language_change(message, get_or_create_webhook, catchannel)
 
     if message.channel == botchannel:
         await response_handler.handle_bot_channel_message(message, cxstorage, gatochannel)
@@ -524,17 +485,7 @@ async def on_message(message):
 
 
     # queued message handler
-    for queuedmsg in messagequeue:
-        print(f'checking queued message: {queuedmsg.message} {queuedmsg.when} current time: {datetime.datetime.now()}')
-        if datetime.datetime.now() > queuedmsg.when:
-            print(f'queue time {queuedmsg.when} reached, sending message: {queuedmsg.message}')
-            if queuedmsg.channel == cloudchannel:
-                cloudhouse_webhook = await get_or_create_webhook(queuedmsg.channel, 'cloudhouse')
-                await cloudhouse_webhook.send(queuedmsg.message, username=queuedmsg.username, avatar_url=queuedmsg.avatar)
-            else:
-                await message.channel.send(queuedmsg.message)
-
-            messagequeue.remove(queuedmsg)
+    await message_queue.process_queue(get_or_create_webhook)
 
     # Add summon command
     if message.content.startswith('!summon'):
