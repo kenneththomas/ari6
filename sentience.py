@@ -365,17 +365,21 @@ async def view_image(message):
 
 context = {}
 
-def load_context():
-    print('\"You think you just fell out of a coconut tree? You exist in the context of all in which you live and what came before you.\" - Kamala Harris')
-    with open('resources/easycontext.csv', 'r') as file:
-        reader = csv.reader(file)
-        # skip header, field 0 is trigger phrases, field 1 is context, field 2 is status, only load if status is active
-        for row in reader:
-            if row[2] == 'active':
-                context[row[0]] = row[1]
-
-    print('loaded context')
-    print(context)
+def load_context(filepath: str = 'resources/easycontext.csv') -> None:
+    """Load context from CSV file"""
+    try:
+        with open(filepath, 'r') as file:
+            reader = csv.reader(file)
+            next(reader)  # Skip header
+            context.clear()
+            context.update({
+                row[0]: row[1] 
+                for row in reader 
+                if row[2] == 'active'
+            })
+        print(f"Loaded {len(context)} context entries")
+    except Exception as e:
+        print(f"Error loading context: {e}")
 
 async def precheck(prompt):
     start_time = time.time()
