@@ -464,25 +464,6 @@ async def on_message(message):
         for game in ctespn.storage.values():
             await message.channel.send(ctespn.info_printer(game))
 
-    #if message started with && delete it
-    if message.content.startswith('&&'):
-        print('used forcesubject - deleting message!')
-        await message.delete()
-    if message.channel == cloudchannel:
-        print('cloudhouse channel')
-        async with message.channel.typing():
-            cloudhouse_message = await cloudhouse.cloudhouse_single(message.author.name, message.content)
-        webhook = cloudhouse_message['webhook']
-        cmessage = cloudhouse_message['message']
-
-        cloudhouse_webhook = await get_or_create_webhook(cloudchannel, 'cloudhouse')
-
-        try:
-            await cloudhouse_webhook.send(cmessage, username=webhook[0], avatar_url=webhook[1])
-        except IndexError:
-            await cloudchannel.send(cmessage)
-
-
     # queued message handler
     await message_queue.process_queue(get_or_create_webhook)
 
