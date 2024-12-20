@@ -234,25 +234,6 @@ async def ai_experimental(prompt, gmodel="gpt-4o-mini", prompt_addition=False):
 
     return generated_text
 
-#cloudhouse claude prompt
-async def ch_claudex(prompt, recentmessages, model='claude-3-5-sonnet-20241022'):
-    #call claude with prompt and recent messages
-
-    rm = [{"role": "user", "content": f'{recentmessages}'}]
-
-    response = claude.messages.create(
-        model=model,
-        max_tokens=800,
-        messages=rm,
-        system=f"{prompt}"
-    )
-
-    print(response)
-    text_content = ''.join(block.text for block in response.content)
-    print(text_content)
-
-    return text_content
-
 
 async def claudex2(cxstorage, model='claude-3-5-sonnet-20241022', prompt_addition=None):
 
