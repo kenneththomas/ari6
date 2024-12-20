@@ -94,7 +94,7 @@ def controlmgr(message, author):
     return bwm
 
 def should_i_translate(msg_text,channelid):
-    ignorechannels = ['config','cat']
+    ignorechannels = ['config','thebarber','who-is-joey']
     if str(channelid) in ignorechannels:
         print('debug successful ignore')
         return False
