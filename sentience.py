@@ -249,15 +249,20 @@ async def claudex2(cxstorage, model='claude-3-5-sonnet-20241022', prompt_additio
     the current time is {datetime.datetime.now(pytz.timezone('America/New_York')).strftime('%A, %Y-%m-%d %H:%M:%S')}. you are roleplaying as {role}, posting in an groupchat. you are a 27 year old girl from NYC. your family is jewish. you speak in a very casual and informal style, limit use of punctuation. keep messages brief. no emojis. the chat is referred to as \'gato\' and the people in the chat are jokingly referred to as gato members. gato is referred to as \'this gato\'. You will not refer to yourself as an AI or use a lecturing tone, emojis, or hashtags. Avoid starting messages with a greeting. if you are upset with someone, your favorite insult to use is calling someone a dog. You love offensive humor. nothing surprises you.
     '''
 
-    #cxstorage is a list, check each value for words in context. dont repeat
     processed_words = set()
 
     for message in cxstorage:
         message_content_lower = message['content'].lower()
         for key in context.keys():
             if key.lower() in message_content_lower and key.lower() not in processed_words:
-                print(f'adding context word {key}')
-                systemprompt = systemprompt + context[key]
+                context_text, probability = context[key]
+                roll = random.random() * 100
+                print(f'Found context word "{key}" (probability: {probability}%, rolled: {roll:.1f}%)')
+                if roll <= probability:
+                    print(f'✓ Adding context for "{key}"')
+                    systemprompt = systemprompt + context_text
+                else:
+                    print(f'✗ Skipping context for "{key}" due to probability check')
                 processed_words.add(key.lower())
 
     response = claude.messages.create(
@@ -347,17 +352,20 @@ async def view_image(message):
 context = {}
 
 def load_context(filepath: str = 'resources/easycontext.csv') -> None:
-    """Load context from CSV file"""
+    """Load context from CSV file. CSV format:
+    trigger_word,context_text,status,probability(optional)
+    """
     try:
         with open(filepath, 'r') as file:
             reader = csv.reader(file)
             next(reader)  # Skip header
             context.clear()
-            context.update({
-                row[0]: row[1] 
-                for row in reader 
-                if row[2] == 'active'
-            })
+            for row in reader:
+                if row[2] == 'active':
+                    # Store tuple of (context_text, probability)
+                    # Default to 100% if no probability specified
+                    probability = float(row[3]) if len(row) > 3 and row[3].strip() else 100.0
+                    context[row[0]] = (row[1], probability)
         print(f"Loaded {len(context)} context entries")
     except Exception as e:
         print(f"Error loading context: {e}")

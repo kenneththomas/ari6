@@ -1,5 +1,8 @@
 # releasenotes
 
+## 1/22/2025
+im not maintaining this releasenotes file anymore. for now at least
+
 ## 8.9.2
 - assistant
 
