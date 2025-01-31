@@ -68,7 +68,7 @@ trivia_handler = TriviaHandler()
 # Add after other global variables
 personal_assistant = pa.PersonalAssistant()
 
-summon_timeout = 30  # Default timeout in seconds
+summon_timeout = 120  # Default timeout in seconds
 
 translator = Translator()
 
@@ -422,40 +422,52 @@ async def on_message(message):
 
     #zoomerposting
     if flipper.zoomerposting:
-
-        # sometimes people post one thought across multiple messages. to give lamelo full context, if the last message was from the same user, append the message to the last message
+        # Aggregate messages from the same author for context
         if str(message.author) == flipper.zp_last_msg_author:
-            flipper.zp_msg = f'{flipper.zp_msg} \n {message.content}'
-            print(f'last message was from {flipper.zp_last_msg_author}, appending message to last message, message: {flipper.zp_msg}')
+            flipper.zp_msg = f"{flipper.zp_msg}\n{message.content}"
+            print(f'Last message was from {flipper.zp_last_msg_author}, appending message: {flipper.zp_msg}')
         else:
             flipper.zp_msg = message.content
 
         flipper.zp_last_msg_author = str(message.author)
 
+        # Chance to generate and react with an emoji
         if mememgr.chance(35):
-            emoji = await sentience.generate_text_gpt(f'{flipper.zp_msg}','respond to messages with a single emoji that fits the message. the response should be an emoji and nothing else.')
-            print(f'message: {flipper.zp_msg} emoji: {emoji}')
+            emoji = await sentience.generate_text_gpt(
+                flipper.zp_msg,
+                "respond to messages with a single emoji that fits the message. the response should be an emoji and nothing else."
+            )
+            print(f"Message: {flipper.zp_msg} | Emoji: {emoji}")
             await message.add_reaction(emoji)
-        #if channel is barcochannel
+
+        # Define common GPT prompt for zoomer response
+        zoomer_prompt = (
+            'respond to messages very briefly in the style of a zoomer male in disbelief. '
+            'if there was a funny-sounding phrase in the message you could say "he said (message)", '
+            'the message should finish with a skull emoji'
+        )
+
+        # Handle response based on channel
         if message.channel == barcochannel:
             if mememgr.chance(8):
-                webhooks = await barcochannel.webhooks()
-                barco_webhook = next((webhook for webhook in webhooks if webhook.name == 'barco'), None)
-                if not barco_webhook:
-                    barco_webhook = await barcochannel.create_webhook(name='barco')
+                webhook = await get_or_create_webhook(barcochannel, 'barco')
                 async with barcochannel.typing():
-                    zoomerpost = await sentience.generate_text_gpt(f'{flipper.zp_msg}','respond to messages very briefly in the style of a zoomer male in disbelief. if there was a funny-sounding phrase in the message you could say \"he said (message)\", the message should finish with a skull emoji')
-                    #post as lamelo ball webhook
-                    await barco_webhook.send(zoomerpost, username='lamelo ball', avatar_url=wl.webhook_library['lamelo ball'][1])
+                    zoomerpost = await sentience.generate_text_gpt(flipper.zp_msg, zoomer_prompt)
+                    await webhook.send(
+                        zoomerpost,
+                        username='lamelo ball',
+                        avatar_url=wl.webhook_library['lamelo ball'][1]
+                    )
         else:
             if mememgr.chance(50):
                 async with gatochannel.typing():
-                    zoomerpost = await sentience.generate_text_gpt(f'{flipper.zp_msg}','respond to messages very briefly in the style of a zoomer male in disbelief. if there was a funny-sounding phrase in the message you could say \"he said (message)\", the message should finish with a skull emoji','gpt-4o')
-                    #send to gatochannel
-                    webhooks = await gatochannel.webhooks()
-                    ari_webhook = next((webhook for webhook in webhooks if webhook.name == 'ari'), None)
-                    await ari_webhook.send(zoomerpost, username='lamelo ball', avatar_url=wl.webhook_library['lamelo ball'][1])
-                
+                    zoomerpost = await sentience.generate_text_gpt(flipper.zp_msg, zoomer_prompt, 'gpt-4o')
+                    webhook = await get_or_create_webhook(gatochannel, 'ari')
+                    await webhook.send(
+                        zoomerpost,
+                        username='lamelo ball',
+                        avatar_url=wl.webhook_library['lamelo ball'][1]
+                    )
 
     #if message is !ctespn run scoreboard_request and sb_parser
     if message.content == '!ctespn':
