@@ -174,23 +174,6 @@ async def on_message(message):
         uptime_string = f"{hours} hours, {minutes} minutes, {seconds} seconds"
         await message.channel.send(uptime_string)
 
-    if str(message.author) == 'breezyexcursion':
-        if 'vxtwitter.com' not in message.content:
-            if 'https://x.com/' in message.content:
-                tweetlink = message.content.replace('x.com','vxtwitter.com')
-                await message.delete() 
-                if str(message.channel) == 'gato':
-                    webhooks = await gatochannel.webhooks()
-                    ari_webhook = next((webhook for webhook in webhooks if webhook.name == 'ari'), None)
-                    #pick random webhook from webhook_library
-                    personality = random.choice(list(wl.webhook_library.values()))
-                    username = personality[0]
-                    avatar = personality[1]
-                    await ari_webhook.send(f'{message.author.display_name} posted:\n {tweetlink}', username=username, avatar_url=avatar)
-                else:
-                    await message.channel.send(f"{message.author.display_name} posted:\n {tweetlink}")
-                return
-
     #toggle main_enabled with !main
     if str(message.content) == '!main':
         main_enabled = not main_enabled
@@ -340,7 +323,7 @@ async def on_message(message):
             tweetcontainer.append(message.content)
             
             if str(message.channel) == 'gato':
-                tweetlink = message.content.replace('x.com', 'vxtwitter.com')
+                tweetlink = message.content.replace('x.com', 'girlcockx.com')
                 await message.delete()
                 personality = random.choice(list(wl.webhook_library.values()))
                 username = personality[0]
