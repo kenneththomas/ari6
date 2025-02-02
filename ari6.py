@@ -322,8 +322,17 @@ async def on_message(message):
         else:
             tweetcontainer.append(message.content)
             
+            # Determine the replacement domain based on the day of the week:
+            # Use 'girlcockx.com' on weekends (Saturday and Sunday) and 'vxtwitter.com' on weekdays.
+            current_weekday = datetime.datetime.now().weekday()  # Monday=0, Tuesday=1, ..., Sunday=6
+            if current_weekday >= 5:  # 5 = Saturday, 6 = Sunday
+                domain = 'girlcockx.com'
+            else:
+                domain = 'vxtwitter.com'
+            
+            tweetlink = message.content.replace('x.com', domain)
+            
             if str(message.channel) == 'gato':
-                tweetlink = message.content.replace('x.com', 'girlcockx.com')
                 await message.delete()
                 personality = random.choice(list(wl.webhook_library.values()))
                 username = personality[0]
