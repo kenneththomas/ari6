@@ -255,7 +255,7 @@ async def on_message(message):
                 })
             
             # Split and send message
-            if freemsg.count('\n') < 6:
+            if freemsg.count('\n') < 8:
                 for line in freemsg.split('\n'):
                     if line.strip():
                         await asyncio.sleep(random.uniform(1, 4.3))
