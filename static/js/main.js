@@ -101,6 +101,18 @@ if (userActivityCanvas) {
                         }
                     }
                 }
+            },
+            // Add animation configuration
+            animation: {
+                duration: 1000, // Animation duration in milliseconds
+                easing: 'easeInOutQuad' // Smooth easing function
+            },
+            transitions: {
+                active: {
+                    animation: {
+                        duration: 1000
+                    }
+                }
             }
         }
     });
@@ -138,19 +150,22 @@ socket.on('metrics_update', function(data) {
     
     // Update the user activity bar chart (if the chart exists)
     if (userActivityChart && data.user_activity) {
+        // Sort the user activity data by message count in descending order
+        const sortedUserActivity = [...data.user_activity].sort((a, b) => b.message_count - a.message_count);
+        
         // Store the avatar URLs in our mapping
-        data.user_activity.forEach(user => {
+        sortedUserActivity.forEach(user => {
             if (user.avatar) {
                 userAvatars[user.username] = user.avatar;
             }
         });
         
         // Update the chart with user data
-        userActivityChart.data.labels = data.user_activity.map(user => user.username);
-        userActivityChart.data.datasets[0].data = data.user_activity.map(user => user.message_count);
+        userActivityChart.data.labels = sortedUserActivity.map(user => user.username);
+        userActivityChart.data.datasets[0].data = sortedUserActivity.map(user => user.message_count);
         
         // Create avatars array matching the order of users in the chart
-        const avatars = data.user_activity.map(user => user.avatar);
+        const avatars = sortedUserActivity.map(user => user.avatar);
         
         // Update chart plugin data
         userActivityChart.options.plugins.customCanvasBackgroundImage = {
