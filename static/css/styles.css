@@ -38,6 +38,12 @@ button:hover {
   min-width: 300px;
   display: block;
 }
+/* Make the user activity panel moderately larger but not too big */
+#user_activity_panel {
+  min-width: 450px;
+  min-height: 400px;
+  width: 60%;
+}
 .panel h2 {
   color: #5865F2;
   border-bottom: 1px solid #eee;

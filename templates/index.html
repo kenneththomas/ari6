@@ -20,6 +20,9 @@
       <!-- New buttons for Line Graph Panel -->
       <button onclick="addPanel('line_graph_panel')">Show Line Graph Panel</button>
       <button onclick="removePanel('line_graph_panel')">Hide Line Graph Panel</button>
+      <!-- New buttons for User Activity Panel -->
+      <button onclick="addPanel('user_activity_panel')">Show User Activity Panel</button>
+      <button onclick="removePanel('user_activity_panel')">Hide User Activity Panel</button>
     </div>
     <div id="dashboard">
       <div id="metrics_panel" class="panel">
@@ -38,6 +41,11 @@
       <div id="line_graph_panel" class="panel" style="display: none;">
         <h2>Message Count (Last 10 Minutes)</h2>
         <canvas id="messageChart" width="400" height="200"></canvas>
+      </div>
+      <!-- New panel for the user activity bar chart -->
+      <div id="user_activity_panel" class="panel" style="display: none;">
+        <h2>User Activity (Last Hour)</h2>
+        <canvas id="userActivityChart" width="600" height="400"></canvas>
       </div>
     </div>
     <!-- Load SocketIO client library from a CDN -->

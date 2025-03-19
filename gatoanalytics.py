@@ -25,6 +25,9 @@ metrics = {
     'active_users': 0
 }
 
+# Add this to store avatars in memory without changing the database schema
+user_avatars = {}
+
 def update_metrics():
     """
     This background thread updates analytics from the database.
@@ -57,12 +60,36 @@ def update_metrics():
         """)
         message_history = db_cursor.fetchall()
         
+        # Get user activity data for the last hour (for the bar chart)
+        db_cursor.execute("""
+            SELECT user, COUNT(*) as message_count 
+            FROM messages 
+            WHERE timestamp > datetime('now', '-1 hour')
+            GROUP BY user
+            ORDER BY message_count DESC
+            LIMIT 10
+        """)
+        user_activity_raw = db_cursor.fetchall()
+        
+        # Prepare the user activity data with avatars
+        user_activity = []
+        for user, count in user_activity_raw:
+            # Get the avatar URL from memory if available
+            avatar_url = user_avatars.get(user, "https://cdn.discordapp.com/embed/avatars/0.png")
+            
+            user_activity.append({
+                'username': user,
+                'message_count': count,
+                'avatar': avatar_url
+            })
+        
         # Emit the updated metrics to all connected clients
         socketio.emit('metrics_update', {
             'total_messages': metrics['total_messages'],
             'total_reactions': metrics['total_reactions'],
             'active_users': metrics['active_users'],
-            'message_history': message_history
+            'message_history': message_history,
+            'user_activity': user_activity
         })
         
         time.sleep(5)  # Update every 5 seconds - a reasonable interval
@@ -126,6 +153,9 @@ class MyDiscordClient(discord.Client):
         except Exception as e:
             print(f"Error getting avatar: {e}")
             avatar_url = "https://cdn.discordapp.com/embed/avatars/0.png"  # Default avatar
+        
+        # Store the avatar URL in memory
+        user_avatars[user] = avatar_url
         
         # Log message details to the SQLite database
         db_cursor.execute(

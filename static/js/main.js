@@ -56,6 +56,59 @@ if (chartCanvas) {
     });
 }
 
+// Setup User Activity Chart if the canvas exists
+let userActivityChart;
+const userActivityCanvas = document.getElementById('userActivityChart');
+if (userActivityCanvas) {
+    const ctx = userActivityCanvas.getContext('2d');
+    userActivityChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: [], // usernames
+            datasets: [{
+                label: 'Messages Sent',
+                data: [], // message counts
+                backgroundColor: 'rgba(88, 101, 242, 0.8)',
+                borderColor: 'rgba(88, 101, 242, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            indexAxis: 'y',  // Horizontal bar chart
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Message Count'
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Users'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: true
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `Messages: ${context.raw}`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Store avatars separately to update them when available
+let userAvatars = {};
+
 // Listen for metrics updates and update the metrics panel and the line chart.
 socket.on('metrics_update', function(data) {
     // Update text values
@@ -82,6 +135,30 @@ socket.on('metrics_update', function(data) {
         
         messageChart.update();
     }
+    
+    // Update the user activity bar chart (if the chart exists)
+    if (userActivityChart && data.user_activity) {
+        // Store the avatar URLs in our mapping
+        data.user_activity.forEach(user => {
+            if (user.avatar) {
+                userAvatars[user.username] = user.avatar;
+            }
+        });
+        
+        // Update the chart with user data
+        userActivityChart.data.labels = data.user_activity.map(user => user.username);
+        userActivityChart.data.datasets[0].data = data.user_activity.map(user => user.message_count);
+        
+        // Create avatars array matching the order of users in the chart
+        const avatars = data.user_activity.map(user => user.avatar);
+        
+        // Update chart plugin data
+        userActivityChart.options.plugins.customCanvasBackgroundImage = {
+            avatars: avatars
+        };
+        
+        userActivityChart.update();
+    }
 });
 
 // Listen for new messages and update the latest message panel
@@ -98,6 +175,44 @@ socket.on('new_message', function(data) {
             <p><strong>Message:</strong> ${data.message}</p>
         </div>
     `;
+    
+    // Update the avatar in our mapping whenever a new message comes in
+    userAvatars[data.user] = data.avatar;
+});
+
+// Add a plugin to display avatars next to the bars
+Chart.register({
+    id: 'customCanvasBackgroundImage',
+    beforeDraw: (chart) => {
+        if (chart.config.type !== 'bar' || chart.options.indexAxis !== 'y') return;
+        
+        const avatars = chart.options.plugins.customCanvasBackgroundImage?.avatars;
+        if (!avatars) return;
+        
+        const {ctx, chartArea, scales} = chart;
+        const yScale = scales.y;
+        
+        // For each data point
+        avatars.forEach((avatar, index) => {
+            const y = yScale.getPixelForValue(index);
+            
+            // Create an image element
+            const img = new Image();
+            img.src = avatar;
+            
+            // Draw the image when it's loaded
+            img.onload = function() {
+                ctx.save();
+                // Draw circle avatar to the left of the bar
+                ctx.beginPath();
+                ctx.arc(chartArea.left - 25, y, 15, 0, Math.PI * 2);
+                ctx.closePath();
+                ctx.clip();
+                ctx.drawImage(img, chartArea.left - 40, y - 15, 30, 30);
+                ctx.restore();
+            };
+        });
+    }
 });
 
 // Functions to hide/show panels dynamically.
