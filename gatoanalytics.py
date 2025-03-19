@@ -18,7 +18,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app)
 
-# In-memory analytics data (replace these with real metrics from the discord bot as needed)
+# In-memory analytics data (now populated from database)
 metrics = {
     'total_messages': 0,
     'total_reactions': 0,
@@ -27,18 +27,45 @@ metrics = {
 
 def update_metrics():
     """
-    This background thread simulates updating analytics.
-    In your real implementation, you might update these from real data.
+    This background thread updates analytics from the database.
     """
     while True:
-        # Simulate increasing metrics with random increments
-        metrics['total_messages'] += random.randint(0, 5)
-        metrics['total_reactions'] += random.randint(0, 3)
-        metrics['active_users'] = random.randint(5, 20)
+        # Get total messages from database
+        db_cursor.execute("SELECT COUNT(*) FROM messages")
+        metrics['total_messages'] = db_cursor.fetchone()[0]
         
-        # Emit (push) the updated metrics to all connected clients
-        socketio.emit('metrics_update', metrics)
-        time.sleep(2)  # adjust interval as needed
+        # Get active users (unique users in the last 10 minutes)
+        ten_min_ago = (datetime.now().isoformat()[:-3])  # Current time minus 10 minutes
+        db_cursor.execute("""
+            SELECT COUNT(DISTINCT user) FROM messages 
+            WHERE timestamp > datetime('now', '-10 minutes')
+        """)
+        metrics['active_users'] = db_cursor.fetchone()[0]
+        
+        # For reactions, we would need a reactions table
+        # For now, keeping the simulated data for this metric
+        metrics['total_reactions'] += random.randint(0, 3)
+        
+        # Get message count data for the last 10 minutes (for the chart)
+        db_cursor.execute("""
+            SELECT strftime('%Y-%m-%dT%H:%M:%S', timestamp) as minute, 
+                   COUNT(*) as count 
+            FROM messages 
+            WHERE timestamp > datetime('now', '-10 minutes')
+            GROUP BY strftime('%Y-%m-%dT%H:%M:00', timestamp)
+            ORDER BY minute
+        """)
+        message_history = db_cursor.fetchall()
+        
+        # Emit the updated metrics to all connected clients
+        socketio.emit('metrics_update', {
+            'total_messages': metrics['total_messages'],
+            'total_reactions': metrics['total_reactions'],
+            'active_users': metrics['active_users'],
+            'message_history': message_history
+        })
+        
+        time.sleep(5)  # Update every 5 seconds - a reasonable interval
 
 @app.route('/')
 def index():

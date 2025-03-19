@@ -1,10 +1,14 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <meta charset="UTF-8">
     <title>Realtime Discord Analytics Dashboard</title>
     <!-- Link to external CSS file -->
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/styles.css') }}">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chart.js Date Adapter (date-fns adapter) -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
   </head>
   <body>
     <h1>Discord Server Analytics Dashboard</h1>
@@ -13,6 +17,9 @@
       <button onclick="removePanel('metrics_panel')">Hide Metrics Panel</button>
       <button onclick="addPanel('latest_message_panel')">Show Latest Message Panel</button>
       <button onclick="removePanel('latest_message_panel')">Hide Latest Message Panel</button>
+      <!-- New buttons for Line Graph Panel -->
+      <button onclick="addPanel('line_graph_panel')">Show Line Graph Panel</button>
+      <button onclick="removePanel('line_graph_panel')">Hide Line Graph Panel</button>
     </div>
     <div id="dashboard">
       <div id="metrics_panel" class="panel">
@@ -26,6 +33,11 @@
         <div id="message_content">
           <p>Waiting for new messages...</p>
         </div>
+      </div>
+      <!-- New panel for the line graph -->
+      <div id="line_graph_panel" class="panel" style="display: none;">
+        <h2>Message Count (Last 10 Minutes)</h2>
+        <canvas id="messageChart" width="400" height="200"></canvas>
       </div>
     </div>
     <!-- Load SocketIO client library from a CDN -->
