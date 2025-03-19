@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Realtime Discord Analytics Dashboard</title>
+    <!-- Link to external CSS file -->
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/styles.css') }}">
+  </head>
+  <body>
+    <h1>Discord Server Analytics Dashboard</h1>
+    <div class="controls">
+      <button onclick="addPanel('metrics_panel')">Show Metrics Panel</button>
+      <button onclick="removePanel('metrics_panel')">Hide Metrics Panel</button>
+      <button onclick="addPanel('latest_message_panel')">Show Latest Message Panel</button>
+      <button onclick="removePanel('latest_message_panel')">Hide Latest Message Panel</button>
+    </div>
+    <div id="dashboard">
+      <div id="metrics_panel" class="panel">
+        <h2>Metrics</h2>
+        <p>Total Messages: <span id="total_messages">0</span></p>
+        <p>Total Reactions: <span id="total_reactions">0</span></p>
+        <p>Active Users: <span id="active_users">0</span></p>
+      </div>
+      <div id="latest_message_panel" class="panel">
+        <h2>Latest Message</h2>
+        <div id="message_content">
+          <p>Waiting for new messages...</p>
+        </div>
+      </div>
+    </div>
+    <!-- Load SocketIO client library from a CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.0/socket.io.min.js"></script>
+    <!-- Link to external JavaScript file -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  </body>
+</html> 

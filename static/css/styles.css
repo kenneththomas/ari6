@@ -1,0 +1,65 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 20px;
+  background-color: #f5f5f5;
+}
+h1 {
+  color: #5865F2;
+  text-align: center;
+}
+.controls {
+  text-align: center;
+  margin-bottom: 20px;
+}
+button {
+  background-color: #5865F2;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  margin: 5px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+button:hover {
+  background-color: #4752C4;
+}
+#dashboard {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.panel {
+  border: 1px solid #ccc;
+  padding: 15px;
+  margin: 10px;
+  border-radius: 8px;
+  background-color: white;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  min-width: 300px;
+  display: block;
+}
+.panel h2 {
+  color: #5865F2;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+  margin-top: 0;
+}
+#message_content {
+  padding: 10px;
+  background-color: #f9f9f9;
+  border-radius: 5px;
+}
+.avatar-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.avatar-container img {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  margin-right: 15px;
+}
+.message-details {
+  margin-top: 10px;
+} 
