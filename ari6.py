@@ -6,6 +6,8 @@ import asyncio
 import control as ct
 import aritooter
 import datetime
+from zoneinfo import ZoneInfo
+import csv
 import sentience
 import re
 import random
@@ -36,6 +38,8 @@ lasttweet = ''
 dev_mode = False
 trivia_answer = ''
 trivia_question = ''
+
+scheduled_messages_jobs = []  # Global list for scheduled messages
 
 intents = discord.Intents.default()
 
@@ -97,6 +101,11 @@ async def on_ready():
     rdytime = datetime.datetime.now()
     start_duration = rdytime - starttime
     print(f'Bot started in {start_duration}')
+
+    # Initialize scheduled messages from CSV and start the scheduled messages loop
+    global scheduled_messages_jobs
+    scheduled_messages_jobs = load_scheduled_messages()
+    asyncio.create_task(scheduled_messages_loop())
 
 
 
@@ -512,5 +521,58 @@ async def on_reaction_add(reaction, user):
 @client.event
 async def on_message_delete(message):
     print(f'[{datetime.datetime.now()}] {message.author.name} deleted message: {message.content}')
+
+async def send_scheduled_message(job):
+    """Send the scheduled message to the appropriate channel."""
+    channel = client.get_channel(job["channel"])
+    if channel:
+        await channel.send(job["message"])
+    else:
+        print(f"Channel with ID {job['channel']} not found")
+
+
+def load_scheduled_messages():
+    """Load scheduled messages from the CSV file."""
+    scheduled = []
+    try:
+        with open("resources/scheduled_messages.csv", newline='') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                time_str = row["time"].strip()         # expects format HH:MM (24-hour)
+                message = row["message"].strip()
+                repeat = row["repeat"].strip().lower() in ["true", "1"]
+                channel = int(row["channel"].strip())
+                scheduled.append({
+                    "time": time_str,
+                    "message": message,
+                    "repeat": repeat,
+                    "channel": channel,
+                    "last_sent": None  # keeps track of the last day this message was sent
+                })
+    except Exception as e:
+        print(f"Error reading scheduled messages: {e}")
+    return scheduled
+
+
+async def scheduled_messages_loop():
+    """Loop that checks every 20 seconds to send scheduled messages at the correct EST time."""
+    global scheduled_messages_jobs
+    while True:
+        now = datetime.datetime.now(ZoneInfo("America/New_York"))
+        current_time_str = now.strftime("%H:%M")
+        current_date = now.date()
+        for job in scheduled_messages_jobs[:]:  # iterate on a copy so we can remove non-repeat jobs
+            if job["time"] == current_time_str:
+                if not job["repeat"]:
+                    # non-repeating: send only once, then remove from the list
+                    if job.get("last_sent") is None:
+                        await send_scheduled_message(job)
+                        scheduled_messages_jobs.remove(job)
+                else:
+                    # repeating: check if we already sent today
+                    if job.get("last_sent") != current_date:
+                        await send_scheduled_message(job)
+                        job["last_sent"] = current_date
+        await asyncio.sleep(20)
 
 client.run(maricon.bottoken)
