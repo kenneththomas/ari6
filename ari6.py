@@ -300,7 +300,9 @@ async def on_message(message):
     if message.content.startswith('!ds'):
         response_text = await sentience.deepseek(message.content)
         await message.reply(response_text)
-
+    
+    #reasoner takes too long
+    '''
     if message.content.startswith('!rs'):
         response_text = await sentience.deepseek(message.content,model_name='deepseek-reasoner')
         # Split long messages to fit Discord's 2000 character limit
@@ -311,6 +313,7 @@ async def on_message(message):
                 await message.channel.send(chunk)
         else:
             await message.reply(response_text)
+    '''
 
     # Translation handling
     if flipper.translation_enabled:
