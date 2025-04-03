@@ -291,7 +291,7 @@ async def on_message(message):
 
     if message.content.startswith('!gpt'):
         ari_webhook = await get_or_create_webhook(message.channel, 'ari')
-        response_text = "i am gay! \nfor now, please use the **!ds** command to use deepseek chat, or **!rs** to use deepseek reasoner. 🇨🇳"
+        response_text = "i am gay! \n\nfor now, please use the **!ds** command to use deepseek chat 🇨🇳"
         username = wl.webhook_library['sam'][0]
         avatar = wl.webhook_library['sam'][1]
         await ari_webhook.send(response_text, username=username, avatar_url=avatar)
