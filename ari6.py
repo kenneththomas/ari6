@@ -274,7 +274,8 @@ async def on_message(message):
 
         return
     
-    #basic gpt
+    # im not payig for openai credits rn so this is disabled
+    '''
     gmodel = 'gpt-4o-mini'
     if message.content.startswith('!gpt'):
         if message.content.startswith('!gpt4'):
@@ -286,6 +287,30 @@ async def on_message(message):
         response_text = await sentience.generate_text_gpt(message.content,gmodel=gmodel)
         await asyncio.sleep(1)
         await message.reply(response_text)
+    '''
+
+    if message.content.startswith('!gpt'):
+        ari_webhook = await get_or_create_webhook(message.channel, 'ari')
+        response_text = "i am gay! \nfor now, please use the **!ds** command to use deepseek chat, or **!rs** to use deepseek reasoner. 🇨🇳"
+        username = wl.webhook_library['sam'][0]
+        avatar = wl.webhook_library['sam'][1]
+        await ari_webhook.send(response_text, username=username, avatar_url=avatar)
+
+    #deepseek
+    if message.content.startswith('!ds'):
+        response_text = await sentience.deepseek(message.content)
+        await message.reply(response_text)
+
+    if message.content.startswith('!rs'):
+        response_text = await sentience.deepseek(message.content,model_name='deepseek-reasoner')
+        # Split long messages to fit Discord's 2000 character limit
+        if len(response_text) > 1900:
+            chunks = [response_text[i:i+1900] for i in range(0, len(response_text), 1900)]
+            await message.reply(chunks[0])
+            for chunk in chunks[1:]:
+                await message.channel.send(chunk)
+        else:
+            await message.reply(response_text)
 
     # Translation handling
     if flipper.translation_enabled:

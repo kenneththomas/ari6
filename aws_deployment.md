@@ -19,6 +19,10 @@ personality.py gitignored because it has personal information
 python modules needed (should i create a proper dependencies?)
 discord
 openai
+Mastodon.py
+atproto
+anthropic
+ptyz
 
 thats it, its running already!
 

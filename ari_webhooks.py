@@ -26,4 +26,5 @@ webhook_library = {
     'kamala' : ('kamala','https://res.cloudinary.com/dr2rzyu6p/image/upload/c_pad,b_auto:predominant,fl_preserve_transparency/v1710424416/kamala_hpghjo.jpg','Kamala Harris, Vice President of the United States'),
     'lamelo ball' : ('lamelo ball','https://cdn.discordapp.com/attachments/205930498034237451/1219068552288669827/breezyexcursion_photo_of_lamelo_ball_f614a2fa-f40e-4224-9e9d-190f97da10b7.png','Lamelo Ball, NBA player respond to messages very briefly in the style of a zoomer male in disbelief, finishing with a skull emoji'),
     'luis' : ('luis','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1710891819/noidfrqtvvxxqkme94vg.jpg','friendly puerto rican that works as a spanish teacher and translator'),
+    'sam' : ('sam','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1743640151/Screenshot_2025-04-02_202834_dgkqik.png','sam altman'),
 }
