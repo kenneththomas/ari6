@@ -275,11 +275,10 @@ async def on_message(message):
         return
     
     # im not payig for openai credits rn so this is disabled
-    '''
-    gmodel = 'gpt-4o-mini'
+    gmodel = 'gpt-4.1-mini'
     if message.content.startswith('!gpt'):
         if message.content.startswith('!gpt4'):
-            gmodel = 'gpt-4o'
+            gmodel = 'gpt-4.1'
         if flipper.precheck:
             if 'yes' in await sentience.precheck(message.content):
                 await message.reply('popsicle')
@@ -287,18 +286,20 @@ async def on_message(message):
         response_text = await sentience.generate_text_gpt(message.content,gmodel=gmodel)
         await asyncio.sleep(1)
         await message.reply(response_text)
-    '''
 
+    '''
     if message.content.startswith('!gpt'):
         ari_webhook = await get_or_create_webhook(message.channel, 'ari')
         response_text = "i am gay! \n\nfor now, please use the **!ds** command to use deepseek chat 🇨🇳"
         username = wl.webhook_library['sam'][0]
         avatar = wl.webhook_library['sam'][1]
         await ari_webhook.send(response_text, username=username, avatar_url=avatar)
+    '''
 
     #deepseek
     if message.content.startswith('!ds'):
-        response_text = await sentience.deepseek(message.content)
+        #response_text = await sentience.deepseek(message.content)
+        response_text = 'we not dewin this rn'
         await message.reply(response_text)
     
     #reasoner takes too long
