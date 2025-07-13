@@ -364,7 +364,9 @@ async def on_message(message):
             # Use 'girlcockx.com' on weekends (Saturday and Sunday) and 'vxtwitter.com' on weekdays.
             current_weekday = datetime.datetime.now().weekday()  # Monday=0, Tuesday=1, ..., Sunday=6
             if current_weekday >= 5:  # 5 = Saturday, 6 = Sunday
-                domain = 'girlcockx.com'
+                #domain = 'girlcockx.com'
+                #7/13/25 - girlcockx.com is down, using vxtwitter.com instead
+                domain = 'vxtwitter.com'
             else:
                 domain = 'vxtwitter.com'
             
