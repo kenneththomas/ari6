@@ -63,6 +63,14 @@ def search_logs():
         # Execute query
         conn = get_db_connection()
         cursor = conn.cursor()
+        
+        # First, get the total count of matching results
+        count_sql = sql.replace("SELECT sender, channel, timestamp, message", "SELECT COUNT(*)")
+        count_sql = count_sql.replace(" ORDER BY timestamp DESC LIMIT ? OFFSET ?", "")
+        cursor.execute(count_sql, params[:-2])  # Remove limit and offset from params
+        total_count = cursor.fetchone()[0]
+        
+        # Now execute the main query with pagination
         cursor.execute(sql, params)
         results = cursor.fetchall()
         
@@ -81,7 +89,7 @@ def search_logs():
         return jsonify({
             'success': True,
             'logs': logs,
-            'count': len(logs)
+            'count': total_count
         })
         
     except Exception as e:

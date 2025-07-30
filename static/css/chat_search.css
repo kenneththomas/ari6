@@ -305,8 +305,20 @@ body {
 #page-info {
     font-weight: 600;
     color: #4a5568;
-    min-width: 80px;
+    min-width: 200px;
     text-align: center;
+    font-size: 0.9rem;
+}
+
+.btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.btn.disabled:hover {
+    transform: none;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
 }
 
 /* Responsive Design */

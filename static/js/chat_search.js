@@ -221,11 +221,29 @@ class ChatSearch {
         }
         
         this.paginationEl.style.display = 'flex';
-        this.pageInfoEl.textContent = `Page ${this.currentPage} of ${totalPages}`;
+        
+        // Calculate the range of results being shown
+        const startResult = (this.currentPage - 1) * this.currentLimit + 1;
+        const endResult = Math.min(this.currentPage * this.currentLimit, totalCount);
+        
+        this.pageInfoEl.textContent = `Page ${this.currentPage} of ${totalPages} (${startResult}-${endResult} of ${totalCount} results)`;
         
         // Update button states
         this.prevPageBtn.disabled = this.currentPage <= 1;
         this.nextPageBtn.disabled = this.currentPage >= totalPages;
+        
+        // Add visual feedback for disabled buttons
+        if (this.currentPage <= 1) {
+            this.prevPageBtn.classList.add('disabled');
+        } else {
+            this.prevPageBtn.classList.remove('disabled');
+        }
+        
+        if (this.currentPage >= totalPages) {
+            this.nextPageBtn.classList.add('disabled');
+        } else {
+            this.nextPageBtn.classList.remove('disabled');
+        }
     }
 
     async previousPage() {
