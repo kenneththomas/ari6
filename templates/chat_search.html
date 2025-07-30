@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Log Search</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/chat_search.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1><i class="fas fa-search"></i> Chat Log Search</h1>
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <span class="stat-label">Total Messages:</span>
+                    <span class="stat-value" id="total-messages">-</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Unique Users:</span>
+                    <span class="stat-value" id="unique-users">-</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Channels:</span>
+                    <span class="stat-value" id="unique-channels">-</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="search-container">
+            <div class="search-filters">
+                <div class="filter-group">
+                    <label for="search-query">
+                        <i class="fas fa-search"></i> Search Messages
+                    </label>
+                    <input type="text" id="search-query" placeholder="Search in messages, senders, or channels...">
+                </div>
+
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label for="sender-filter">
+                            <i class="fas fa-user"></i> Sender
+                        </label>
+                        <input type="text" id="sender-filter" placeholder="Filter by sender...">
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="channel-filter">
+                            <i class="fas fa-hashtag"></i> Channel
+                        </label>
+                        <input type="text" id="channel-filter" placeholder="Filter by channel...">
+                    </div>
+                </div>
+
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label for="date-from">
+                            <i class="fas fa-calendar"></i> From Date
+                        </label>
+                        <input type="date" id="date-from">
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="date-to">
+                            <i class="fas fa-calendar"></i> To Date
+                        </label>
+                        <input type="date" id="date-to">
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="limit-select">
+                            <i class="fas fa-list"></i> Results
+                        </label>
+                        <select id="limit-select">
+                            <option value="50">50</option>
+                            <option value="100" selected>100</option>
+                            <option value="250">250</option>
+                            <option value="500">500</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="search-actions">
+                    <button id="search-btn" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                    <button id="clear-btn" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Clear
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="results-container">
+            <div class="results-header">
+                <h2>Search Results</h2>
+                <div class="results-info">
+                    <span id="results-count">0 results</span>
+                    <div class="loading-spinner" id="loading-spinner" style="display: none;">
+                        <i class="fas fa-spinner fa-spin"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="results-list" id="results-list">
+                <div class="no-results">
+                    <i class="fas fa-search"></i>
+                    <p>Enter search criteria to find messages</p>
+                </div>
+            </div>
+
+            <div class="pagination" id="pagination" style="display: none;">
+                <button id="prev-page" class="btn btn-secondary">
+                    <i class="fas fa-chevron-left"></i> Previous
+                </button>
+                <span id="page-info">Page 1</span>
+                <button id="next-page" class="btn btn-secondary">
+                    Next <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/chat_search.js') }}"></script>
+</body>
+</html> 
