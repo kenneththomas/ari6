@@ -8,9 +8,11 @@ class ChatSearch {
         this.channelFilter = '';
         this.dateFrom = '';
         this.dateTo = '';
+        this.selectedDatabases = ['gato.db'];
         
         this.initializeElements();
         this.bindEvents();
+        this.loadDatabases();
         this.loadStats();
     }
 
@@ -40,6 +42,11 @@ class ChatSearch {
         this.totalMessagesEl = document.getElementById('total-messages');
         this.uniqueUsersEl = document.getElementById('unique-users');
         this.uniqueChannelsEl = document.getElementById('unique-channels');
+        
+        // Database elements
+        this.databaseCheckboxesEl = document.getElementById('database-checkboxes');
+        this.selectAllDbsBtn = document.getElementById('select-all-dbs');
+        this.deselectAllDbsBtn = document.getElementById('deselect-all-dbs');
     }
 
     bindEvents() {
@@ -72,11 +79,19 @@ class ChatSearch {
         this.dateFromEl.addEventListener('change', debouncedSearch);
         this.dateToEl.addEventListener('change', debouncedSearch);
         this.limitSelectEl.addEventListener('change', debouncedSearch);
+        
+        // Database selection events
+        this.selectAllDbsBtn.addEventListener('click', () => this.selectAllDatabases());
+        this.deselectAllDbsBtn.addEventListener('click', () => this.deselectAllDatabases());
     }
 
     async loadStats() {
         try {
-            const response = await fetch('/api/stats');
+            const params = new URLSearchParams({
+                databases: this.selectedDatabases.join(',')
+            });
+            
+            const response = await fetch(`/api/stats?${params}`);
             const data = await response.json();
             
             if (data.success) {
@@ -95,6 +110,72 @@ class ChatSearch {
 
     formatNumber(num) {
         return new Intl.NumberFormat().format(num);
+    }
+
+    async loadDatabases() {
+        try {
+            const response = await fetch('/api/databases');
+            const data = await response.json();
+            
+            if (data.success) {
+                this.renderDatabaseCheckboxes(data.databases);
+            }
+        } catch (error) {
+            console.error('Error loading databases:', error);
+        }
+    }
+
+    renderDatabaseCheckboxes(databases) {
+        this.databaseCheckboxesEl.innerHTML = '';
+        
+        databases.forEach(db => {
+            const checkboxDiv = document.createElement('div');
+            checkboxDiv.className = 'database-checkbox';
+            
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.id = `db-${db}`;
+            checkbox.value = db;
+            checkbox.checked = this.selectedDatabases.includes(db);
+            
+            const label = document.createElement('label');
+            label.htmlFor = `db-${db}`;
+            label.textContent = db;
+            
+            checkbox.addEventListener('change', (e) => {
+                this.updateSelectedDatabases();
+            });
+            
+            checkboxDiv.appendChild(checkbox);
+            checkboxDiv.appendChild(label);
+            this.databaseCheckboxesEl.appendChild(checkboxDiv);
+        });
+    }
+
+    updateSelectedDatabases() {
+        const checkboxes = this.databaseCheckboxesEl.querySelectorAll('input[type="checkbox"]:checked');
+        this.selectedDatabases = Array.from(checkboxes).map(cb => cb.value);
+        
+        // Ensure at least one database is selected
+        if (this.selectedDatabases.length === 0) {
+            this.selectedDatabases = ['gato.db'];
+            const defaultCheckbox = this.databaseCheckboxesEl.querySelector('#db-gato.db');
+            if (defaultCheckbox) {
+                defaultCheckbox.checked = true;
+            }
+        }
+    }
+
+    selectAllDatabases() {
+        const checkboxes = this.databaseCheckboxesEl.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(cb => cb.checked = true);
+        this.updateSelectedDatabases();
+    }
+
+    deselectAllDatabases() {
+        const checkboxes = this.databaseCheckboxesEl.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(cb => cb.checked = false);
+        this.updateSelectedDatabases();
     }
 
     async performSearch() {
@@ -119,7 +200,8 @@ class ChatSearch {
                 date_from: this.dateFrom,
                 date_to: this.dateTo,
                 limit: this.currentLimit,
-                offset: (this.currentPage - 1) * this.currentLimit
+                offset: (this.currentPage - 1) * this.currentLimit,
+                databases: this.selectedDatabases.join(',')
             });
             
             const response = await fetch(`/api/search?${params}`);
@@ -174,11 +256,14 @@ class ChatSearch {
         const highlightedSender = this.highlightSearchTerms(log.sender);
         const highlightedChannel = this.highlightSearchTerms(log.channel);
         
+        const databaseIndicator = log.database ? `<div class="message-database">${log.database}</div>` : '';
+        
         messageDiv.innerHTML = `
             <div class="message-header">
                 <div class="message-sender">${highlightedSender}</div>
                 <div class="message-channel">${highlightedChannel}</div>
                 <div class="message-timestamp">${this.formatTimestamp(log.timestamp)}</div>
+                ${databaseIndicator}
             </div>
             <div class="message-content">${highlightedMessage}</div>
         `;
@@ -269,7 +354,8 @@ class ChatSearch {
                 date_from: this.dateFrom,
                 date_to: this.dateTo,
                 limit: this.currentLimit,
-                offset: (this.currentPage - 1) * this.currentLimit
+                offset: (this.currentPage - 1) * this.currentLimit,
+                databases: this.selectedDatabases.join(',')
             });
             
             const response = await fetch(`/api/search?${params}`);
