@@ -41,6 +41,11 @@ trivia_question = ''
 
 scheduled_messages_jobs = []  # Global list for scheduled messages
 
+# TK thinking tracking variables
+tk_thinking_window_start = None
+tk_thinking_medal_count = 0  # 0 = no medals given, 1 = gold given, 2 = silver given, 3 = bronze given
+tk_thinking_last_check = None
+
 intents = discord.Intents.default()
 
 #currently giving all access?
@@ -241,6 +246,35 @@ async def on_message(message):
 
     #start AI block
 
+    # TK thinking detection and medal system
+    global tk_thinking_window_start, tk_thinking_medal_count, tk_thinking_last_check
+    
+    if flipper.tk_thinking:
+        # Check if we need to reset the window (1 hour = 3600 seconds)
+        current_time = datetime.datetime.now()
+        if tk_thinking_window_start is None or (current_time - tk_thinking_window_start).total_seconds() > 3600:
+            tk_thinking_window_start = current_time
+            tk_thinking_medal_count = 0
+        
+        # Check if message contains "tk" as a standalone word
+        import re
+        tk_pattern = r'\btk\b'
+        if re.search(tk_pattern, message.content.lower()):
+            # Check if they're actually talking about TK the person
+            is_about_tk = await sentience.check_if_talking_about_tk(message.content)
+            
+            if is_about_tk:
+                # Award medals based on count
+                if tk_thinking_medal_count == 0:
+                    await message.add_reaction('🥇')  # Gold
+                    tk_thinking_medal_count = 1
+                elif tk_thinking_medal_count == 1:
+                    await message.add_reaction('🥈')  # Silver
+                    tk_thinking_medal_count = 2
+                elif tk_thinking_medal_count == 2:
+                    await message.add_reaction('🥉')  # Bronze
+                    tk_thinking_medal_count = 3
+    
     # TK Bot handling - check if someone summoned TK or replied to TK webhook
     if '@tk' in message.content.lower() or (message.reference and message.reference.resolved.author.name == 'TK'):
         async with message.channel.typing():
@@ -277,6 +311,25 @@ async def on_message(message):
                 else:
                     await message.reply(tk_response)
         return
+    
+    # Random TK responses during thinking window (5% chance) - only after all medals given
+    if flipper.tk_thinking and tk_thinking_medal_count >= 3 and mememgr.chance(5):
+        # Check if we're still in the same window
+        current_time = datetime.datetime.now()
+        if tk_thinking_window_start and (current_time - tk_thinking_window_start).total_seconds() <= 3600:
+            async with message.channel.typing():
+                tk_response = await sentience.tk_bot_response(experimental_container)
+                
+                # Use webhook if in gato or config channel, otherwise regular reply
+                if str(message.channel) == 'gato':
+                    tk_webhook = await get_or_create_webhook(gatochannel, 'tk')
+                    await tk_webhook.send(tk_response, username='TK', avatar_url=wl.webhook_library['tk'][1])
+                elif str(message.channel) == 'config':
+                    tk_webhook = await get_or_create_webhook(configchannel, 'TK')
+                    await tk_webhook.send(tk_response, username='TK', avatar_url=wl.webhook_library['tk'][1])
+                else:
+                    await message.channel.send(tk_response)
+            return
 
     triggerphrases = ['is this rizz']
     

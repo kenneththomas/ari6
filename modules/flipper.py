@@ -5,11 +5,12 @@ spotify_enable = True
 cheap = True
 precheck = False
 auto_skeeter = 0
+tk_thinking = True  # Controls the "thinking about TK" feature
 zp_last_msg_author = ''
 zp_msg = ''
 
 def togglemgr(user, message):
-    global zoomerposting, translation_enabled, claude, spotify_enable, cheap, precheck, auto_skeeter
+    global zoomerposting, translation_enabled, claude, spotify_enable, cheap, precheck, auto_skeeter, tk_thinking
     if message == '!zoomerposting':
         zoomerposting = not zoomerposting
         return f'zoomerposting is now {bool_to_str(zoomerposting)}'
@@ -25,6 +26,9 @@ def togglemgr(user, message):
     elif message == '!precheck':
         precheck = not precheck
         return f'precheck is now {bool_to_str(precheck)}'
+    elif message == '!tktoggle':
+        tk_thinking = not tk_thinking
+        return f'tk thinking is now {bool_to_str(tk_thinking)}'
     elif message.startswith('!autoskeeter'):
         parts = message.split()
         if len(parts) == 1:  # Just !autoskeeter with no number

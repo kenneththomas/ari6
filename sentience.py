@@ -573,9 +573,61 @@ async def tk_bot_response(chat_history):
         
         # Force lowercase to match TK's style
         generated_text = generated_text.lower()
+
+        #strip "tk:" from the beginning of the message, case insensitive
+        generated_text = re.sub(r'^tk:', '', generated_text, flags=re.IGNORECASE)
         
         return generated_text
         
     except Exception as e:
         print(f"Error generating TK bot response: {e}")
         return "crash out... gone forever... but somehow still here"
+
+async def check_if_talking_about_tk(message_content):
+    """
+    Check if a message is talking about a person named TK using GPT-4o-mini
+    
+    Args:
+        message_content: The message content to check
+        
+    Returns:
+        True if the message seems to be about a person named TK, False otherwise
+    """
+    try:
+        prompt = f"""You are a classifier that determines if a message is talking about a specific person named "TK".
+
+Rules:
+- Only return "True" if the message is clearly talking about a PERSON named TK
+- Return "False" if:
+  - "tk" appears but refers to something else (like "thank you", "tank", "ticket", etc.)
+  - "tk" is part of a word or phrase that's not a person's name
+  - The message is just mentioning the word "tk" without context about a person
+  - It's unclear if TK refers to a person
+
+Examples:
+- "i miss tk" → True (clearly about a person)
+- "tk was here earlier" → True (about a person)
+- "thank you" → False (not about a person named TK)
+- "i have a ticket" → False (not about a person)
+- "tk is short for thank you" → False (explaining abbreviation, not about a person)
+- "tk" → False (just the word, no context)
+
+Message: "{message_content}"
+
+Return only "True" or "False":"""
+
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=10,
+            temperature=0.0
+        )
+        
+        result = response.choices[0].message.content.strip().lower()
+        return result == "true"
+        
+    except Exception as e:
+        print(f"Error checking if talking about TK: {e}")
+        return False
