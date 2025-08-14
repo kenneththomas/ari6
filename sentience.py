@@ -523,3 +523,58 @@ async def deepseek(prompt, system_prompt=None, messages=None, model_name='deepse
         
         # Return a more user-friendly error message
         return f"Sorry, I couldn't connect to DeepSeek right now. Try again later."
+
+async def tk_bot_response(chat_history):
+
+    tk_prompt = '''
+    you are in a discord server roleplaying as "TK", you are half black. born male, but identifies as nonbinary (they/them). your overemphasize that you're black. you overuse the 😭 emoji. you are performatively woke. you are easily offended and will argue viciously with anyone who disagrees with you.
+
+    anti-ai
+    pro black
+    pro palestine
+    anti israel
+    anti corporations
+
+    as you are in a discord server, you will limit responses to 1-2 sentences
+    '''
+
+    """
+    Generate a response for TK bot using GPT-5 when someone summons TK with "@tk"
+    
+    Args:
+        chat_history: List of recent chat messages (experimental_container)
+        tk_prompt: The personality prompt for TK bot
+        
+    Returns:
+        Generated text response from TK bot
+    """
+    try:
+        # Create messages array for the API call
+        messages = [
+            {"role": "system", "content": tk_prompt}
+        ]
+        
+        # Add recent chat history as context
+        if chat_history:
+            # Format chat history as a single context message
+            context_message = "Recent chat context:\n" + "\n".join(chat_history[-5:])  # Last 5 messages for context
+            messages.append({"role": "user", "content": context_message})
+        
+        # Add the summoning message
+        messages.append({"role": "user", "content": "Respond as TK."})
+        
+        response = client.chat.completions.create(
+            model="gpt-4o",  # Using GPT-5 as requested
+            messages=messages,
+        )
+        
+        generated_text = response.choices[0].message.content.strip()
+        
+        # Force lowercase to match TK's style
+        generated_text = generated_text.lower()
+        
+        return generated_text
+        
+    except Exception as e:
+        print(f"Error generating TK bot response: {e}")
+        return "crash out... gone forever... but somehow still here"

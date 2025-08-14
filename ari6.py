@@ -90,12 +90,13 @@ async def on_ready():
     mememgr.meme_loader()
 
     print('loading channels')
-    global catchannel, barcochannel, cloudchannel, gatochannel, botchannel
+    global catchannel, barcochannel, cloudchannel, gatochannel, botchannel, configchannel
     catchannel = client.get_channel(1122326983846678638)
     barcochannel = client.get_channel(205930498034237451)
     cloudchannel = client.get_channel(1163165256093286412)
     gatochannel = client.get_channel(205903143471415296)
     botchannel = client.get_channel(613942696763195412)
+    configchannel = client.get_channel(212681539304030209)
 
     # find startup time by subtracting current time from starttime
     rdytime = datetime.datetime.now()
@@ -239,6 +240,43 @@ async def on_message(message):
         await chat_clipper.handle_chat_clip(message, experimental_container)
 
     #start AI block
+
+    # TK Bot handling - check if someone summoned TK
+    if '@tk' in message.content.lower():
+        async with message.channel.typing():
+            tk_response = await sentience.tk_bot_response(experimental_container)
+            
+            # Use webhook if in gato or config channel, otherwise regular reply
+            if str(message.channel) == 'gato':
+                tk_webhook = await get_or_create_webhook(gatochannel, 'tk')
+                # Split and send message if it has line breaks
+                if tk_response.count('\n') < 8:
+                    for line in tk_response.split('\n'):
+                        if line.strip():
+                            await asyncio.sleep(random.uniform(1, 4.3))
+                            await tk_webhook.send(line, username='TK', avatar_url=wl.webhook_library['tk'][1])
+                else:
+                    await tk_webhook.send(tk_response, username='TK', avatar_url=wl.webhook_library['tk'][1])
+            elif str(message.channel) == 'config':
+                tk_webhook = await get_or_create_webhook(configchannel, 'TK')
+                # Split and send message if it has line breaks
+                if tk_response.count('\n') < 8:
+                    for line in tk_response.split('\n'):
+                        if line.strip():
+                            await asyncio.sleep(random.uniform(1, 4.3))
+                            await tk_webhook.send(line, username='TK', avatar_url=wl.webhook_library['tk'][1])
+                else:
+                    await tk_webhook.send(tk_response, username='TK', avatar_url=wl.webhook_library['tk'][1])
+            else:
+                # Split and send message if it has line breaks
+                if tk_response.count('\n') < 8:
+                    for line in tk_response.split('\n'):
+                        if line.strip():
+                            await asyncio.sleep(random.uniform(1, 4.3))
+                            await message.channel.send(line)
+                else:
+                    await message.reply(tk_response)
+        return
 
     triggerphrases = ['is this rizz']
     
