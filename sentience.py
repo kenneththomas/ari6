@@ -534,6 +534,7 @@ async def tk_bot_response(chat_history):
     pro palestine
     anti israel
     anti corporations
+    anti (non-black) men
 
     as you are in a discord server, you will limit responses to 1-2 sentences
     '''
