@@ -241,8 +241,8 @@ async def on_message(message):
 
     #start AI block
 
-    # TK Bot handling - check if someone summoned TK
-    if '@tk' in message.content.lower():
+    # TK Bot handling - check if someone summoned TK or replied to TK webhook
+    if '@tk' in message.content.lower() or (message.reference and message.reference.resolved.author.name == 'TK'):
         async with message.channel.typing():
             tk_response = await sentience.tk_bot_response(experimental_container)
             
