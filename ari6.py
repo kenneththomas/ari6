@@ -275,61 +275,9 @@ async def on_message(message):
                     await message.add_reaction('🥉')  # Bronze
                     tk_thinking_medal_count = 3
     
-    # TK Bot handling - check if someone summoned TK or replied to TK webhook
-    if '@tk' in message.content.lower() or (message.reference and message.reference.resolved.author.name == 'TK'):
-        async with message.channel.typing():
-            tk_response = await sentience.tk_bot_response(experimental_container)
-            
-            # Use webhook if in gato or config channel, otherwise regular reply
-            if str(message.channel) == 'gato':
-                tk_webhook = await get_or_create_webhook(gatochannel, 'tk')
-                # Split and send message if it has line breaks
-                if tk_response.count('\n') < 8:
-                    for line in tk_response.split('\n'):
-                        if line.strip():
-                            await asyncio.sleep(random.uniform(1, 4.3))
-                            await tk_webhook.send(line, username='TK', avatar_url=wl.webhook_library['tk'][1])
-                else:
-                    await tk_webhook.send(tk_response, username='TK', avatar_url=wl.webhook_library['tk'][1])
-            elif str(message.channel) == 'config':
-                tk_webhook = await get_or_create_webhook(configchannel, 'TK')
-                # Split and send message if it has line breaks
-                if tk_response.count('\n') < 8:
-                    for line in tk_response.split('\n'):
-                        if line.strip():
-                            await asyncio.sleep(random.uniform(1, 4.3))
-                            await tk_webhook.send(line, username='TK', avatar_url=wl.webhook_library['tk'][1])
-                else:
-                    await tk_webhook.send(tk_response, username='TK', avatar_url=wl.webhook_library['tk'][1])
-            else:
-                # Split and send message if it has line breaks
-                if tk_response.count('\n') < 8:
-                    for line in tk_response.split('\n'):
-                        if line.strip():
-                            await asyncio.sleep(random.uniform(1, 4.3))
-                            await message.channel.send(line)
-                else:
-                    await message.reply(tk_response)
-        return
+
     
-    # Random TK responses during thinking window (5% chance) - only after all medals given
-    if flipper.tk_thinking and tk_thinking_medal_count >= 3 and mememgr.chance(5):
-        # Check if we're still in the same window
-        current_time = datetime.datetime.now()
-        if tk_thinking_window_start and (current_time - tk_thinking_window_start).total_seconds() <= 3600:
-            async with message.channel.typing():
-                tk_response = await sentience.tk_bot_response(experimental_container)
-                
-                # Use webhook if in gato or config channel, otherwise regular reply
-                if str(message.channel) == 'gato':
-                    tk_webhook = await get_or_create_webhook(gatochannel, 'tk')
-                    await tk_webhook.send(tk_response, username='TK', avatar_url=wl.webhook_library['tk'][1])
-                elif str(message.channel) == 'config':
-                    tk_webhook = await get_or_create_webhook(configchannel, 'TK')
-                    await tk_webhook.send(tk_response, username='TK', avatar_url=wl.webhook_library['tk'][1])
-                else:
-                    await message.channel.send(tk_response)
-            return
+
 
     triggerphrases = ['is this rizz']
     
