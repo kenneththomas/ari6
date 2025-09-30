@@ -329,31 +329,13 @@ async def on_message(message):
     '''
     if message.content.startswith('!gpt'):
         ari_webhook = await get_or_create_webhook(message.channel, 'ari')
-        response_text = "i am gay! \n\nfor now, please use the **!ds** command to use deepseek chat 🇨🇳"
+        response_text = "i am gay!"
         username = wl.webhook_library['sam'][0]
         avatar = wl.webhook_library['sam'][1]
         await ari_webhook.send(response_text, username=username, avatar_url=avatar)
     '''
 
-    #deepseek
-    if message.content.startswith('!ds'):
-        #response_text = await sentience.deepseek(message.content)
-        response_text = 'we not dewin this rn'
-        await message.reply(response_text)
     
-    #reasoner takes too long
-    '''
-    if message.content.startswith('!rs'):
-        response_text = await sentience.deepseek(message.content,model_name='deepseek-reasoner')
-        # Split long messages to fit Discord's 2000 character limit
-        if len(response_text) > 1900:
-            chunks = [response_text[i:i+1900] for i in range(0, len(response_text), 1900)]
-            await message.reply(chunks[0])
-            for chunk in chunks[1:]:
-                await message.channel.send(chunk)
-        else:
-            await message.reply(response_text)
-    '''
 
     # Translation handling
     if flipper.translation_enabled:
