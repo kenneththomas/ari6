@@ -236,7 +236,7 @@ async def ai_experimental(prompt, gmodel="gpt-4o-mini", prompt_addition=False):
     return generated_text
 
 
-async def claudex2(cxstorage, model='claude-sonnet-4-20250514', prompt_addition=None):
+async def claudex2(cxstorage, model='claude-sonnet-4-5-20250929', prompt_addition=None):
 
     role = 'ari'
     print(cxstorage)
@@ -398,7 +398,7 @@ async def precheck(prompt):
 
 load_context()
 
-async def assistant_claude(messages, system_prompt, model='claude-sonnet-4-20250514'):
+async def assistant_claude(messages, system_prompt, model='claude-sonnet-4-5-20250929'):
     # Check messages for context keywords
     processed_words = set()
     additional_context = ''
