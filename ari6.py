@@ -9,6 +9,7 @@ import datetime
 from zoneinfo import ZoneInfo
 import csv
 import sentience
+import sentience2
 import re
 import random
 import ari_webhooks as wl
@@ -283,14 +284,15 @@ async def on_message(message):
                 await message.reply(freemsg)
 
         return
-    
-    gmodel = 'gpt-5'
+    gmodel = 'gpt-5-mini'
     if message.content.startswith('!gpt'):
+        if message.content.startswith('!gpt5'):
+            gmodel = 'gpt-5'
         if flipper.precheck:
             if 'yes' in await sentience.precheck(message.content):
                 await message.reply('popsicle')
                 return
-        response_text = await sentience.generate_text_gpt(message.content,gmodel=gmodel)
+        response_text = await sentience2.generate_text_gpt(message.content, gmodel=gmodel)
         await asyncio.sleep(1)
         await message.reply(response_text)
 
