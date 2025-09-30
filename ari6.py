@@ -204,34 +204,9 @@ async def on_message(message):
 
     #spotify handling
     if flipper.spotify_enable:
-        if message.author.activities:
-            for activity in message.author.activities:
-                if activity.type == discord.ActivityType.listening:
-                    if activity.name == 'Spotify':
-                        barco_webhook = await get_or_create_webhook(barcochannel, 'barco')
-                        npstring, albumart = masta_selecta.nowplaying(str(message.author), activity)
-                        if message.content == '!np':
-                            #hacky - if you do !np it could be a dupe, so force it to return with allowrepeat
-                            npstring, albumart = masta_selecta.nowplaying(str(message.author), activity, allowrepeat=True)
-                        
-                        if npstring:
-                            l.add_xp_user(str(message.author), 1)
-                            # was message !np?
-                            if message.content == '!np':
-                                await message.channel.send(npstring)
-                                if albumart:
-                                    await message.channel.send(albumart)
-                            else:
-                                await barco_webhook.send(npstring, username=message.author.name, avatar_url=message.author.avatar)
-                                if albumart:
-                                    await barco_webhook.send(albumart, username=message.author.name, avatar_url=message.author.avatar)
-
-                            #roast user's music taste
-                            if mememgr.chance(40):
-                                roast_prompt = f'{message.author.display_name} is listening to {npstring}, roast them for it. you can comment negative things about the artist or make fun of particular lyrics from that song. end with a skull emoji.'
-                                roast = await sentience.generate_text_gpt(roast_prompt,gmodel='gpt-4o')
-                                #post as lamelo ball webhook
-                                await barco_webhook.send(roast, username='lamelo ball', avatar_url=wl.webhook_library['lamelo ball'][1])
+        handled = await masta_selecta.handle_spotify_activity(message, get_or_create_webhook, barcochannel)
+        if handled:
+            return
 
 
     # anything after this will not work in main if main is disabled
@@ -275,10 +250,6 @@ async def on_message(message):
                     await message.add_reaction('🥉')  # Bronze
                     tk_thinking_medal_count = 3
     
-
-    
-
-
     triggerphrases = ['is this rizz']
     
     if (message.reference and message.reference.resolved.author == client.user) or \
