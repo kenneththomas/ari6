@@ -303,7 +303,7 @@ async def on_message(message):
     # RAG-based user impersonation (@chucky, @tk, @breez mentions)
     if message.channel in [gatochannel, configchannel]:
         # Check for user mentions
-        mention_pattern = r'@(chucky|tk|breez)\b'
+        mention_pattern = r'@(pete|tk|breez)\b'
         match = re.search(mention_pattern, message.content.lower())
         
         if match:
