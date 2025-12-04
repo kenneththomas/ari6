@@ -284,15 +284,16 @@ async def on_message(message):
                 await message.reply(freemsg)
 
         return
-    gmodel = 'gpt-5-mini'
+    gmodel = 'gpt-5.1'
     if message.content.startswith('!gpt'):
         if message.content.startswith('!gpt5'):
-            gmodel = 'gpt-5'
+            gmodel = 'gpt-5.1'
         if flipper.precheck:
             if 'yes' in await sentience.precheck(message.content):
                 await message.reply('popsicle')
                 return
-        response_text = await sentience2.generate_text_gpt(message.content, gmodel=gmodel)
+        # Pass cxstorage as chat history for context filtering
+        response_text = await sentience2.generate_text_gpt(message.content, gmodel=gmodel, chat_history=cxstorage, use_context_filter=True)
         await asyncio.sleep(1)
         await message.reply(response_text)
 
