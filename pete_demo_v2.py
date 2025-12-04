@@ -1,0 +1,291 @@
+"""
+Pete Message Generator Demo V2
+Uses RAG (Retrieval Augmented Generation) with conversation chunking
+Similar to how chatbox knowledge bases work
+"""
+
+from openai import OpenAI
+import maricon
+import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
+import pickle
+import os
+import sentience2
+
+client = OpenAI(api_key=maricon.gptkey)
+
+# Configuration for different users
+USER_CONFIGS = {
+    'pete': {
+        'file': 'logs/pete.txt',
+        'cache': 'logs/pete_chunks_embeddings.pkl',
+        'name': 'Pete'
+    },
+    'tk': {
+        'file': 'logs/tk.txt',
+        'cache': 'logs/tk_chunks_embeddings.pkl',
+        'name': 'TK'
+    },
+    'breez': {
+        'file': 'logs/breez.txt',
+        'cache': 'logs/breez_chunks_embeddings.pkl',
+        'name': 'Breez'
+    }
+}
+
+def load_messages(user_config):
+    """Load all messages from the text file"""
+    print(f"Loading {user_config['name']}'s messages...")
+    with open(user_config['file'], 'r', encoding='utf-8') as f:
+        messages = [line.strip() for line in f if line.strip()]
+    print(f"Loaded {len(messages)} messages from {user_config['name']}")
+    return messages
+
+def create_conversation_chunks(messages, chunk_size=8, overlap=2):
+    """
+    Create overlapping chunks of consecutive messages (conversation windows)
+    This mimics how knowledge bases chunk text for better context retrieval
+    
+    Args:
+        messages: List of individual messages
+        chunk_size: Number of messages per chunk
+        overlap: Number of messages to overlap between chunks
+    """
+    print(f"Creating conversation chunks (size={chunk_size}, overlap={overlap})...")
+    chunks = []
+    
+    for i in range(0, len(messages), chunk_size - overlap):
+        chunk_messages = messages[i:i + chunk_size]
+        if len(chunk_messages) < 3:  # Skip tiny chunks at the end
+            break
+        
+        # Join messages with newlines to form a conversation chunk
+        chunk_text = "\n".join(chunk_messages)
+        chunks.append({
+            'text': chunk_text,
+            'messages': chunk_messages,
+            'start_idx': i,
+            'end_idx': i + len(chunk_messages)
+        })
+    
+    print(f"Created {len(chunks)} conversation chunks")
+    return chunks
+
+def create_embeddings(chunks):
+    """Create embeddings for conversation chunks"""
+    print("Creating embeddings for chunks (this may take a minute)...")
+    embeddings = []
+    
+    # Process in batches
+    batch_size = 50
+    chunk_texts = [chunk['text'] for chunk in chunks]
+    
+    for i in range(0, len(chunk_texts), batch_size):
+        batch = chunk_texts[i:i+batch_size]
+        print(f"Processing batch {i//batch_size + 1}/{(len(chunk_texts)-1)//batch_size + 1}...")
+        
+        response = client.embeddings.create(
+            model="text-embedding-3-small",
+            input=batch
+        )
+        
+        batch_embeddings = [item.embedding for item in response.data]
+        embeddings.extend(batch_embeddings)
+    
+    print("Embeddings created!")
+    return np.array(embeddings)
+
+def load_or_create_embeddings(chunks, cache_path):
+    """Load cached embeddings or create new ones"""
+    if os.path.exists(cache_path):
+        print("Loading cached embeddings...")
+        with open(cache_path, 'rb') as f:
+            cached_data = pickle.load(f)
+            if len(cached_data['embeddings']) == len(chunks):
+                print("Using cached embeddings!")
+                return cached_data['embeddings']
+            else:
+                print("Cache size mismatch, regenerating...")
+    
+    # Create new embeddings
+    embeddings = create_embeddings(chunks)
+    
+    # Cache them
+    print("Caching embeddings for future use...")
+    os.makedirs(os.path.dirname(cache_path), exist_ok=True)
+    with open(cache_path, 'wb') as f:
+        pickle.dump({'embeddings': embeddings}, f)
+    
+    return embeddings
+
+def find_similar_chunks(query, chunks, embeddings, top_k=5):
+    """Find the most similar conversation chunks using semantic search"""
+    # Get embedding for the query
+    query_response = client.embeddings.create(
+        model="text-embedding-3-large",
+        input=[query]
+    )
+    query_embedding = np.array([query_response.data[0].embedding])
+    
+    # Calculate cosine similarity
+    similarities = cosine_similarity(query_embedding, embeddings)[0]
+    
+    # Get top k most similar chunks
+    top_indices = np.argsort(similarities)[-top_k:][::-1]
+    
+    similar_chunks = [
+        (chunks[idx], similarities[idx]) 
+        for idx in top_indices
+    ]
+    
+    return similar_chunks
+
+def generate_message(prompt, similar_chunks, user_name, chat_history=None):
+    """Generate a message using similar conversation chunks and optional chat history"""
+    # Build context from similar chunks
+    context_parts = []
+    for i, (chunk, score) in enumerate(similar_chunks[:3], 1):
+        context_parts.append(f"Conversation {i}:\n{chunk['text']}")
+    
+    context = "\n\n".join(context_parts)
+    
+    # Build recent chat context if provided
+    chat_context = ""
+    if chat_history and len(chat_history) > 0:
+        recent_messages = chat_history[-8:]  # Last 8 messages
+        chat_lines = []
+        for msg in recent_messages:
+            chat_lines.append(f"{msg.get('content', '')}")
+        chat_context = f"\n\nRecent conversation:\n" + "\n".join(chat_lines)
+    
+    system_prompt = f"""You are {user_name} from a Discord chat. Below are some examples of {user_name}'s actual conversations:
+
+{context}
+{chat_context}
+
+Based on these examples, respond to the prompt in {user_name}'s voice. Match their:
+- Casual, informal tone and grammar
+- Sense of humor and topics
+- Way of expressing themselves
+- Message length and style
+
+Respond naturally as {user_name} would in Discord. Keep it short and conversational."""
+
+    # Build input for GPT-5 (uses responses.create with input parameter)
+    full_prompt = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": prompt}
+    ]
+    
+    response = client.responses.create(
+        model="gpt-5.1",
+        input=full_prompt
+    )
+    
+    return response.output_text
+
+def show_similar_chunks(similar_chunks, user_name, show_count=3):
+    """Display the most similar conversation chunks"""
+    print(f"\n📝 Most similar {user_name} conversations:")
+    print("=" * 70)
+    for i, (chunk, score) in enumerate(similar_chunks[:show_count], 1):
+        print(f"\nConversation {i} [similarity: {score:.3f}]:")
+        print("-" * 70)
+        # Show first few messages from the chunk
+        for msg in chunk['messages'][:6]:
+            print(f"  {msg}")
+        if len(chunk['messages']) > 6:
+            print(f"  ... ({len(chunk['messages'])-6} more messages)")
+    print("=" * 70)
+
+def interactive_demo():
+    """Run the interactive demo"""
+    print("\n" + "="*70)
+    print("🤖 MESSAGE GENERATOR V2 - RAG with Conversation Chunks")
+    print("="*70)
+    print("\nThis uses Retrieval Augmented Generation (RAG) like modern")
+    print("knowledge base systems. It chunks messages into")
+    print("conversation windows for better context retrieval.\n")
+    
+    # User selection
+    print("Available users:")
+    for key, config in USER_CONFIGS.items():
+        print(f"  - {key}: {config['name']}")
+    
+    while True:
+        user_choice = input("\nSelect user (pete/tk): ").strip().lower()
+        if user_choice in USER_CONFIGS:
+            user_config = USER_CONFIGS[user_choice]
+            break
+        print("Invalid choice. Please enter 'pete' or 'tk'.")
+    
+    print(f"\n✅ Selected: {user_config['name']}")
+    
+    # Load messages
+    messages = load_messages(user_config)
+    
+    # Create conversation chunks
+    chunks = create_conversation_chunks(messages, chunk_size=8, overlap=2)
+    
+    # Load or create embeddings
+    embeddings = load_or_create_embeddings(chunks, user_config['cache'])
+    
+    print(f"\n✅ Ready to generate {user_config['name']} messages!")
+    print("\nCommands:")
+    print(f"  - Type a prompt/context to generate a {user_config['name']} response")
+    print("  - Type 'random' to see a random conversation chunk")
+    print("  - Type 'switch' to change user")
+    print("  - Type 'quit' to exit\n")
+    
+    while True:
+        print("-" * 70)
+        user_input = input("\n🎯 Enter prompt (or 'quit'): ").strip()
+        
+        if not user_input:
+            continue
+            
+        if user_input.lower() in ['quit', 'exit', 'q']:
+            print("\n👋 Thanks for testing! Goodbye!")
+            break
+        
+        if user_input.lower() == 'switch':
+            print("\n🔄 Restarting demo to switch user...")
+            interactive_demo()
+            return
+        
+        if user_input.lower() == 'random':
+            import random
+            random_chunk = random.choice(chunks)
+            print(f"\n💬 Random {user_config['name']} conversation:")
+            print("-" * 70)
+            for msg in random_chunk['messages']:
+                print(f"  {msg}")
+            continue
+        
+        # Find similar chunks
+        print(f"\n🔍 Finding similar {user_config['name']} conversations...")
+        similar_chunks = find_similar_chunks(user_input, chunks, embeddings, top_k=5)
+        
+        # Show similar chunks
+        show_similar_chunks(similar_chunks, user_config['name'])
+        
+        # Generate response
+        print(f"\n🤖 Generating {user_config['name']}-style response...")
+        generated_response = generate_message(user_input, similar_chunks, user_config['name'], chat_history=None)
+        
+        print("\n" + "="*70)
+        print(f"💬 {user_config['name'].upper()} SAYS:")
+        print("="*70)
+        print(f"{generated_response}")
+        print("="*70)
+
+if __name__ == "__main__":
+    try:
+        interactive_demo()
+    except KeyboardInterrupt:
+        print("\n\n👋 Demo interrupted. Goodbye!")
+    except Exception as e:
+        print(f"\n❌ Error: {e}")
+        import traceback
+        traceback.print_exc()
+

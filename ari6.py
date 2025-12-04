@@ -113,6 +113,9 @@ async def on_ready():
     global scheduled_messages_jobs
     scheduled_messages_jobs = load_scheduled_messages()
     asyncio.create_task(scheduled_messages_loop())
+    
+    # Initialize RAG data for user impersonation
+    sentience2.initialize_user_rag_data()
 
 
 
@@ -296,6 +299,37 @@ async def on_message(message):
         response_text = await sentience2.generate_text_gpt(message.content, gmodel=gmodel, chat_history=cxstorage, use_context_filter=True)
         await asyncio.sleep(1)
         await message.reply(response_text)
+
+    # RAG-based user impersonation (@chucky, @tk, @breez mentions)
+    if message.channel in [gatochannel, configchannel]:
+        # Check for user mentions
+        mention_pattern = r'@(chucky|tk|breez)\b'
+        match = re.search(mention_pattern, message.content.lower())
+        
+        if match:
+            user_key = match.group(1)  # 'pete', 'tk', or 'breez'
+            
+            # Generate response using sentience2 RAG handler
+            response_text = await sentience2.handle_user_mention(
+                message.content,
+                user_key,
+                chat_history=cxstorage,
+                conversation_context=experimental_container
+            )
+            
+            if response_text:
+                # Send via webhook in the same channel
+                webhook = await get_or_create_webhook(message.channel, 'ari')
+                webhook_info = wl.webhook_library[user_key]
+                
+                await webhook.send(
+                    response_text,
+                    username=webhook_info[0],
+                    avatar_url=webhook_info[1]
+                )
+                
+                print(f'✅ {user_key} response sent via webhook')
+                return
 
     # Translation handling
     if flipper.translation_enabled:

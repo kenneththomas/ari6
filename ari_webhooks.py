@@ -28,4 +28,6 @@ webhook_library = {
     'luis' : ('luis','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1710891819/noidfrqtvvxxqkme94vg.jpg','friendly puerto rican that works as a spanish teacher and translator'),
     'sam' : ('sam','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1743640151/Screenshot_2025-04-02_202834_dgkqik.png','sam altman'),
     'tk' : ('tk','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1755136602/72571de5-c8d2-43f8-8c84-ec11ed807414.png','its tk'),
+    'pete' : ('pete','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1764811197/a459d76b-542b-4c47-bb39-2059d5b28092.png','its pete'),
+    'breez' : ('breez','https://res.cloudinary.com/dr2rzyu6p/image/upload/v1764811687/IMG_5477_tcllbs.jpg','its breez'),
 }

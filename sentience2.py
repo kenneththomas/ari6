@@ -13,6 +13,10 @@ import time
 import datetime
 import pytz
 import requests
+import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
+import pickle
+import os
 
 async def filter_relevant_messages(current_message, chat_history, filter_model='gpt-5-mini'):
     """
@@ -132,3 +136,266 @@ async def generate_text_gpt(prompt, gmodel='gpt-5-mini', chat_history=None, use_
         model=gmodel,
         input=full_prompt)
     return response.output_text
+
+# ============================================================================
+# RAG-BASED USER IMPERSONATION (Pete, TK, etc.)
+# ============================================================================
+
+# Configuration for different users
+USER_CONFIGS = {
+    'pete': {
+        'file': 'logs/pete.txt',
+        'cache': 'logs/pete_chunks_embeddings.pkl',
+        'name': 'Pete'
+    },
+    'tk': {
+        'file': 'logs/tk.txt',
+        'cache': 'logs/tk_chunks_embeddings.pkl',
+        'name': 'TK'
+    },
+    'breez': {
+        'file': 'logs/breez.txt',
+        'cache': 'logs/breez_chunks_embeddings.pkl',
+        'name': 'Breez'
+    }
+}
+
+# Global storage for RAG data
+user_rag_data = {
+    'pete': {'chunks': None, 'embeddings': None, 'config': None},
+    'tk': {'chunks': None, 'embeddings': None, 'config': None},
+    'breez': {'chunks': None, 'embeddings': None, 'config': None}
+}
+
+def load_messages(user_config):
+    """Load all messages from the text file"""
+    print(f"Loading {user_config['name']}'s messages...")
+    with open(user_config['file'], 'r', encoding='utf-8') as f:
+        messages = [line.strip() for line in f if line.strip()]
+    print(f"Loaded {len(messages)} messages from {user_config['name']}")
+    return messages
+
+def create_conversation_chunks(messages, chunk_size=8, overlap=2):
+    """
+    Create overlapping chunks of consecutive messages (conversation windows)
+    This mimics how knowledge bases chunk text for better context retrieval
+    """
+    print(f"Creating conversation chunks (size={chunk_size}, overlap={overlap})...")
+    chunks = []
+    
+    for i in range(0, len(messages), chunk_size - overlap):
+        chunk_messages = messages[i:i + chunk_size]
+        if len(chunk_messages) < 3:  # Skip tiny chunks at the end
+            break
+        
+        # Join messages with newlines to form a conversation chunk
+        chunk_text = "\n".join(chunk_messages)
+        chunks.append({
+            'text': chunk_text,
+            'messages': chunk_messages,
+            'start_idx': i,
+            'end_idx': i + len(chunk_messages)
+        })
+    
+    print(f"Created {len(chunks)} conversation chunks")
+    return chunks
+
+def create_embeddings(chunks):
+    """Create embeddings for conversation chunks"""
+    print("Creating embeddings for chunks (this may take a minute)...")
+    embeddings = []
+    
+    # Process in batches
+    batch_size = 50
+    chunk_texts = [chunk['text'] for chunk in chunks]
+    
+    for i in range(0, len(chunk_texts), batch_size):
+        batch = chunk_texts[i:i+batch_size]
+        print(f"Processing batch {i//batch_size + 1}/{(len(chunk_texts)-1)//batch_size + 1}...")
+        
+        response = client.embeddings.create(
+            model="text-embedding-3-large",
+            input=batch
+        )
+        
+        batch_embeddings = [item.embedding for item in response.data]
+        embeddings.extend(batch_embeddings)
+    
+    print("Embeddings created!")
+    return np.array(embeddings)
+
+def load_or_create_embeddings(chunks, cache_path):
+    """Load cached embeddings or create new ones"""
+    if os.path.exists(cache_path):
+        print("Loading cached embeddings...")
+        with open(cache_path, 'rb') as f:
+            cached_data = pickle.load(f)
+            if len(cached_data['embeddings']) == len(chunks):
+                print("Using cached embeddings!")
+                return cached_data['embeddings']
+            else:
+                print("Cache size mismatch, regenerating...")
+    
+    # Create new embeddings
+    embeddings = create_embeddings(chunks)
+    
+    # Cache them
+    print("Caching embeddings for future use...")
+    os.makedirs(os.path.dirname(cache_path), exist_ok=True)
+    with open(cache_path, 'wb') as f:
+        pickle.dump({'embeddings': embeddings}, f)
+    
+    return embeddings
+
+def find_similar_chunks(query, chunks, embeddings, top_k=5):
+    """Find the most similar conversation chunks using semantic search"""
+    # Get embedding for the query
+    query_response = client.embeddings.create(
+        model="text-embedding-3-large",
+        input=[query]
+    )
+    query_embedding = np.array([query_response.data[0].embedding])
+    
+    # Calculate cosine similarity
+    similarities = cosine_similarity(query_embedding, embeddings)[0]
+    
+    # Get top k most similar chunks
+    top_indices = np.argsort(similarities)[-top_k:][::-1]
+    
+    similar_chunks = [
+        (chunks[idx], similarities[idx]) 
+        for idx in top_indices
+    ]
+    
+    return similar_chunks
+
+def generate_user_message(prompt, similar_chunks, user_name, chat_history=None):
+    """Generate a message using similar conversation chunks and optional chat history"""
+    # Build context from similar chunks
+    context_parts = []
+    for i, (chunk, score) in enumerate(similar_chunks[:3], 1):
+        context_parts.append(f"Conversation {i}:\n{chunk['text']}")
+    
+    context = "\n\n".join(context_parts)
+    
+    # Build recent chat context if provided
+    chat_context = ""
+    if chat_history and len(chat_history) > 0:
+        recent_messages = chat_history[-8:]  # Last 8 messages
+        chat_lines = []
+        for msg in recent_messages:
+            chat_lines.append(f"{msg.get('content', '')}")
+        chat_context = f"\n\nRecent conversation:\n" + "\n".join(chat_lines)
+    
+    system_prompt = f"""You are {user_name} from a Discord chat. Below are some examples of {user_name}'s actual conversations:
+
+{context}
+{chat_context}
+
+Based on these examples, respond to the prompt in {user_name}'s voice. Match their:
+- Casual, informal tone and grammar
+- Sense of humor and topics
+- Way of expressing themselves
+- Message length and style
+
+Respond naturally as {user_name} would in Discord. Keep it short and conversational."""
+
+    # Build input for GPT-5 (uses responses.create with input parameter)
+    full_prompt = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": prompt}
+    ]
+    
+    response = client.responses.create(
+        model="gpt-5.1",
+        input=full_prompt
+    )
+    
+    return response.output_text
+
+def initialize_user_rag_data():
+    """Initialize RAG data for all configured users (call on bot startup)"""
+    print('Initializing RAG data for user impersonation...')
+    global user_rag_data
+    
+    for user_key in USER_CONFIGS.keys():
+        try:
+            config = USER_CONFIGS[user_key]
+            messages = load_messages(config)
+            chunks = create_conversation_chunks(messages, chunk_size=8, overlap=2)
+            embeddings = load_or_create_embeddings(chunks, config['cache'])
+            user_rag_data[user_key] = {
+                'chunks': chunks,
+                'embeddings': embeddings,
+                'config': config
+            }
+            print(f'✅ {config["name"]} RAG data loaded successfully')
+        except Exception as e:
+            print(f'❌ Failed to load {user_key} RAG data: {e}')
+    
+    print('RAG initialization complete!')
+    return user_rag_data
+
+async def handle_user_mention(message_content, mentioned_user, chat_history=None, conversation_context=None):
+    """
+    Handle user mention and generate response using RAG
+    
+    Args:
+        message_content: The message content
+        mentioned_user: The user key ('pete', 'tk', etc.)
+        chat_history: Recent chat history (cxstorage format)
+        conversation_context: Recent conversation strings (experimental_container format)
+    
+    Returns:
+        Generated response text or None if user data not loaded
+    """
+    if mentioned_user not in user_rag_data or user_rag_data[mentioned_user]['chunks'] is None:
+        print(f'RAG data not loaded for {mentioned_user}')
+        return None
+    
+    try:
+        print(f'Generating {mentioned_user} response using RAG...')
+        
+        # Build comprehensive context for finding similar chunks
+        context_parts = []
+        
+        # Add recent chat history if available
+        if chat_history and len(chat_history) > 0:
+            recent_chat = chat_history[-6:]  # Last 6 messages
+            for msg in recent_chat:
+                context_parts.append(msg.get('content', ''))
+        
+        # Add conversation context if available
+        if conversation_context and len(conversation_context) > 0:
+            context_parts.extend(conversation_context[-4:])
+        
+        # Combine or use just the message content
+        if context_parts:
+            context = "\n".join(context_parts)
+        else:
+            context = message_content
+        
+        # Find similar conversation chunks
+        similar_chunks = find_similar_chunks(
+            context,
+            user_rag_data[mentioned_user]['chunks'],
+            user_rag_data[mentioned_user]['embeddings'],
+            top_k=5
+        )
+        
+        # Generate response with chat history
+        response_text = generate_user_message(
+            message_content,
+            similar_chunks,
+            user_rag_data[mentioned_user]['config']['name'],
+            chat_history=chat_history
+        )
+        
+        print(f'✅ {mentioned_user} response generated: {response_text}')
+        return response_text
+        
+    except Exception as e:
+        print(f'❌ Error generating {mentioned_user} response: {e}')
+        import traceback
+        traceback.print_exc()
+        return None
