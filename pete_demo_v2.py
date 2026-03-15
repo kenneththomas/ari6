@@ -184,7 +184,7 @@ Respond naturally as {user_name} would in Discord. Keep it short and conversatio
     
     return response.output_text
 
-def show_similar_chunks(similar_chunks, user_name, show_count=3):
+def show_similar_chunks(similar_chunks, user_name, show_count=6):
     """Display the most similar conversation chunks"""
     print(f"\n📝 Most similar {user_name} conversations:")
     print("=" * 70)
@@ -264,7 +264,7 @@ def interactive_demo():
         
         # Find similar chunks
         print(f"\n🔍 Finding similar {user_config['name']} conversations...")
-        similar_chunks = find_similar_chunks(user_input, chunks, embeddings, top_k=5)
+        similar_chunks = find_similar_chunks(user_input, chunks, embeddings, top_k=6)
         
         # Show similar chunks
         show_similar_chunks(similar_chunks, user_config['name'])

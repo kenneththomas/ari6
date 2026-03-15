@@ -2,6 +2,38 @@
 from openai import OpenAI
 import maricon
 client = OpenAI(api_key=maricon.gptkey)
+
+# OpenRouter: same as Chat Completions API; use when model id contains "/" (e.g. moonshotai/kimi-k2.5)
+DEFAULT_OPENROUTER_MODEL = "moonshotai/kimi-k2.5"
+OPENROUTER_BASE = "https://openrouter.ai/api/v1"
+
+def _use_openrouter(model):
+    """True if model should be sent to OpenRouter (provider/model id)."""
+    return "/" in (model or "")
+
+def _openrouter_chat(messages, model, reasoning_disabled=False):
+    """Call OpenRouter chat completions; returns response text or raises."""
+    key = (getattr(maricon, "openrouter_key", None) or os.environ.get("OPENROUTER_API_KEY") or "")
+    if not key:
+        raise ValueError("OpenRouter requested but openrouter_key (or OPENROUTER_API_KEY) not set")
+    payload = {
+        "model": model,
+        "messages": messages,
+        "max_tokens": 4096,
+        "temperature": 0.0,
+    }
+    if reasoning_disabled:
+        payload["reasoning"] = {"enabled": False}
+    r = requests.post(
+        f"{OPENROUTER_BASE}/chat/completions",
+        headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
+        json=payload,
+        timeout=120,
+    )
+    r.raise_for_status()
+    data = r.json()
+    return data["choices"][0]["message"]["content"]
+
 import personality
 import asyncio
 import random
@@ -131,7 +163,11 @@ async def generate_text_gpt(prompt, gmodel='gpt-5-mini', chat_history=None, use_
     
     # Add the current user query
     full_prompt.append({"role": "user", "content": clean_prompt})
-    
+
+    if _use_openrouter(gmodel):
+        reasoning_disabled = "kimi" in (gmodel or "").lower()
+        return _openrouter_chat(full_prompt, gmodel, reasoning_disabled=reasoning_disabled)
+
     response = client.responses.create(
         model=gmodel,
         input=full_prompt)
@@ -269,8 +305,13 @@ def find_similar_chunks(query, chunks, embeddings, top_k=5):
     
     return similar_chunks
 
-def generate_user_message(prompt, similar_chunks, user_name, chat_history=None):
-    """Generate a message using similar conversation chunks and optional chat history"""
+def generate_user_message(prompt, similar_chunks, user_name, chat_history=None, rag_model=None):
+    """Generate a message using similar conversation chunks and optional chat history.
+    rag_model: model to use for generation; defaults to DEFAULT_OPENROUTER_MODEL (OpenRouter).
+    """
+    if rag_model is None:
+        rag_model = DEFAULT_OPENROUTER_MODEL
+
     # Build context from similar chunks
     context_parts = []
     for i, (chunk, score) in enumerate(similar_chunks[:3], 1):
@@ -300,17 +341,19 @@ Based on these examples, respond to the prompt in {user_name}'s voice. Match the
 
 Respond naturally as {user_name} would in Discord. Keep it short and conversational."""
 
-    # Build input for GPT-5 (uses responses.create with input parameter)
     full_prompt = [
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": prompt}
     ]
+
+    if _use_openrouter(rag_model):
+        reasoning_disabled = "kimi" in (rag_model or "").lower()
+        return _openrouter_chat(full_prompt, rag_model, reasoning_disabled=reasoning_disabled)
     
     response = client.responses.create(
-        model="gpt-5.1",
+        model=rag_model,
         input=full_prompt
     )
-    
     return response.output_text
 
 def initialize_user_rag_data():

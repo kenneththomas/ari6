@@ -287,10 +287,10 @@ async def on_message(message):
                 await message.reply(freemsg)
 
         return
-    gmodel = 'gpt-5.1'
+    gmodel = sentience2.DEFAULT_OPENROUTER_MODEL  # moonshotai/kimi-k2.5 with thinking disabled
     if message.content.startswith('!gpt'):
         if message.content.startswith('!gpt5'):
-            gmodel = 'gpt-5.1'
+            gmodel = sentience2.DEFAULT_OPENROUTER_MODEL
         if flipper.precheck:
             if 'yes' in await sentience.precheck(message.content):
                 await message.reply('popsicle')
