@@ -1,5 +1,6 @@
 import discord
 import maricon
+import time
 import lumberjack as l
 import mememgr
 import asyncio
@@ -86,6 +87,20 @@ personal_assistant = pa.PersonalAssistant()
 summon_timeout = 120  # Default timeout in seconds
 
 translator = Translator()
+
+# Sim user (@pete/@tk/@breez) rate limit: per author + sim key
+SIM_USER_COOLDOWN_SEC = 25
+_sim_user_last_at = {}
+
+
+def _sim_user_cooldown_ok(author_id, user_key):
+    key = (author_id, user_key)
+    now = time.monotonic()
+    last = _sim_user_last_at.get(key)
+    if last is not None and (now - last) < SIM_USER_COOLDOWN_SEC:
+        return False
+    _sim_user_last_at[key] = now
+    return True
 
 
 async def _delete_summon_prompt_later(temp_msg, delay: float):
@@ -323,36 +338,35 @@ async def on_message(message):
         await asyncio.sleep(1)
         await message.reply(response_text)
 
-    # RAG-based user impersonation (@chucky, @tk, @breez mentions)
+    # RAG-based user impersonation (@pete, @tk, @breez) — first match only per message (cost control)
     if message.channel in [gatochannel, configchannel]:
-        # Check for user mentions
         mention_pattern = r'@(pete|tk|breez)\b'
         match = re.search(mention_pattern, message.content.lower())
-        
+
         if match:
-            user_key = match.group(1)  # 'pete', 'tk', or 'breez'
-            
-            # Generate response using sentience2 RAG handler
-            response_text = await sentience2.handle_user_mention(
-                message.content,
-                user_key,
-                chat_history=cxstorage,
-                conversation_context=experimental_container
-            )
-            
-            if response_text:
-                # Send via webhook in the same channel
-                webhook = await get_or_create_webhook(message.channel, 'ari')
+            user_key = match.group(1)
+            if _sim_user_cooldown_ok(message.author.id, user_key):
                 webhook_info = wl.webhook_library[user_key]
-                
-                await webhook.send(
-                    response_text,
-                    username=webhook_info[0],
-                    avatar_url=webhook_info[1]
-                )
-                
-                print(f'✅ {user_key} response sent via webhook')
-                return
+                persona_bio = webhook_info[2] if len(webhook_info) > 2 else None
+
+                async with message.channel.typing():
+                    response_text = await sentience2.handle_user_mention(
+                        message.content,
+                        user_key,
+                        chat_history=cxstorage,
+                        conversation_context=experimental_container,
+                        persona_bio=persona_bio,
+                    )
+
+                if response_text:
+                    webhook = await get_or_create_webhook(message.channel, 'ari')
+                    await webhook.send(
+                        response_text,
+                        username=webhook_info[0],
+                        avatar_url=webhook_info[1],
+                    )
+                    print(f'✅ {user_key} response sent via webhook')
+                    return
 
     # Translation handling
     if flipper.translation_enabled:
@@ -453,6 +467,22 @@ async def on_message(message):
         top_users = l.get_top_10_xp_users()
         await message.channel.send(top_users)
 
+    # Rebuild sim-user RAG caches from logs/*.txt (admin)
+    if message.content.startswith('!refreshsim'):
+        if not ct.admincheck(str(message.author)):
+            cantdothat = await sentience.ucantdothat(message.author, message.content)
+            await message.reply(cantdothat)
+        else:
+            rest = message.content.replace('!refreshsim', '').strip().lower()
+            key = rest if rest in sentience2.USER_CONFIGS else None
+            if rest and key is None:
+                await message.channel.send('Usage: !refreshsim [pete|tk|breez] or !refreshsim for all')
+            else:
+                await message.channel.send('Rebuilding sim RAG from logs...')
+                await asyncio.to_thread(sentience2.reload_user_rag_data, key)
+                await message.channel.send('Sim RAG refresh finished.')
+        return
+
     # Trivia commands
     if message.content == '!trivia':
         await trivia_handler.handle_trivia_command(message)
@@ -479,7 +509,6 @@ async def on_message(message):
         else:
             cantdothat = await sentience.ucantdothat(message.author, message.content)
             await message.reply(cantdothat)
-
 
     #zoomerposting
     if flipper.zoomerposting:
