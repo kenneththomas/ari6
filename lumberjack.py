@@ -24,8 +24,31 @@ os.makedirs('logs', exist_ok=True)
 conn = sqlite3.connect(dbfilename)
 c = conn.cursor()
 c.execute('''CREATE TABLE IF NOT EXISTS logs (sender text, channel text, timestamp text, date text, hour text, message text)''')
-# create xp table
-c.execute('''CREATE TABLE IF NOT EXISTS xp (user text, xp integer)''')
+
+def _ensure_xp_table(conn):
+    """xp rows must be unique per user; INSERT OR REPLACE only works with a PK/UNIQUE on user."""
+    cur = conn.cursor()
+    cur.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='xp'")
+    row = cur.fetchone()
+    if row is None:
+        cur.execute(
+            "CREATE TABLE xp (user TEXT PRIMARY KEY NOT NULL, xp INTEGER NOT NULL)"
+        )
+        return
+    ddl = (row[0] or "").upper()
+    if "PRIMARY KEY" in ddl:
+        return
+    cur.execute(
+        "CREATE TABLE xp_new (user TEXT PRIMARY KEY NOT NULL, xp INTEGER NOT NULL)"
+    )
+    cur.execute(
+        "INSERT INTO xp_new SELECT user, MAX(xp) FROM xp GROUP BY user"
+    )
+    cur.execute("DROP TABLE xp")
+    cur.execute("ALTER TABLE xp_new RENAME TO xp")
+
+_ensure_xp_table(conn)
+
 # populate xp buffer
 c.execute("SELECT * FROM xp")
 result = c.fetchall()
