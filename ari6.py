@@ -13,8 +13,17 @@ import sentience2
 import re
 import random
 import ari_webhooks as wl
-import uuid
 import ctespn
+
+# Discord channel IDs (single place to update when channels move)
+CHANNEL_IDS = {
+    "catchannel": 1122326983846678638,
+    "barcochannel": 205930498034237451,
+    "cloudchannel": 1163165256093286412,
+    "gatochannel": 205903143471415296,
+    "botchannel": 613942696763195412,
+    "configchannel": 212681539304030209,
+}
 import modules.masta_selecta as masta_selecta
 import modules.flipper as flipper
 import modules.joey as joey
@@ -37,23 +46,18 @@ main_enabled = True
 
 lasttweet = ''
 dev_mode = False
-trivia_answer = ''
-trivia_question = ''
 
 scheduled_messages_jobs = []  # Global list for scheduled messages
 
 # TK thinking tracking variables
 tk_thinking_window_start = None
 tk_thinking_medal_count = 0  # 0 = no medals given, 1 = gold given, 2 = silver given, 3 = bronze given
-tk_thinking_last_check = None
 
 intents = discord.Intents.default()
-
-#currently giving all access?
 intents.members = True
 intents.message_content = True
 
-client = discord.Client(intents=discord.Intents.all())
+client = discord.Client(intents=intents)
 
 lastmsg = datetime.datetime.now()
 lmcontainer = []
@@ -69,6 +73,7 @@ barcochannel = None
 cloudchannel = None
 gatochannel = None
 botchannel = None
+configchannel = None
 
 
 starttime = datetime.datetime.now()
@@ -81,6 +86,17 @@ personal_assistant = pa.PersonalAssistant()
 summon_timeout = 120  # Default timeout in seconds
 
 translator = Translator()
+
+
+async def _delete_summon_prompt_later(temp_msg, delay: float):
+    await asyncio.sleep(delay)
+    try:
+        await temp_msg.delete()
+    except discord.NotFound:
+        pass
+    except discord.HTTPException as e:
+        print(f"Could not delete summon prompt: {e}")
+
 
 async def get_or_create_webhook(channel, webhook_name):
     """Get existing webhook or create a new one if it doesn't exist"""
@@ -97,12 +113,12 @@ async def on_ready():
 
     print('loading channels')
     global catchannel, barcochannel, cloudchannel, gatochannel, botchannel, configchannel
-    catchannel = client.get_channel(1122326983846678638)
-    barcochannel = client.get_channel(205930498034237451)
-    cloudchannel = client.get_channel(1163165256093286412)
-    gatochannel = client.get_channel(205903143471415296)
-    botchannel = client.get_channel(613942696763195412)
-    configchannel = client.get_channel(212681539304030209)
+    catchannel = client.get_channel(CHANNEL_IDS["catchannel"])
+    barcochannel = client.get_channel(CHANNEL_IDS["barcochannel"])
+    cloudchannel = client.get_channel(CHANNEL_IDS["cloudchannel"])
+    gatochannel = client.get_channel(CHANNEL_IDS["gatochannel"])
+    botchannel = client.get_channel(CHANNEL_IDS["botchannel"])
+    configchannel = client.get_channel(CHANNEL_IDS["configchannel"])
 
     # find startup time by subtracting current time from starttime
     rdytime = datetime.datetime.now()
@@ -123,7 +139,6 @@ async def on_ready():
 async def on_message(message):
     global catchannel, barcochannel, cloudchannel, gatochannel
     global lastmsg, experimental_container
-    global trivia_answer, trivia_question
     #ignore webhooks
     if message.webhook_id:
         return
@@ -138,7 +153,6 @@ async def on_message(message):
         await message.reply(assistant_response)
         return
 
-    global sentience_personality
     if message.author == client.user:
         return
     
@@ -170,7 +184,7 @@ async def on_message(message):
     if len(experimental_container) > 10:
         experimental_container.pop(0)
 
-    #experimental container can get quite large even with less than 10 messages, if there are more than 500 words across all messages clear the memory
+    # experimental_container can get large; if total character count exceeds maxlength, clear it
     maxlength = 1000
     total_length = sum(len(s) for s in experimental_container)
     if total_length > maxlength:
@@ -195,8 +209,12 @@ async def on_message(message):
 
     #toggle main_enabled with !main
     if str(message.content) == '!main':
-        main_enabled = not main_enabled
-        await message.channel.send(f'main is now {main_enabled}')
+        if ct.admincheck(str(message.author)):
+            main_enabled = not main_enabled
+            await message.channel.send(f'main is now {main_enabled}')
+        else:
+            cantdothat = await sentience.ucantdothat(message.author, message.content)
+            await message.reply(cantdothat)
 
     #other togglers in flipper
     if message.content.startswith('!'):
@@ -215,7 +233,7 @@ async def on_message(message):
 
     # anything after this will not work in main if main is disabled
     if main_enabled == False:
-        if message.channel.id == 205903143471415296:
+        if message.channel.id == CHANNEL_IDS["gatochannel"]:
             if str(message.content).startswith('!'):
                 print(f'seems like someone is trying to run a command! main disabled tho lol')
             return
@@ -226,8 +244,8 @@ async def on_message(message):
     #start AI block
 
     # TK thinking detection and medal system
-    global tk_thinking_window_start, tk_thinking_medal_count, tk_thinking_last_check
-    
+    global tk_thinking_window_start, tk_thinking_medal_count
+
     if flipper.tk_thinking:
         # Check if we need to reset the window (1 hour = 3600 seconds)
         current_time = datetime.datetime.now()
@@ -236,7 +254,6 @@ async def on_message(message):
             tk_thinking_medal_count = 0
         
         # Check if message contains "tk" as a standalone word
-        import re
         tk_pattern = r'\btk\b'
         if re.search(tk_pattern, message.content.lower()):
             # Check if they're actually talking about TK the person
@@ -255,12 +272,18 @@ async def on_message(message):
                     tk_thinking_medal_count = 3
     
     triggerphrases = ['is this rizz']
-    
-    if (message.reference and message.reference.resolved.author == client.user) or \
-       any(trigger in message.content.lower() for trigger in triggerphrases):
-        
+
+    ref = message.reference
+    ref_msg = ref.resolved if ref else None
+    reply_to_bot = (
+        ref_msg is not None
+        and getattr(ref_msg, "author", None) == client.user
+    )
+    trigger_hit = any(trigger in message.content.lower() for trigger in triggerphrases)
+
+    if reply_to_bot or trigger_hit:
         # Check if the referenced message contains a vxtwitter link
-        if message.reference and 'vxtwitter.com' in message.reference.resolved.content:
+        if ref_msg and ref_msg.content and 'vxtwitter.com' in ref_msg.content:
             print('DEBUG: not responding to vxtwitter link that was probably posted by me')
             return
 
@@ -374,17 +397,8 @@ async def on_message(message):
             await message.reply(random.choice(oldoptions))
         else:
             tweetcontainer.append(message.content)
-            
-            # Determine the replacement domain based on the day of the week:
-            # Use 'girlcockx.com' on weekends (Saturday and Sunday) and 'vxtwitter.com' on weekdays.
-            current_weekday = datetime.datetime.now().weekday()  # Monday=0, Tuesday=1, ..., Sunday=6
-            if current_weekday >= 5:  # 5 = Saturday, 6 = Sunday
-                #domain = 'girlcockx.com'
-                #7/13/25 - girlcockx.com is down, using vxtwitter.com instead
-                domain = 'vxtwitter.com'
-            else:
-                domain = 'vxtwitter.com'
-            
+
+            domain = 'vxtwitter.com'
             tweetlink = message.content.replace('x.com', domain)
             
             if str(message.channel) == 'gato':
@@ -460,7 +474,7 @@ async def on_message(message):
                 new_batch_size = int(message.content.replace('!batch','').strip())
                 l.BATCH_SIZE = new_batch_size
                 await message.channel.send(f'batch size is now {new_batch_size}')
-            except:
+            except ValueError:
                 await message.channel.send('Invalid batch size')
         else:
             cantdothat = await sentience.ucantdothat(message.author, message.content)
@@ -544,12 +558,7 @@ async def on_message(message):
         await message.delete()
         # Send a temporary message that can be replied to
         temp_msg = await message.channel.send(f"💭 I'm listening... (this message will delete itself in {summon_timeout}s)")
-        # Schedule message deletion
-        await asyncio.sleep(summon_timeout)
-        try:
-            await temp_msg.delete()
-        except:
-            print("Message already deleted or not found")
+        asyncio.create_task(_delete_summon_prompt_later(temp_msg, float(summon_timeout)))
 
 
 @client.event
