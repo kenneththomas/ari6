@@ -54,10 +54,6 @@ scheduled_messages_jobs = []  # Global list for scheduled messages
 scheduled_messages_task = None  # Single task running the scheduler loop
 SCHEDULED_MESSAGES_STATE_PATH = os.path.join("resources", "scheduled_messages_state.json")
 
-# TK thinking tracking variables
-tk_thinking_window_start = None
-tk_thinking_medal_count = 0  # 0 = no medals given, 1 = gold given, 2 = silver given, 3 = bronze given
-
 intents = discord.Intents.default()
 intents.members = True
 intents.message_content = True
@@ -88,20 +84,6 @@ trivia_handler = TriviaHandler()
 summon_timeout = 120  # Default timeout in seconds
 
 translator = Translator()
-
-# Sim user (@pete/@tk/@breez) rate limit: per author + sim key
-SIM_USER_COOLDOWN_SEC = 25
-_sim_user_last_at = {}
-
-
-def _sim_user_cooldown_ok(author_id, user_key):
-    key = (author_id, user_key)
-    now = time.monotonic()
-    last = _sim_user_last_at.get(key)
-    if last is not None and (now - last) < SIM_USER_COOLDOWN_SEC:
-        return False
-    _sim_user_last_at[key] = now
-    return True
 
 
 async def _delete_summon_prompt_later(temp_msg, delay: float):
@@ -152,9 +134,6 @@ async def on_ready():
             pass
     scheduled_messages_jobs = load_scheduled_messages()
     scheduled_messages_task = asyncio.create_task(scheduled_messages_loop())
-    
-    # Initialize RAG data for user impersonation
-    sentience2.initialize_user_rag_data()
 
 
 
@@ -256,34 +235,6 @@ async def on_message(message):
 
     #start AI block
 
-    # TK thinking detection and medal system
-    global tk_thinking_window_start, tk_thinking_medal_count
-
-    if flipper.tk_thinking:
-        # Check if we need to reset the window (1 hour = 3600 seconds)
-        current_time = datetime.datetime.now()
-        if tk_thinking_window_start is None or (current_time - tk_thinking_window_start).total_seconds() > 3600:
-            tk_thinking_window_start = current_time
-            tk_thinking_medal_count = 0
-        
-        # Check if message contains "tk" as a standalone word
-        tk_pattern = r'\btk\b'
-        if re.search(tk_pattern, message.content.lower()):
-            # Check if they're actually talking about TK the person
-            is_about_tk = await sentience.check_if_talking_about_tk(message.content)
-            
-            if is_about_tk:
-                # Award medals based on count
-                if tk_thinking_medal_count == 0:
-                    await message.add_reaction('🥇')  # Gold
-                    tk_thinking_medal_count = 1
-                elif tk_thinking_medal_count == 1:
-                    await message.add_reaction('🥈')  # Silver
-                    tk_thinking_medal_count = 2
-                elif tk_thinking_medal_count == 2:
-                    await message.add_reaction('🥉')  # Bronze
-                    tk_thinking_medal_count = 3
-    
     triggerphrases = ['is this rizz']
 
     ref = message.reference
@@ -327,36 +278,6 @@ async def on_message(message):
         response_text = await sentience2.generate_text_gpt(message.content, gmodel=gmodel, chat_history=cxstorage, use_context_filter=True)
         await asyncio.sleep(1)
         await message.reply(response_text)
-
-    # RAG-based user impersonation (@pete, @tk, @breez) — first match only per message (cost control)
-    if message.channel in [gatochannel, configchannel]:
-        mention_pattern = r'@(pete|tk|breez)\b'
-        match = re.search(mention_pattern, message.content.lower())
-
-        if match:
-            user_key = match.group(1)
-            if _sim_user_cooldown_ok(message.author.id, user_key):
-                webhook_info = wl.webhook_library[user_key]
-                persona_bio = webhook_info[2] if len(webhook_info) > 2 else None
-
-                async with message.channel.typing():
-                    response_text = await sentience2.handle_user_mention(
-                        message.content,
-                        user_key,
-                        chat_history=cxstorage,
-                        conversation_context=experimental_container,
-                        persona_bio=persona_bio,
-                    )
-
-                if response_text:
-                    webhook = await get_or_create_webhook(message.channel, 'ari')
-                    await webhook.send(
-                        response_text,
-                        username=webhook_info[0],
-                        avatar_url=webhook_info[1],
-                    )
-                    print(f'✅ {user_key} response sent via webhook')
-                    return
 
     # Translation handling
     if flipper.translation_enabled:
@@ -455,22 +376,6 @@ async def on_message(message):
     if message.content == '!top':
         top_users = l.get_top_10_xp_users()
         await message.channel.send(top_users)
-
-    # Rebuild sim-user RAG caches from logs/*.txt (admin)
-    if message.content.startswith('!refreshsim'):
-        if not ct.admincheck(str(message.author)):
-            cantdothat = await sentience.ucantdothat(message.author, message.content)
-            await message.reply(cantdothat)
-        else:
-            rest = message.content.replace('!refreshsim', '').strip().lower()
-            key = rest if rest in sentience2.USER_CONFIGS else None
-            if rest and key is None:
-                await message.channel.send('Usage: !refreshsim [pete|tk|breez] or !refreshsim for all')
-            else:
-                await message.channel.send('Rebuilding sim RAG from logs...')
-                await asyncio.to_thread(sentience2.reload_user_rag_data, key)
-                await message.channel.send('Sim RAG refresh finished.')
-        return
 
     # Trivia commands
     if message.content == '!trivia':
