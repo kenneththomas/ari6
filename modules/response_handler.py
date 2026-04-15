@@ -2,6 +2,7 @@ import discord
 import asyncio
 import random
 import sentience
+import sentience2
 from discord.ui import Button, View
 
 class ResponseView(View):
@@ -24,13 +25,12 @@ class ResponseView(View):
         async with interaction.channel.typing():
             if self.cxstorage:
                 self.cxstorage.pop()
-            
+
             responses = []
             for _ in range(2):
-                cxstorage_formatted = sentience.claudeify(self.cxstorage)
-                response = await sentience.claudex2(cxstorage_formatted)
+                response = await sentience2.generate_text_openrouter(self.cxstorage)
                 responses.append(response)
-            
+
             if self.cxstorage:
                 self.cxstorage.pop()
             
@@ -68,18 +68,17 @@ async def handle_bot_channel_message(message, cxstorage, gatochannel):
     async with message.channel.typing():
         if cxstorage:
             cxstorage.pop()
-        
+
         cxstorage.append({
             'role': 'user',
             'content': f"it's your turn to respond. here's some context for how we expect you to respond: {message.content}"
         })
-        
+
         responses = []
         for _ in range(2):
-            cxstorage_formatted = sentience.claudeify(cxstorage)
-            response = await sentience.claudex2(cxstorage_formatted)
+            response = await sentience2.generate_text_openrouter(cxstorage)
             responses.append(response)
-        
+
         if cxstorage:
             cxstorage.pop()
         

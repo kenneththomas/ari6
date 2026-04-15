@@ -3,3 +3,4 @@ logs/
 *.secret
 *.pyc
 personality.py
+resources/.scheduled_messages_state.json

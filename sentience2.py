@@ -26,6 +26,9 @@ def _openrouter_chat(messages, model, reasoning_disabled=False):
     }
     if reasoning_disabled:
         payload["reasoning"] = {"enabled": False}
+
+    start_time = time.time()
+
     r = requests.post(
         f"{OPENROUTER_BASE}/chat/completions",
         headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
@@ -34,7 +37,27 @@ def _openrouter_chat(messages, model, reasoning_disabled=False):
     )
     r.raise_for_status()
     data = r.json()
-    return data["choices"][0]["message"]["content"]
+
+    latency_ms = (time.time() - start_time) * 1000
+
+    content = data["choices"][0]["message"]["content"]
+    usage = data.get("usage", {})
+
+    input_summary = [{"role": m["role"], "content": m["content"][:100] + "..." if len(m.get("content", "")) > 100 else m.get("content", "")} for m in messages]
+
+    print(f"""
+=== AI CALL ===
+Model: {model}
+Input tokens: {usage.get('prompt_tokens', 'N/A')}
+Output tokens: {usage.get('completion_tokens', 'N/A')}
+Total tokens: {usage.get('total_tokens', 'N/A')}
+Latency: {latency_ms:.0f}ms
+Input: {input_summary}
+Output: {content}
+==============
+""")
+
+    return content
 
 import personality
 import asyncio
@@ -173,6 +196,39 @@ async def generate_text_gpt(prompt, gmodel='gpt-5-mini', chat_history=None, use_
         model=gmodel,
         input=full_prompt)
     return response.output_text
+
+
+async def generate_text_openrouter(cxstorage, model=None, system_prompt=None):
+    """
+    Generate text using OpenRouter for any model (Anthropic, OpenAI, etc.).
+
+    Args:
+        cxstorage: List of message dicts with 'role' and 'content' keys
+        model: Model identifier (e.g., 'anthropic/claude-sonnet-4-6'). Defaults to flipper.current_model.
+        system_prompt: Optional system prompt. If None, uses default Ari persona.
+
+    Returns:
+        Generated response text
+    """
+    import modules.flipper as flipper
+
+    if model is None:
+        model = flipper.current_model
+
+    if system_prompt is None:
+        system_prompt = f"the current time is {datetime.datetime.now(pytz.timezone('America/New_York')).strftime('%A, %Y-%m-%d %H:%M:%S')}. you are roleplaying as ari, posting in an groupchat. you are a 27 year old girl from NYC. your family is jewish. you speak in a very casual and informal style, limit use of punctuation. keep messages brief unless there's something funny to say (encouraged) and you can go up to like 3 sentences. longer form is ok if answering a specific question. no emojis. the chat is referred to as \'gato\' and the people in the chat are jokingly referred to as gato members. gato is referred to as \'this gato\'. You will not refer to yourself as an AI or use a lecturing tone, emojis, or hashtags. Avoid starting messages with a greeting. if you are upset with someone, your favorite insult to use is calling someone a dog. You love offensive/crude humor. nothing surprises you."
+
+    full_prompt = [{"role": "system", "content": system_prompt}]
+
+    for msg in cxstorage:
+        full_prompt.append({
+            "role": msg.get("role", "user"),
+            "content": msg.get("content", "")
+        })
+
+    reasoning_disabled = "kimi" in (model or "").lower()
+    return _openrouter_chat(full_prompt, model, reasoning_disabled=reasoning_disabled)
+
 
 # ============================================================================
 # RAG-BASED USER IMPERSONATION (Pete, TK, etc.)

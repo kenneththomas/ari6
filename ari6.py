@@ -9,6 +9,9 @@ import aritooter
 import datetime
 from zoneinfo import ZoneInfo
 import csv
+import json
+import os
+import hashlib
 import sentience
 import sentience2
 import re
@@ -31,7 +34,6 @@ import modules.joey as joey
 import chat_clipper
 from modules.trivia_handler import TriviaHandler
 import modules.response_handler as response_handler
-import modules.personal_assistant as pa
 from modules.message_queue import MessageQueue
 from modules.translator import Translator
 
@@ -49,6 +51,8 @@ lasttweet = ''
 dev_mode = False
 
 scheduled_messages_jobs = []  # Global list for scheduled messages
+scheduled_messages_task = None  # Single task running the scheduler loop
+SCHEDULED_MESSAGES_STATE_PATH = os.path.join("resources", "scheduled_messages_state.json")
 
 # TK thinking tracking variables
 tk_thinking_window_start = None
@@ -80,9 +84,6 @@ configchannel = None
 starttime = datetime.datetime.now()
 
 trivia_handler = TriviaHandler()
-
-# Add after other global variables
-personal_assistant = pa.PersonalAssistant()
 
 summon_timeout = 120  # Default timeout in seconds
 
@@ -142,8 +143,15 @@ async def on_ready():
 
     # Initialize scheduled messages from CSV and start the scheduled messages loop
     global scheduled_messages_jobs
+    global scheduled_messages_task
+    # `on_ready` can fire multiple times (reconnects). Ensure only one loop is running.
+    if scheduled_messages_task and not scheduled_messages_task.done():
+        try:
+            scheduled_messages_task.cancel()
+        except Exception:
+            pass
     scheduled_messages_jobs = load_scheduled_messages()
-    asyncio.create_task(scheduled_messages_loop())
+    scheduled_messages_task = asyncio.create_task(scheduled_messages_loop())
     
     # Initialize RAG data for user impersonation
     sentience2.initialize_user_rag_data()
@@ -156,16 +164,6 @@ async def on_message(message):
     global lastmsg, experimental_container
     #ignore webhooks
     if message.webhook_id:
-        return
-
-    # Add personal assistant handling
-    # if channel is assistant, add to history
-    if str(message.channel) == 'assistant':
-        personal_assistant.add_to_history(message)
-    assistant_response = await personal_assistant.handle_message(message)
-    if assistant_response:
-        # we should be using webhooks so typically the response will be handled inside the function
-        await message.reply(assistant_response)
         return
 
     if message.author == client.user:
@@ -295,26 +293,18 @@ async def on_message(message):
         and getattr(ref_msg, "author", None) == client.user
     )
     trigger_hit = any(trigger in message.content.lower() for trigger in triggerphrases)
+    mention_hit = client.user in message.mentions
 
-    if reply_to_bot or trigger_hit:
+    if reply_to_bot or trigger_hit or mention_hit:
         # Check if the referenced message contains a vxtwitter link
         if ref_msg and ref_msg.content and 'vxtwitter.com' in ref_msg.content:
             print('DEBUG: not responding to vxtwitter link that was probably posted by me')
             return
 
         async with message.channel.typing():
-            if not flipper.claude:
-                freemsg = await sentience.ai_experimental(experimental_container,'gpt-4o')
-                experimental_container.append(f'{freemsg}')
-            else:
-                print(f'converting to claude format: {cxstorage}')
-                cxstorage_formatted = sentience.claudeify(cxstorage)
-                freemsg = await sentience.claudex2(cxstorage_formatted)
-                cxstorage.append({
-                    'role': 'assistant',
-                    'content': f"{freemsg}"
-                })
-            
+            freemsg = await sentience2.generate_text_openrouter(cxstorage)
+            cxstorage.append({"role": "assistant", "content": freemsg})
+
             # Split and send message
             if freemsg.count('\n') < 8:
                 for line in freemsg.split('\n'):
@@ -441,8 +431,7 @@ async def on_message(message):
         print('---auto skeeter---')
         print(cxstorage)
         print('---')
-        cxstorage_formatted = sentience.claudeify(cxstorage)
-        skeet = await sentience.claudex2(cxstorage_formatted)
+        skeet = await sentience2.generate_text_openrouter(cxstorage)
         aritooter.tootcontrol(skeet)
         print('posted skeet')
 
@@ -615,9 +604,39 @@ async def send_scheduled_message(job):
         print(f"Channel with ID {job['channel']} not found")
 
 
+def _scheduled_job_key(job) -> str:
+    # Stable, deterministic key for state tracking across restarts.
+    base = f"{job.get('channel')}|{job.get('time')}|{job.get('message')}"
+    return hashlib.sha1(base.encode("utf-8")).hexdigest()
+
+
+def _load_scheduled_messages_state() -> dict:
+    try:
+        with open(SCHEDULED_MESSAGES_STATE_PATH, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return data if isinstance(data, dict) else {}
+    except FileNotFoundError:
+        return {}
+    except Exception as e:
+        print(f"Error reading scheduled messages state: {e}")
+        return {}
+
+
+def _save_scheduled_messages_state(state: dict) -> None:
+    try:
+        os.makedirs(os.path.dirname(SCHEDULED_MESSAGES_STATE_PATH), exist_ok=True)
+        tmp_path = SCHEDULED_MESSAGES_STATE_PATH + ".tmp"
+        with open(tmp_path, "w", encoding="utf-8") as f:
+            json.dump(state, f, ensure_ascii=False, indent=2, sort_keys=True)
+        os.replace(tmp_path, SCHEDULED_MESSAGES_STATE_PATH)
+    except Exception as e:
+        print(f"Error saving scheduled messages state: {e}")
+
+
 def load_scheduled_messages():
     """Load scheduled messages from the CSV file."""
     scheduled = []
+    state = _load_scheduled_messages_state()
     try:
         with open("resources/scheduled_messages.csv", newline='') as csvfile:
             reader = csv.DictReader(csvfile)
@@ -626,13 +645,26 @@ def load_scheduled_messages():
                 message = row["message"].strip()
                 repeat = row["repeat"].strip().lower() in ["true", "1"]
                 channel = int(row["channel"].strip())
-                scheduled.append({
+                job = {
                     "time": time_str,
                     "message": message,
                     "repeat": repeat,
                     "channel": channel,
                     "last_sent": None  # keeps track of the last day this message was sent
-                })
+                }
+                key = _scheduled_job_key(job)
+                last_sent = state.get(key, {}).get("last_sent")
+                if isinstance(last_sent, str) and last_sent:
+                    try:
+                        job["last_sent"] = datetime.date.fromisoformat(last_sent)
+                    except ValueError:
+                        job["last_sent"] = None
+
+                # If this is a one-time job and it has ever been sent, don't schedule it again.
+                if not job["repeat"] and job.get("last_sent") is not None:
+                    continue
+
+                scheduled.append(job)
     except Exception as e:
         print(f"Error reading scheduled messages: {e}")
     return scheduled
@@ -645,18 +677,28 @@ async def scheduled_messages_loop():
         now = datetime.datetime.now(ZoneInfo("America/New_York"))
         current_time_str = now.strftime("%H:%M")
         current_date = now.date()
+        state = None  # lazy-load only if we need to write
         for job in scheduled_messages_jobs[:]:  # iterate on a copy so we can remove non-repeat jobs
             if job["time"] == current_time_str:
                 if not job["repeat"]:
                     # non-repeating: send only once, then remove from the list
                     if job.get("last_sent") is None:
                         await send_scheduled_message(job)
+                        job["last_sent"] = current_date
+                        if state is None:
+                            state = _load_scheduled_messages_state()
+                        state[_scheduled_job_key(job)] = {"last_sent": current_date.isoformat()}
+                        _save_scheduled_messages_state(state)
                         scheduled_messages_jobs.remove(job)
                 else:
                     # repeating: check if we already sent today
                     if job.get("last_sent") != current_date:
                         await send_scheduled_message(job)
                         job["last_sent"] = current_date
+                        if state is None:
+                            state = _load_scheduled_messages_state()
+                        state[_scheduled_job_key(job)] = {"last_sent": current_date.isoformat()}
+                        _save_scheduled_messages_state(state)
         await asyncio.sleep(20)
 
 client.run(maricon.bottoken)
