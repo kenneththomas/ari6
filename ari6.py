@@ -36,8 +36,9 @@ from modules.trivia_handler import TriviaHandler
 import modules.response_handler as response_handler
 from modules.message_queue import MessageQueue
 from modules.translator import Translator
+from modules.image_reader import image_reader
 
-ari_version = '8.9.1'
+ari_version = '8.9.2'
 
 message_queue = MessageQueue()
 songlibrary = {}
@@ -154,6 +155,45 @@ async def on_message(message):
     l.log(message)
     experimental_container.append(f'{message.author.display_name}: {message.content}')
     message_content = f"{message.author.display_name}: {message.content}"
+
+    if message.embeds:
+        embeds_text = []
+        for embed in message.embeds:
+            if embed.description:
+                embeds_text.append(embed.description)
+            if embed.title:
+                embeds_text.append(f"[title]: {embed.title}")
+            for field in embed.fields:
+                embeds_text.append(f"[{field.name}]: {field.value}")
+        if embeds_text:
+            message_content += "\n" + "\n".join(embeds_text)
+
+    image_urls = []
+    for attachment in message.attachments:
+        if attachment.filename.lower().endswith(('.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp')):
+            image_urls.append(attachment.url)
+
+    for embed in message.embeds:
+        if embed.image:
+            image_urls.append(embed.image.url)
+        if embed.thumbnail:
+            image_urls.append(embed.thumbnail.url)
+
+    # Skip image processing for certain bots that produce junk embeds
+    junk_bots = ("tatsu",)
+    if message.author.bot and message.author.display_name.lower() in junk_bots:
+        image_urls = []
+
+    image_descriptions = []
+    if image_urls:
+        for url in image_urls:
+            description = await image_reader.get_image_description(url)
+            if description:
+                image_descriptions.append(description)
+
+    if image_descriptions:
+        message_content += "\n" + "[images]: " + "; ".join(image_descriptions)
+
     if not any(msg['content'] == message_content for msg in cxstorage):
         cxstorage.append({
             'role': 'user',
