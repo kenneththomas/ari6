@@ -1,4 +1,5 @@
 maricon.py
+.venv/
 logs/
 *.secret
 *.pyc

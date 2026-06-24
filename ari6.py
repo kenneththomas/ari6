@@ -34,6 +34,7 @@ import modules.joey as joey
 import chat_clipper
 from modules.trivia_handler import TriviaHandler
 import modules.response_handler as response_handler
+import modules.blackjack as blackjack
 from modules.message_queue import MessageQueue
 from modules.translator import Translator
 from modules.image_reader import image_reader
@@ -95,6 +96,25 @@ async def _delete_summon_prompt_later(temp_msg, delay: float):
         pass
     except discord.HTTPException as e:
         print(f"Could not delete summon prompt: {e}")
+
+
+async def _enrich_cxstorage_with_image_descriptions(cxstorage):
+    """Scan cxstorage for entries with unprocessed image URLs and retroactively fetch descriptions."""
+    for entry in cxstorage:
+        content = entry.get('content', '')
+        if '[image_urls]:' in content and '[images]:' not in content:
+            urls_match = re.search(r'\[image_urls\]:\s*(.+)', content)
+            if not urls_match:
+                continue
+            urls_str = urls_match.group(1)
+            urls = [u.strip() for u in urls_str.split(';') if u.strip()]
+            descriptions = []
+            for url in urls:
+                desc = await image_reader.get_image_description(url)
+                if desc:
+                    descriptions.append(desc)
+            if descriptions:
+                entry['content'] = content + "\n[images]: " + "; ".join(descriptions)
 
 
 async def get_or_create_webhook(channel, webhook_name):
@@ -184,15 +204,8 @@ async def on_message(message):
     if message.author.bot and message.author.display_name.lower() in junk_bots:
         image_urls = []
 
-    image_descriptions = []
     if image_urls:
-        for url in image_urls:
-            description = await image_reader.get_image_description(url)
-            if description:
-                image_descriptions.append(description)
-
-    if image_descriptions:
-        message_content += "\n" + "[images]: " + "; ".join(image_descriptions)
+        message_content += "\n" + "[image_urls]: " + "; ".join(image_urls)
 
     if not any(msg['content'] == message_content for msg in cxstorage):
         cxstorage.append({
@@ -239,14 +252,17 @@ async def on_message(message):
         uptime_string = f"{hours} hours, {minutes} minutes, {seconds} seconds"
         await message.channel.send(uptime_string)
 
-    #toggle main_enabled with !main
-    if str(message.content) == '!main':
+#toggle main_enabled with !main
+    if message.content == '!main':
         if ct.admincheck(str(message.author)):
             main_enabled = not main_enabled
             await message.channel.send(f'main is now {main_enabled}')
         else:
             cantdothat = await sentience.ucantdothat(message.author, message.content)
             await message.reply(cantdothat)
+
+    # Update blackjack chat context
+    blackjack.update_chat_context(message.author.id, message.content)
 
     #other togglers in flipper
     if message.content.startswith('!'):
@@ -293,6 +309,7 @@ async def on_message(message):
             return
 
         async with message.channel.typing():
+            await _enrich_cxstorage_with_image_descriptions(cxstorage)
             freemsg = await sentience2.generate_text_openrouter(cxstorage)
             cxstorage.append({"role": "assistant", "content": freemsg})
 
@@ -315,6 +332,7 @@ async def on_message(message):
                 await message.reply('popsicle')
                 return
         # Pass cxstorage as chat history for context filtering
+        await _enrich_cxstorage_with_image_descriptions(cxstorage)
         response_text = await sentience2.generate_text_gpt(message.content, gmodel=gmodel, chat_history=cxstorage, use_context_filter=True)
         await asyncio.sleep(1)
         await message.reply(response_text)
@@ -392,6 +410,7 @@ async def on_message(message):
         print('---auto skeeter---')
         print(cxstorage)
         print('---')
+        await _enrich_cxstorage_with_image_descriptions(cxstorage)
         skeet = await sentience2.generate_text_openrouter(cxstorage)
         aritooter.tootcontrol(skeet)
         print('posted skeet')
@@ -430,6 +449,13 @@ async def on_message(message):
         await trivia_handler.show_help(message)
     else:
         await trivia_handler.check_trivia_answer(message)
+
+    # Blackjack command
+    if message.content.startswith('!blackjack') or message.content.startswith('!barijack'):
+        await blackjack.handle_blackjack_command(message, cxstorage)
+
+    # Update blackjack chat context
+    blackjack.update_chat_context(message.author.id, message.content)
 
     #adjust l.BATCH_SIZE with !batch $number
     if message.content.startswith('!batch'):

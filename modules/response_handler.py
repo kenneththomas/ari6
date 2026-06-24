@@ -3,7 +3,27 @@ import asyncio
 import random
 import sentience
 import sentience2
+import aritooter as _  # ensures aritooter is loaded (may have side effects)
+import re
+import modules.image_reader as image_reader
 from discord.ui import Button, View
+
+
+async def _enrich_cxstorage_with_image_descriptions(cxstorage):
+    for entry in cxstorage:
+        content = entry.get('content', '')
+        if '[image_urls]:' in content and '[images]:' not in content:
+            urls_match = re.search(r'\[image_urls\]:\s*(.+)', content)
+            if not urls_match:
+                continue
+            urls = [u.strip() for u in urls_match.group(1).split(';') if u.strip()]
+            descriptions = []
+            for url in urls:
+                desc = await image_reader.image_reader.get_image_description(url)
+                if desc:
+                    descriptions.append(desc)
+            if descriptions:
+                entry['content'] = content + "\n[images]: " + "; ".join(descriptions)
 
 class ResponseView(View):
     def __init__(self, responses, target_channel, cxstorage):
@@ -26,6 +46,7 @@ class ResponseView(View):
             if self.cxstorage:
                 self.cxstorage.pop()
 
+            await _enrich_cxstorage_with_image_descriptions(self.cxstorage)
             responses = []
             for _ in range(2):
                 response = await sentience2.generate_text_openrouter(self.cxstorage)
@@ -73,6 +94,8 @@ async def handle_bot_channel_message(message, cxstorage, gatochannel):
             'role': 'user',
             'content': f"it's your turn to respond. here's some context for how we expect you to respond: {message.content}"
         })
+
+        await _enrich_cxstorage_with_image_descriptions(cxstorage)
 
         responses = []
         for _ in range(2):
