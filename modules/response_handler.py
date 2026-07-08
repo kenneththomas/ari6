@@ -1,10 +1,8 @@
 import discord
-import asyncio
-import random
 import sentience
 import sentience2
 import aritooter as _  # ensures aritooter is loaded (may have side effects)
-from modules.context_tools import enrich_cxstorage_with_image_descriptions
+from modules.context_tools import enrich_cxstorage_with_image_descriptions, send_ai_response
 from discord.ui import Button, View
 
 
@@ -53,13 +51,7 @@ class ResponseView(View):
         await interaction.message.delete()
 
     async def _handle_response(self, interaction, index):
-        if self.responses[index].count('\n') < 6:
-            for line in self.responses[index].split('\n'):
-                if line.strip():
-                    await asyncio.sleep(random.uniform(1, 4.3))
-                    await self.target_channel.send(line)
-        else:
-            await self.target_channel.send(self.responses[index])
+        await send_ai_response(self.target_channel, self.responses[index], multiline_threshold=6)
         
         self.cxstorage.append({
             'role': 'assistant',

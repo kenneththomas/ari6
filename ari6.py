@@ -26,7 +26,7 @@ import modules.masta_selecta as masta_selecta
 import modules.flipper as flipper
 import modules.joey as joey
 import modules.scheduled_messages as scheduled_messages
-from modules.context_tools import enrich_cxstorage_with_image_descriptions
+from modules.context_tools import enrich_cxstorage_with_image_descriptions, send_ai_response
 import chat_clipper
 from modules.trivia_handler import TriviaHandler
 import modules.response_handler as response_handler
@@ -276,14 +276,7 @@ async def on_message(message):
             freemsg = await sentience2.generate_text_openrouter(cxstorage)
             cxstorage.append({"role": "assistant", "content": freemsg})
 
-            # Split and send message
-            if freemsg.count('\n') < 8:
-                for line in freemsg.split('\n'):
-                    if line.strip():
-                        await asyncio.sleep(random.uniform(1, 4.3))
-                        await message.channel.send(line)
-            else:
-                await message.reply(freemsg)
+            await send_ai_response(message.channel, freemsg, reply_to=message)
 
         return
     gmodel = sentience2.DEFAULT_OPENROUTER_MODEL  # moonshotai/kimi-k2.5 with thinking disabled

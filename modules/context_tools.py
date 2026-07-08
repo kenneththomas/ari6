@@ -1,3 +1,5 @@
+import asyncio
+import random
 import re
 
 from modules.image_reader import image_reader
@@ -21,3 +23,16 @@ async def enrich_cxstorage_with_image_descriptions(cxstorage):
 
             if descriptions:
                 entry['content'] = content + "\n[images]: " + "; ".join(descriptions)
+
+
+async def send_ai_response(channel, text, multiline_threshold=8, reply_to=None):
+    """Send short AI responses line by line, and long responses as one message."""
+    if text.count('\n') < multiline_threshold:
+        for line in text.split('\n'):
+            if line.strip():
+                await asyncio.sleep(random.uniform(1, 4.3))
+                await channel.send(line)
+    elif reply_to:
+        await reply_to.reply(text)
+    else:
+        await channel.send(text)
