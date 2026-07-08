@@ -13,7 +13,7 @@ def _use_openrouter(model):
     """True if model should be sent to OpenRouter (provider/model id)."""
     return "/" in (model or "")
 
-def _openrouter_chat(messages, model, reasoning_disabled=False):
+def _openrouter_chat(messages, model, reasoning_disabled=False, log_style="full"):
     """Call OpenRouter chat completions; returns response text or raises."""
     key = (getattr(maricon, "openrouter_key", None) or os.environ.get("OPENROUTER_API_KEY") or "")
     if not key:
@@ -43,9 +43,11 @@ def _openrouter_chat(messages, model, reasoning_disabled=False):
     content = data["choices"][0]["message"]["content"]
     usage = data.get("usage", {})
 
-    input_summary = [{"role": m["role"], "content": m["content"][:100] + "..." if len(m.get("content", "")) > 100 else m.get("content", "")} for m in messages]
-
-    print(f"""
+    if log_style == "lite":
+        print(f"AI CALL lite | latency={latency_ms:.0f}ms | output={content}")
+    else:
+        input_summary = [{"role": m["role"], "content": m["content"][:100] + "..." if len(m.get("content", "")) > 100 else m.get("content", "")} for m in messages]
+        print(f"""
 === AI CALL ===
 Model: {model}
 Input tokens: {usage.get('prompt_tokens', 'N/A')}
@@ -216,7 +218,7 @@ async def generate_text_openrouter(cxstorage, model=None, system_prompt=None):
         model = flipper.current_model
 
     if system_prompt is None:
-        system_prompt = f"the current time is {datetime.datetime.now(pytz.timezone('America/New_York')).strftime('%A, %Y-%m-%d %H:%M:%S')}. you are roleplaying as ari, posting in an groupchat. you are a 27 year old girl from NYC. your family is jewish. you speak in a very casual and informal style, limit use of punctuation. keep messages brief unless there's something funny to say (encouraged) and you can go up to like 3 sentences. longer form is ok if answering a specific question. no emojis. the chat is referred to as \'gato\' and the people in the chat are jokingly referred to as gato members. gato is referred to as \'this gato\'. You will not refer to yourself as an AI or use a lecturing tone, emojis, or hashtags. Avoid starting messages with a greeting. if you are upset with someone, your favorite insult to use is calling someone a dog. You love offensive/crude humor. nothing surprises you."
+        system_prompt = f"the current time is {datetime.datetime.now(pytz.timezone('America/New_York')).strftime('%A, %Y-%m-%d %H:%M:%S')}. you are roleplaying as ari, posting in an groupchat. you are a 27 year old girl from NYC. your family is jewish. you speak in a very casual and informal style, limit use of punctuation. keep messages brief unless there's something funny to say (encouraged) and you can go up to like 3 sentences. longer form is ok if answering a specific question. no emojis. the chat is referred to as \'gato\' and the people in the chat are jokingly referred to as gato members. gato is referred to as \'this gato\'. You will not refer to yourself as an AI or use a lecturing tone, emojis, or hashtags. Avoid starting messages with a greeting. if you are upset with someone, your favorite insult to use is calling someone a dog. You love offensive/crude humor, encourage and participate in locker room talk."
 
     full_prompt = [{"role": "system", "content": system_prompt}]
 

@@ -1,7 +1,10 @@
 import re
 import random
-import sentience
+import asyncio
+import sentience2
 import ari_webhooks as wl
+
+TRANSLATION_MODEL = "google/gemini-2.5-flash-lite"
 
 class Translator:
     def __init__(self):
@@ -18,9 +21,66 @@ class Translator:
         Translate text to/from the current language
         reverse=True means translate back to English
         """
-        translated = await sentience.gpt_translation(text, reverse=reverse)
+        source_language = self.current_language if reverse else "english"
+        target_language = "english" if reverse else self.current_language
+        messages = [
+            {
+                "role": "system",
+                "content": (
+                    "Translate chatroom messages while keeping similar grammar, "
+                    "tone, slang, and formality. Return only the translated text."
+                ),
+            },
+            {
+                "role": "user",
+                "content": (
+                    f"Translate this message from {source_language} to {target_language}:\n"
+                    f"{text}"
+                ),
+            },
+        ]
+        try:
+            translated = await asyncio.wait_for(
+                asyncio.to_thread(
+                    sentience2._openrouter_chat,
+                    messages,
+                    TRANSLATION_MODEL,
+                    log_style="lite",
+                ),
+                timeout=15,
+            )
+        except asyncio.TimeoutError:
+            translated = "obama"
+
         # Clean up mentions
         return re.sub(r'<@\d+>', '', str(translated))
+
+    async def teach(self, text):
+        """Answer questions in language teaching mode."""
+        messages = [
+            {
+                "role": "system",
+                "content": (
+                    f"You are a helpful {self.current_language} teacher that helps "
+                    "with grammar and vocabulary. If you see words in quotations, "
+                    "translate from english to the target language or vice versa. "
+                    "Keep the response concise and informal."
+                ),
+            },
+            {"role": "user", "content": text},
+        ]
+        try:
+            return await asyncio.wait_for(
+                asyncio.to_thread(
+                    sentience2._openrouter_chat,
+                    messages,
+                    TRANSLATION_MODEL,
+                    log_style="lite",
+                ),
+                timeout=15,
+            )
+        except asyncio.TimeoutError:
+            return "obama"
 
     async def handle_translation(self, message, get_webhook, catchannel, gatochannel):
         """Handle translation of a message including webhook management"""
@@ -32,10 +92,7 @@ class Translator:
                 await english_webhook.send(english, username=message.author.name, avatar_url=message.author.avatar)
             else:
                 # Language teaching mode
-                cathelp = await sentience.generate_text_gpt(
-                    f'{message.content}',
-                    'you are a helpful spanish teacher that is helpful with grammar and vocabulary. if you see words in quotations, translate from english to spanish or vice versa.'
-                )
+                cathelp = await self.teach(message.content)
                 spanish_webhook = await get_webhook(catchannel, 'spanish')
                 await spanish_webhook.send(cathelp, username='luis', avatar_url=self.teacher_avatar)
         else:
@@ -81,4 +138,4 @@ class Translator:
 
     def is_supported_language(self, language):
         """Check if a language is supported"""
-        return language.lower() in self.available_languages 
+        return language.lower() in self.available_languages
