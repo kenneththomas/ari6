@@ -70,9 +70,9 @@ class BlackjackGame:
         return ' '.join([f"{c['rank']}{c['suit']}" for c in hand])
     
     def start_round(self):
+        self.deck = self.create_deck()
         self.player_hand = [self.deal_card(), self.deal_card()]
         self.dealer_hand = [self.deal_card(), self.deal_card()]
-        self.deck = self.create_deck()
     
     def create_embed(self, final=False, blackjack=False, bust=False):
         embed = discord.Embed(
@@ -316,7 +316,8 @@ async def handle_blackjack_command(message, cxstorage):
         return
     
     try:
-        bet_amount = int(message.content.replace('!blackjack', '').strip()) if len(message.content.split()) > 1 else 100
+        parts = message.content.split(maxsplit=1)
+        bet_amount = int(parts[1]) if len(parts) > 1 else 100
     except ValueError:
         bet_amount = 100
     

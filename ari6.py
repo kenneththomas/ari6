@@ -454,9 +454,6 @@ async def on_message(message):
     if message.content.startswith('!blackjack') or message.content.startswith('!barijack'):
         await blackjack.handle_blackjack_command(message, cxstorage)
 
-    # Update blackjack chat context
-    blackjack.update_chat_context(message.author.id, message.content)
-
     #adjust l.BATCH_SIZE with !batch $number
     if message.content.startswith('!batch'):
         if ct.admincheck(str(message.author)):

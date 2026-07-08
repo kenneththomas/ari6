@@ -50,27 +50,44 @@ def controlmgr(message, author):
     if message.startswith('!'):
         if admincheck(author):
             if message.startswith('!bw add'):
-                addword = message.split(' ')
+                addword = message.split(maxsplit=2)
+                if len(addword) < 3:
+                    bwm.message = 'Usage: !bw add <word>'
+                    return bwm
                 bannedwords.append(addword[2])
                 print('BWM: added {} to the banned words list'.format(addword[2]))
                 bwm.message = 'Added {} to the banned words list'.format(addword[2])
             elif message.startswith('!bw remove'):
-                removeword = message.split(' ')
-                bannedwords.remove(removeword[2])
-                print('BWM: removed {} from the banned words list'.format(removeword[2]))
-                bwm.message = 'Removed {} from the banned words list'.format(removeword[2])
+                removeword = message.split(maxsplit=2)
+                if len(removeword) < 3:
+                    bwm.message = 'Usage: !bw remove <word>'
+                    return bwm
+                if removeword[2] in bannedwords:
+                    bannedwords.remove(removeword[2])
+                    print('BWM: removed {} from the banned words list'.format(removeword[2]))
+                    bwm.message = 'Removed {} from the banned words list'.format(removeword[2])
+                else:
+                    bwm.message = '{} is not in the banned words list'.format(removeword[2])
             elif message.startswith('!admin add'):
-                adduser = message.split(' ')
+                adduser = message.split(maxsplit=2)
+                if len(adduser) < 3:
+                    bwm.message = 'Usage: !admin add <user>'
+                    return bwm
                 adminlist.append(adduser[2])
                 bwm.message = 'Added {} to admin list'.format(adduser[2])
             elif message.startswith('!admin remove'):
-                removeuser = message.split(' ')
-                adminlist.remove(removeuser[2])
-                bwm.message = 'Removed {} from admin list.'.format(adduser[2])
+                removeuser = message.split(maxsplit=2)
+                if len(removeuser) < 3:
+                    bwm.message = 'Usage: !admin remove <user>'
+                    return bwm
+                if removeuser[2] in adminlist:
+                    adminlist.remove(removeuser[2])
+                    bwm.message = 'Removed {} from admin list.'.format(removeuser[2])
+                else:
+                    bwm.message = '{} is not in admin list.'.format(removeuser[2])
             elif message == '!release':
-                released = ''
-                for x in heldmsgcontainer:
-                    released = released + '{}: {}'.format(x.author,x.message)
+                for x in heldmsgcontainer[:]:
+                    released = '{}: {}'.format(x.author,x.message)
                     if not bwm.message:
                         bwm.message = released + '\n'
                     else:
