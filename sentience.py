@@ -1,15 +1,9 @@
 from openai import OpenAI
 import maricon
 client = OpenAI(api_key=maricon.gptkey)
-import personality
 import asyncio
-import random
-import re
 import csv
 import time
-import datetime
-import pytz
-import requests
 
 
 translate_language = 'spanish'

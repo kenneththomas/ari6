@@ -1,6 +1,4 @@
 import discord
-import asyncio
-import random
 import lumberjack as l
 import mememgr
 import sentience

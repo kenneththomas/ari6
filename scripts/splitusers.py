@@ -1,5 +1,4 @@
 import fixtools as ft
-import re
 
 logfile = open('../logs/a5lfix.log','r')
 allfile = open('../logs/everyone.log','w')

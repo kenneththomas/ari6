@@ -1,5 +1,4 @@
 import sqlite3
-import pandas as pd
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 import sys

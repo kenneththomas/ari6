@@ -1,6 +1,5 @@
 import discord
 import maricon
-import time
 import lumberjack as l
 import mememgr
 import asyncio
@@ -24,7 +23,6 @@ CHANNEL_IDS = {
 }
 import modules.masta_selecta as masta_selecta
 import modules.flipper as flipper
-import modules.joey as joey
 import modules.scheduled_messages as scheduled_messages
 from modules.context_tools import enrich_cxstorage_with_image_descriptions, send_ai_response
 import chat_clipper

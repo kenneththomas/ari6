@@ -1,4 +1,3 @@
-from mastodon import Mastodon
 import maricon
 from atproto import Client
 #import twitter

@@ -1,7 +1,4 @@
-import fixtools as ft
-import numpy as np
 import pandas as pd
-from collections import OrderedDict as odict
 import glob
 
 # poststats.py should be run AFTER genstats.py, as it relies on those generated files

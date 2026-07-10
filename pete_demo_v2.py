@@ -8,7 +8,6 @@ from openai import OpenAI
 import maricon
 import random
 
-import sentience2
 from sentience2 import (
     USER_CONFIGS,
     load_messages,
