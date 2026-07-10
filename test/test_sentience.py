@@ -4,6 +4,9 @@ from unittest.mock import Mock, patch
 import sentience
 
 
+TRANSPORT_TEST_MODEL = "deepseek/deepseek-v4-flash"
+
+
 class OpenRouterTransportTests(unittest.TestCase):
     def test_rejects_non_openrouter_model_identifier(self):
         with self.assertRaisesRegex(ValueError, "provider/model"):
@@ -20,7 +23,7 @@ class OpenRouterTransportTests(unittest.TestCase):
 
         result = sentience._openrouter_chat(
             [{"role": "user", "content": "hi"}],
-            "moonshotai/kimi-k2.5",
+            TRANSPORT_TEST_MODEL,
             reasoning_disabled=True,
             log_style="lite",
         )
@@ -32,7 +35,7 @@ class OpenRouterTransportTests(unittest.TestCase):
             request.args[0],
             "https://openrouter.ai/api/v1/chat/completions",
         )
-        self.assertEqual(request.kwargs["json"]["model"], "moonshotai/kimi-k2.5")
+        self.assertEqual(request.kwargs["json"]["model"], TRANSPORT_TEST_MODEL)
         self.assertEqual(request.kwargs["json"]["reasoning"], {"enabled": False})
 
 
