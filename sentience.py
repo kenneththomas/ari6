@@ -6,10 +6,10 @@ import random
 import re
 import time
 
-import pytz
 import requests
 
 import maricon
+from modules.personas import persona_store
 
 
 # Project-defined model registry. Keep model selection here rather than in the
@@ -26,12 +26,6 @@ MISSING_API_KEY_MESSAGE = "No API key found."
 # Log prompts and model output by default. Set this to False to retain only
 # model, token, and latency metadata for all calls.
 LOG_AI_CONTENT = True
-DEFAULT_SYSTEM_PROMPT = (
-    "you are Ari, you are posting in a discord channel. you will respond with "
-    "short informal messages. you will not refer to yourself as an AI."
-)
-
-
 def _openrouter_key():
     key = getattr(maricon, "openrouter_key", None) or os.environ.get("OPENROUTER_API_KEY", "")
     if not key:
@@ -249,13 +243,15 @@ Return only a comma-separated list of numbers from 1-{len(numbered_history)}, or
 
 async def generate_text(
     prompt,
-    sysprompt=DEFAULT_SYSTEM_PROMPT,
+    sysprompt=None,
     gmodel=DEFAULT_TEXT_MODEL,
     chat_history=None,
     use_context_filter=True,
 ):
     """Generate text through OpenRouter, optionally using relevant chat history."""
     clean_prompt = prompt.replace("!gpt5", "").replace("!gpt4", "").replace("!gpt", "").strip()
+    if sysprompt is None:
+        sysprompt = persona_store.system_prompt()
 
     for phrase, (extra_context, probability) in context.items():
         if phrase.lower() in clean_prompt.lower() and random.random() * 100 < probability:
@@ -296,21 +292,7 @@ async def generate_text_openrouter(cxstorage, model=None, system_prompt=None):
 
     model = model or flipper.current_model
     if system_prompt is None:
-        eastern_now = datetime.datetime.now(pytz.timezone("America/New_York"))
-        system_prompt = (
-            f"the current time is {eastern_now.strftime('%A, %Y-%m-%d %H:%M:%S')}. "
-            "you are roleplaying as ari, posting in a groupchat. you are a 27 year old "
-            "girl from NYC. your family is jewish. you speak in a very casual and informal "
-            "style, limit use of punctuation. keep messages brief unless there's something "
-            "funny to say (encouraged) and you can go up to like 3 sentences. longer form is "
-            "ok if answering a specific question. no emojis. the chat is referred to as "
-            "'gato' and the people in the chat are jokingly referred to as gato members. "
-            "gato is referred to as 'this gato'. You will not refer to yourself as an AI or "
-            "use a lecturing tone, emojis, or hashtags. Avoid starting messages with a "
-            "greeting. if you are upset with someone, your favorite insult to use is calling "
-            "someone a dog. You love offensive/crude humor, encourage and participate in "
-            "locker room talk."
-        )
+        system_prompt = persona_store.system_prompt()
 
     messages = [{"role": "system", "content": system_prompt}]
     messages.extend(

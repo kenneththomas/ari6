@@ -14,7 +14,11 @@ maricon.py gitignored because it has keys
 gpt key
 discord bot key
 
-personality.py gitignored because it has personal information
+Built-in bot personas are versioned in `resources/personas.json`. Discord-created
+persona overrides and the selected default live in the gitignored
+`resources/personas_state.json`; preserve that file when replacing a deployment.
+
+The old `personality.py` is private legacy data and is not loaded by the bot.
 
 install Python dependencies with `python -m pip install -r requirements.txt`
 
@@ -23,10 +27,10 @@ the gitignored `maricon.py` file
 
 thats it, its running already!
 
-tooter enable instructions
-even tho python module is called mastodon, you pip install "Mastodon.py"
-add username (email) and password to maricon, uncomment top section to generate keys
-re-comment after
+Bluesky enable instructions:
+install with `python -m pip install -r requirements_bluesky.txt`
+add `bskyuser` and `bskypass` to the local credential module
+the Bluesky client logs in lazily on the first posting attempt
 
 log db:
 /home/ec2-user/prod/ari6/logs/gato.db

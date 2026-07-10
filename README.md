@@ -52,6 +52,31 @@ provide `bskyuser` and `bskypass` in the existing local credential module:
 python -m pip install -r requirements_bluesky.txt
 ```
 
+## Personas
+
+The bot's required Ari persona and its built-in webhook identities are public
+in `resources/personas.json`. Runtime changes made through Discord are stored
+in the gitignored `resources/personas_state.json`, so they survive restarts
+without putting deployment-specific configuration in Git.
+
+Anyone can inspect personas with `!persona`, `!persona list`, and
+`!persona show <key>`. Bot admins can manage them directly in Discord:
+
+```text
+!persona use <key>
+!persona add <key> | <display name> | <prompt>       # attach an avatar image
+!persona add <key> | <display name> | <avatar URL> | <prompt>
+!persona edit <key> | <name|avatar|prompt> | <value>
+!persona delete <key>
+!persona reset <key>
+```
+
+Selecting a persona changes both the default AI system prompt and the outgoing
+name/avatar. The built-in `ari` persona uses the Discord bot's own identity;
+other personas use a shared webhook. The old gitignored `personality.py` is not
+loaded by the bot and can remain as private legacy notes until it is no longer
+needed.
+
 ## Features
 
 - **Custom Commands:** React to specific commands with custom text responses, memes, or actions.
