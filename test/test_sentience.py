@@ -1,4 +1,6 @@
+import os
 import unittest
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock, patch
 
 import sentience
@@ -9,6 +11,17 @@ TRANSPORT_TEST_MODEL = "deepseek/deepseek-v4-flash"
 
 
 class OpenRouterTransportTests(unittest.TestCase):
+    @patch("sentience.requests.post")
+    def test_missing_api_key_returns_user_facing_message(self, post):
+        with (
+            patch.object(sentience, "maricon", SimpleNamespace()),
+            patch.dict(os.environ, {}, clear=True),
+        ):
+            result = sentience.openrouter_chat([], TRANSPORT_TEST_MODEL)
+
+        self.assertEqual(result, sentience.MISSING_API_KEY_MESSAGE)
+        post.assert_not_called()
+
     def test_rejects_non_openrouter_model_identifier(self):
         with self.assertRaisesRegex(ValueError, "provider/model"):
             sentience.openrouter_chat([], "gpt-4o")

@@ -8,7 +8,6 @@ import aritooter
 import datetime
 import sentience
 import random
-import ari_webhooks as wl
 import ctespn
 
 # Discord channel IDs (single place to update when channels move)
@@ -23,11 +22,14 @@ CHANNEL_IDS = {
 import modules.masta_selecta as masta_selecta
 import modules.flipper as flipper
 import modules.scheduled_messages as scheduled_messages
-from modules.context_tools import enrich_cxstorage_with_image_descriptions, send_ai_response
+from modules.context_tools import enrich_cxstorage_with_image_descriptions
 import chat_clipper
 import modules.response_handler as response_handler
 import modules.blackjack as blackjack
 from modules.message_queue import MessageQueue
+from modules.persona_commands import handle_persona_command
+from modules.persona_output import send_persona_response
+from modules.personas import persona_store
 from modules.translator import Translator
 
 ari_version = '8.9.2'
@@ -209,6 +211,13 @@ async def on_message(message):
         uptime_string = f"{hours} hours, {minutes} minutes, {seconds} seconds"
         await message.channel.send(uptime_string)
 
+    if message.content == '!persona' or message.content.startswith('!persona '):
+        await handle_persona_command(
+            message,
+            is_admin=ct.admincheck(str(message.author)),
+        )
+        return
+
 #toggle main_enabled with !main
     if message.content == '!main':
         if ct.admincheck(str(message.author)):
@@ -266,11 +275,21 @@ async def on_message(message):
             return
 
         async with message.channel.typing():
+            persona = persona_store.default()
             await enrich_cxstorage_with_image_descriptions(cxstorage)
-            freemsg = await sentience.generate_text_openrouter(cxstorage)
+            freemsg = await sentience.generate_text_openrouter(
+                cxstorage,
+                system_prompt=persona_store.system_prompt(persona),
+            )
             cxstorage.append({"role": "assistant", "content": freemsg})
 
-            await send_ai_response(message.channel, freemsg, reply_to=message)
+            await send_persona_response(
+                message.channel,
+                freemsg,
+                get_or_create_webhook,
+                persona=persona,
+                reply_to=message,
+            )
 
         return
     gmodel = sentience.DEFAULT_OPENROUTER_MODEL  # moonshotai/kimi-k2.5 with thinking disabled
@@ -282,10 +301,23 @@ async def on_message(message):
                 await message.reply('popsicle')
                 return
         # Pass cxstorage as chat history for context filtering
+        persona = persona_store.default()
         await enrich_cxstorage_with_image_descriptions(cxstorage)
-        response_text = await sentience.generate_text(message.content, gmodel=gmodel, chat_history=cxstorage, use_context_filter=True)
+        response_text = await sentience.generate_text(
+            message.content,
+            sysprompt=persona_store.system_prompt(persona),
+            gmodel=gmodel,
+            chat_history=cxstorage,
+            use_context_filter=True,
+        )
         await asyncio.sleep(1)
-        await message.reply(response_text)
+        await send_persona_response(
+            message.channel,
+            response_text,
+            get_or_create_webhook,
+            persona=persona,
+            reply_to=message,
+        )
 
     # Translation handling
     if flipper.translation_enabled:
@@ -297,7 +329,12 @@ async def on_message(message):
         await translator.handle_language_change(message, get_or_create_webhook, catchannel)
 
     if message.channel == botchannel:
-        await response_handler.handle_bot_channel_message(message, cxstorage, gatochannel)
+        await response_handler.handle_bot_channel_message(
+            message,
+            cxstorage,
+            gatochannel,
+            get_or_create_webhook,
+        )
         return
 
     # end AI block
@@ -336,10 +373,12 @@ async def on_message(message):
             
             if str(message.channel) == 'gato':
                 await message.delete()
-                personality = random.choice(list(wl.webhook_library.values()))
-                username = personality[0]
-                avatar = personality[1]
-                await ari_webhook.send(f'{message.author.display_name} posted:\n {tweetlink}', username=username, avatar_url=avatar)
+                personas = persona_store.webhook_personas()
+                persona = random.choice(personas) if personas else persona_store.default()
+                await ari_webhook.send(
+                    f'{message.author.display_name} posted:\n {tweetlink}',
+                    **persona.webhook_kwargs(),
+                )
             else:
                 await message.channel.send(f"{message.author.display_name} posted:\n {tweetlink}")
 
@@ -436,10 +475,10 @@ async def on_message(message):
                 webhook = await get_or_create_webhook(barcochannel, 'barco')
                 async with barcochannel.typing():
                     zoomerpost = await sentience.generate_text(flipper.zp_msg, zoomer_prompt)
+                    persona = persona_store.get("lamelo-ball") or persona_store.default()
                     await webhook.send(
                         zoomerpost,
-                        username='lamelo ball',
-                        avatar_url=wl.webhook_library['lamelo ball'][1]
+                        **persona.webhook_kwargs(),
                     )
         else:
             if mememgr.chance(50):
@@ -450,10 +489,10 @@ async def on_message(message):
                         sentience.DEFAULT_TEXT_MODEL,
                     )
                     webhook = await get_or_create_webhook(gatochannel, 'ari')
+                    persona = persona_store.get("lamelo-ball") or persona_store.default()
                     await webhook.send(
                         zoomerpost,
-                        username='lamelo ball',
-                        avatar_url=wl.webhook_library['lamelo ball'][1]
+                        **persona.webhook_kwargs(),
                     )
 
     #if message is !ctespn run scoreboard_request and sb_parser

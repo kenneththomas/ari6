@@ -2,7 +2,7 @@ import discord
 import lumberjack as l
 import mememgr
 import sentience
-import ari_webhooks as wl
+from modules.personas import persona_store
 
 songlibrary = {}
 
@@ -91,7 +91,11 @@ async def handle_spotify_activity(message, get_or_create_webhook, barcochannel):
                         gmodel=sentience.DEFAULT_TEXT_MODEL,
                     )
                     # Post as lamelo ball webhook
-                    await barco_webhook.send(roast, username='lamelo ball', avatar_url=wl.webhook_library['lamelo ball'][1])
+                    persona = persona_store.get("lamelo-ball") or persona_store.default()
+                    await barco_webhook.send(
+                        roast,
+                        **persona.webhook_kwargs(),
+                    )
                 
                 return True
     

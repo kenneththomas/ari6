@@ -3,6 +3,7 @@ import random
 import asyncio
 import sentience
 import ari_webhooks as wl
+from modules.personas import persona_store
 
 TRANSLATION_MODEL = sentience.GOOGLE_MODEL
 
@@ -95,10 +96,10 @@ class Translator:
                 # Language teaching mode
                 cathelp = await self.teach(message.content)
                 spanish_webhook = await get_webhook(catchannel, 'spanish')
+                persona = persona_store.get("luis") or persona_store.default()
                 await spanish_webhook.send(
                     cathelp,
-                    username=wl.webhook_library['luis'][0],
-                    avatar_url=wl.webhook_library['luis'][1],
+                    **persona.webhook_kwargs(),
                 )
         else:
             # Normal translation
@@ -112,15 +113,17 @@ class Translator:
         success, response = self.change_language(new_language)
         
         if success:
-            if new_language in wl.language_webhooks:
+            if new_language in wl.language_personas:
                 webhook = await get_webhook(catchannel, 'spanish')
-                translator_choice = random.choice(wl.language_webhooks[new_language])
-                translator_name = wl.webhook_library[translator_choice][0]
-                translator_avatar = wl.webhook_library[translator_choice][1]
+                available = [
+                    persona_store.get(key)
+                    for key in wl.language_personas[new_language]
+                ]
+                available = [persona for persona in available if persona is not None]
+                translator_persona = random.choice(available) if available else persona_store.default()
                 await webhook.send(
                     f'#cat {response}',
-                    username=translator_name,
-                    avatar_url=translator_avatar
+                    **translator_persona.webhook_kwargs(),
                 )
             else:
                 await message.channel.send(f'#cat {response}')

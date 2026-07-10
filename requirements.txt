@@ -1,8 +1,7 @@
 # Main ari6 bot runtime dependencies.
-discord.py>=2.3
+discord.py>=2.7.1
 requests>=2.31
 pytz>=2024.1
-atproto>=0.0.69
 
 # Web/search helpers used by chat_search.py and gatoanalytics.py.
 Flask>=3.0

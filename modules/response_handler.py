@@ -1,15 +1,26 @@
 import discord
 import sentience
-from modules.context_tools import enrich_cxstorage_with_image_descriptions, send_ai_response
+from modules.context_tools import enrich_cxstorage_with_image_descriptions
+from modules.persona_output import send_persona_response
+from modules.personas import persona_store
 from discord.ui import Button, View
 
 
 class ResponseView(View):
-    def __init__(self, responses, target_channel, cxstorage):
+    def __init__(
+        self,
+        responses,
+        target_channel,
+        cxstorage,
+        get_or_create_webhook,
+        persona,
+    ):
         super().__init__(timeout=300)  # 5 minute timeout
         self.responses = responses
         self.target_channel = target_channel
         self.cxstorage = cxstorage  # Store cxstorage as instance variable
+        self.get_or_create_webhook = get_or_create_webhook
+        self.persona = persona
 
     @discord.ui.button(label="Send A", style=discord.ButtonStyle.green)
     async def send_a_callback(self, interaction: discord.Interaction, button: Button):
@@ -28,7 +39,10 @@ class ResponseView(View):
             await enrich_cxstorage_with_image_descriptions(self.cxstorage)
             responses = []
             for _ in range(2):
-                response = await sentience.generate_text_openrouter(self.cxstorage)
+                response = await sentience.generate_text_openrouter(
+                    self.cxstorage,
+                    system_prompt=persona_store.system_prompt(self.persona),
+                )
                 responses.append(response)
 
             if self.cxstorage:
@@ -41,7 +55,13 @@ class ResponseView(View):
             embed.add_field(name="Option A", value=responses[0], inline=False)
             embed.add_field(name="Option B", value=responses[1], inline=False)
             
-            new_view = ResponseView(responses, self.target_channel, self.cxstorage)
+            new_view = ResponseView(
+                responses,
+                self.target_channel,
+                self.cxstorage,
+                self.get_or_create_webhook,
+                self.persona,
+            )
             await interaction.message.edit(embed=embed, view=new_view)
 
     @discord.ui.button(label="Reject", style=discord.ButtonStyle.red)
@@ -49,7 +69,13 @@ class ResponseView(View):
         await interaction.message.delete()
 
     async def _handle_response(self, interaction, index):
-        await send_ai_response(self.target_channel, self.responses[index], multiline_threshold=6)
+        await send_persona_response(
+            self.target_channel,
+            self.responses[index],
+            self.get_or_create_webhook,
+            persona=self.persona,
+            multiline_threshold=6,
+        )
         
         self.cxstorage.append({
             'role': 'assistant',
@@ -58,8 +84,14 @@ class ResponseView(View):
         
         await interaction.message.delete()
 
-async def handle_bot_channel_message(message, cxstorage, gatochannel):
+async def handle_bot_channel_message(
+    message,
+    cxstorage,
+    gatochannel,
+    get_or_create_webhook,
+):
     async with message.channel.typing():
+        persona = persona_store.default()
         if cxstorage:
             cxstorage.pop()
 
@@ -72,7 +104,10 @@ async def handle_bot_channel_message(message, cxstorage, gatochannel):
 
         responses = []
         for _ in range(2):
-            response = await sentience.generate_text_openrouter(cxstorage)
+            response = await sentience.generate_text_openrouter(
+                cxstorage,
+                system_prompt=persona_store.system_prompt(persona),
+            )
             responses.append(response)
 
         if cxstorage:
@@ -85,5 +120,11 @@ async def handle_bot_channel_message(message, cxstorage, gatochannel):
         embed.add_field(name="Option A", value=responses[0], inline=False)
         embed.add_field(name="Option B", value=responses[1], inline=False)
         
-        view = ResponseView(responses, gatochannel, cxstorage)
+        view = ResponseView(
+            responses,
+            gatochannel,
+            cxstorage,
+            get_or_create_webhook,
+            persona,
+        )
         await message.channel.send(embed=embed, view=view)
