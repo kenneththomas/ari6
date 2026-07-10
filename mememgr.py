@@ -1,7 +1,6 @@
 import random
 from re import compile
 import control
-import datetime
 
 bgbscanner = compile(r'whos [a-z][a-z][a-z]$')
 repeatercache = []

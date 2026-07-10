@@ -1,7 +1,4 @@
 import requests
-import json
-import time
-import datetime
 
 storage = {}
 previous_payloads = []

@@ -61,20 +61,13 @@ Output: {content}
 
     return content
 
-import personality
-import asyncio
-import random
 import anthropic
 claude = anthropic.Anthropic(api_key=maricon.anthropic_key)
 import re
-import csv
 import time
 import datetime
 import pytz
 import requests
-import numpy as np
-from sklearn.metrics.pairwise import cosine_similarity
-import pickle
 
 async def filter_relevant_messages(current_message, chat_history, filter_model='gpt-5-mini'):
     """

@@ -12,9 +12,6 @@ dbfilename = 'logs/gato.db'
 batch_buffer = []
 last_write_time = datetime.now()
 xp_buffer = {}
-trivia_questions = {}
-newquestion = {}
-questions_to_save = {}
 previous_xp_buffer = {}
 
 # Ensure the logs directory exists
@@ -56,24 +53,12 @@ for row in result:
     xp_buffer[row[0]] = row[1]
 # we use previous xp buffer to track changes to xp_buffer
 previous_xp_buffer = xp_buffer.copy()
-# create trivia_questions table
-c.execute('''CREATE TABLE IF NOT EXISTS trivia_questions (question text, answer text)''')
-# load trivia questions into memory, if there are no questions, add a sample one
-c.execute("SELECT * FROM trivia_questions")
-result = c.fetchall()
-if not result:
-    c.execute("INSERT INTO trivia_questions VALUES (?,?)", ('What is the capital of France?', 'Paris'))
-    conn.commit()
-    c.execute("SELECT * FROM trivia_questions")
-    result = c.fetchall()
-for row in result:
-    trivia_questions[row[0]] = row[1]
 conn.commit()
 conn.close()
 
 def flush_to_db():
     print('Flushing to database')
-    global batch_buffer, last_write_time, xp_buffer, questions_to_save
+    global batch_buffer, last_write_time, xp_buffer
     if not batch_buffer:
         return
 
@@ -94,12 +79,6 @@ def flush_to_db():
         # Update previous_xp_buffer after all changes are committed
         previous_xp_buffer.update({user: xp for user, xp in xp_updates})
     
-    #save trivia questions
-    for question, answer in questions_to_save.items():
-        print(f'Saving trivia question: {question} {answer}')
-        c.execute("INSERT OR REPLACE INTO trivia_questions VALUES (?,?)", (question, answer))
-    #reset questions_to_save
-    questions_to_save = {}
     conn.commit()
     conn.close()
     

@@ -1,7 +1,5 @@
 import discord
-import sentience
 import sentience2
-import aritooter as _  # ensures aritooter is loaded (may have side effects)
 from modules.context_tools import enrich_cxstorage_with_image_descriptions, send_ai_response
 from discord.ui import Button, View
 
