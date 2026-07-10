@@ -20,6 +20,11 @@ DEFAULT_FILTER_MODEL = "openai/gpt-5.4-mini"
 DEEPSEEK_MODEL = "deepseek/deepseek-v4-pro"
 GOOGLE_MODEL = "google/gemini-3.5-flash"
 OPENROUTER_BASE = "https://openrouter.ai/api/v1"
+OPENROUTER_MAX_ATTEMPTS = 3
+OPENROUTER_RETRYABLE_STATUS_CODES = {408, 429, 500, 502, 503, 504}
+# Log prompts and model output by default. Set this to False to retain only
+# model, token, and latency metadata for all calls.
+LOG_AI_CONTENT = True
 DEFAULT_SYSTEM_PROMPT = (
     "you are Ari, you are posting in a discord channel. you will respond with "
     "short informal messages. you will not refer to yourself as an AI."
@@ -42,13 +47,49 @@ def _validate_model(model):
     return model
 
 
-def _openrouter_chat(
+class OpenRouterResponseError(RuntimeError):
+    """Raised when OpenRouter returns a successful but malformed response."""
+
+
+def _retry_delay(response, attempt):
+    retry_after = response.headers.get("Retry-After", "") if response is not None else ""
+    try:
+        return min(max(0.0, float(retry_after)), 5.0)
+    except (TypeError, ValueError):
+        return min(0.5 * (2 ** (attempt - 1)), 2.0)
+
+
+def _loggable_messages(messages):
+    """Return messages suitable for logs without embedded base64 image data."""
+    loggable = []
+    for message in messages:
+        content = message.get("content", "")
+        if isinstance(content, list):
+            content_parts = []
+            for part in content:
+                if part.get("type") == "image_url":
+                    content_parts.append(
+                        {
+                            "type": "image_url",
+                            "image_url": {"url": "[image data omitted]"},
+                        }
+                    )
+                else:
+                    content_parts.append(part)
+            content = content_parts
+        loggable.append({"role": message.get("role", "unknown"), "content": content})
+    return loggable
+
+
+def openrouter_chat(
     messages,
     model,
     reasoning_disabled=False,
     log_style="full",
     max_tokens=4096,
     temperature=0.0,
+    timeout=120,
+    log_content=None,
 ):
     """Send a chat-completions request through OpenRouter."""
     model = _validate_model(model)
@@ -61,37 +102,77 @@ def _openrouter_chat(
     if reasoning_disabled:
         payload["reasoning"] = {"enabled": False}
 
+    headers = {
+        "Authorization": f"Bearer {_openrouter_key()}",
+        "Content-Type": "application/json",
+    }
     start_time = time.time()
-    response = requests.post(
-        f"{OPENROUTER_BASE}/chat/completions",
-        headers={
-            "Authorization": f"Bearer {_openrouter_key()}",
-            "Content-Type": "application/json",
-        },
-        json=payload,
-        timeout=120,
-    )
-    response.raise_for_status()
-    data = response.json()
+
+    response = None
+    for attempt in range(1, OPENROUTER_MAX_ATTEMPTS + 1):
+        try:
+            response = requests.post(
+                f"{OPENROUTER_BASE}/chat/completions",
+                headers=headers,
+                json=payload,
+                timeout=timeout,
+            )
+        except (requests.ConnectionError, requests.Timeout):
+            if attempt == OPENROUTER_MAX_ATTEMPTS:
+                raise
+            delay = _retry_delay(None, attempt)
+            print(f"OpenRouter request failed; retrying in {delay:.1f}s")
+            time.sleep(delay)
+            continue
+
+        if (
+            response.status_code in OPENROUTER_RETRYABLE_STATUS_CODES
+            and attempt < OPENROUTER_MAX_ATTEMPTS
+        ):
+            delay = _retry_delay(response, attempt)
+            print(
+                f"OpenRouter returned {response.status_code}; "
+                f"retrying in {delay:.1f}s"
+            )
+            time.sleep(delay)
+            continue
+
+        response.raise_for_status()
+        break
+
+    try:
+        data = response.json()
+        content = data["choices"][0]["message"]["content"]
+    except (KeyError, IndexError, TypeError, ValueError) as error:
+        raise OpenRouterResponseError(
+            "OpenRouter returned a response without message content"
+        ) from error
+
+    if not isinstance(content, str):
+        raise OpenRouterResponseError("OpenRouter message content was not text")
 
     latency_ms = (time.time() - start_time) * 1000
-    content = data["choices"][0]["message"]["content"]
     usage = data.get("usage", {})
+    if not isinstance(usage, dict):
+        usage = {}
+    if log_content is None:
+        log_content = LOG_AI_CONTENT
 
     if log_style == "lite":
-        print(f"AI CALL lite | latency={latency_ms:.0f}ms | output={content}")
-    else:
-        input_summary = [
-            {
-                "role": message["role"],
-                "content": (
-                    message.get("content", "")[:100] + "..."
-                    if len(message.get("content", "")) > 100
-                    else message.get("content", "")
-                ),
-            }
-            for message in messages
-        ]
+        log_line = (
+            f"AI CALL lite | model={model} | latency={latency_ms:.0f}ms | "
+            f"tokens={usage.get('total_tokens', 'N/A')}"
+        )
+        if log_content:
+            log_line += f" | output={content}"
+        print(log_line)
+    elif log_style == "full":
+        content_log = ""
+        if log_content:
+            content_log = (
+                f"Input: {_loggable_messages(messages)}\n"
+                f"Output: {content}\n"
+            )
         print(
             f"""
 === AI CALL ===
@@ -100,9 +181,7 @@ Input tokens: {usage.get('prompt_tokens', 'N/A')}
 Output tokens: {usage.get('completion_tokens', 'N/A')}
 Total tokens: {usage.get('total_tokens', 'N/A')}
 Latency: {latency_ms:.0f}ms
-Input: {input_summary}
-Output: {content}
-==============
+{content_log}==============
 """
         )
 
@@ -134,13 +213,13 @@ Return only a comma-separated list of numbers from 1-{len(numbered_history)}, or
 
     try:
         result = await asyncio.to_thread(
-            _openrouter_chat,
-            [{"role": "user", "content": filter_prompt}],
-            filter_model,
-            False,
-            "lite",
-            50,
-            0.0,
+            openrouter_chat,
+            messages=[{"role": "user", "content": filter_prompt}],
+            model=filter_model,
+            reasoning_disabled=True,
+            log_style="lite",
+            max_tokens=50,
+            temperature=0.0,
         )
         result = result.strip().lower()
         if result == "none":
@@ -195,13 +274,13 @@ async def generate_text(
     messages.append({"role": "user", "content": clean_prompt})
 
     return await asyncio.to_thread(
-        _openrouter_chat,
-        messages,
-        gmodel,
-        "kimi" in gmodel.lower(),
-        "full",
-        1200,
-        0.8,
+        openrouter_chat,
+        messages=messages,
+        model=gmodel,
+        reasoning_disabled=True,
+        log_style="full",
+        max_tokens=1200,
+        temperature=0.8,
     )
 
 
@@ -236,10 +315,10 @@ async def generate_text_openrouter(cxstorage, model=None, system_prompt=None):
         for message in cxstorage
     )
     return await asyncio.to_thread(
-        _openrouter_chat,
-        messages,
-        model,
-        "kimi" in model.lower(),
+        openrouter_chat,
+        messages=messages,
+        model=model,
+        reasoning_disabled="kimi" in model.lower(),
     )
 
 
@@ -259,13 +338,13 @@ async def precheck(prompt):
     ]
     return (
         await asyncio.to_thread(
-            _openrouter_chat,
-            messages,
-            DEFAULT_FILTER_MODEL,
-            False,
-            "lite",
-            20,
-            0.0,
+            openrouter_chat,
+            messages=messages,
+            model=DEFAULT_FILTER_MODEL,
+            reasoning_disabled=True,
+            log_style="lite",
+            max_tokens=20,
+            temperature=0.0,
         )
     ).strip().lower()
 

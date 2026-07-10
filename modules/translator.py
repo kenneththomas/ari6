@@ -41,9 +41,10 @@ class Translator:
         try:
             translated = await asyncio.wait_for(
                 asyncio.to_thread(
-                    sentience._openrouter_chat,
-                    messages,
-                    TRANSLATION_MODEL,
+                    sentience.openrouter_chat,
+                    messages=messages,
+                    model=TRANSLATION_MODEL,
+                    reasoning_disabled=True,
                     log_style="lite",
                 ),
                 timeout=15,
@@ -71,9 +72,10 @@ class Translator:
         try:
             return await asyncio.wait_for(
                 asyncio.to_thread(
-                    sentience._openrouter_chat,
-                    messages,
-                    TRANSLATION_MODEL,
+                    sentience.openrouter_chat,
+                    messages=messages,
+                    model=TRANSLATION_MODEL,
+                    reasoning_disabled=True,
                     log_style="lite",
                 ),
                 timeout=15,
