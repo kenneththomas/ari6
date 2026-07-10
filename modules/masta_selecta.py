@@ -86,7 +86,10 @@ async def handle_spotify_activity(message, get_or_create_webhook, barcochannel):
                 # Roast user's music taste with 40% chance
                 if mememgr.chance(40):
                     roast_prompt = f'{message.author.display_name} is listening to {npstring}, roast them for it. you can comment negative things about the artist or make fun of particular lyrics from that song. end with a skull emoji.'
-                    roast = await sentience.generate_text_gpt(roast_prompt, gmodel='gpt-4o')
+                    roast = await sentience.generate_text(
+                        roast_prompt,
+                        gmodel=sentience.DEFAULT_TEXT_MODEL,
+                    )
                     # Post as lamelo ball webhook
                     await barco_webhook.send(roast, username='lamelo ball', avatar_url=wl.webhook_library['lamelo ball'][1])
                 

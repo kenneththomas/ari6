@@ -1,7 +1,5 @@
 # Main ari6 bot runtime dependencies.
 discord.py>=2.3
-openai>=1.0
-anthropic>=0.34
 requests>=2.31
 pytz>=2024.1
 atproto>=0.0.69

@@ -7,7 +7,6 @@ import control as ct
 import aritooter
 import datetime
 import sentience
-import sentience2
 import random
 import ari_webhooks as wl
 import ctespn
@@ -268,23 +267,23 @@ async def on_message(message):
 
         async with message.channel.typing():
             await enrich_cxstorage_with_image_descriptions(cxstorage)
-            freemsg = await sentience2.generate_text_openrouter(cxstorage)
+            freemsg = await sentience.generate_text_openrouter(cxstorage)
             cxstorage.append({"role": "assistant", "content": freemsg})
 
             await send_ai_response(message.channel, freemsg, reply_to=message)
 
         return
-    gmodel = sentience2.DEFAULT_OPENROUTER_MODEL  # moonshotai/kimi-k2.5 with thinking disabled
+    gmodel = sentience.DEFAULT_OPENROUTER_MODEL  # moonshotai/kimi-k2.5 with thinking disabled
     if message.content.startswith('!gpt'):
         if message.content.startswith('!gpt5'):
-            gmodel = sentience2.DEFAULT_OPENROUTER_MODEL
+            gmodel = sentience.DEFAULT_OPENROUTER_MODEL
         if flipper.precheck:
             if 'yes' in await sentience.precheck(message.content):
                 await message.reply('popsicle')
                 return
         # Pass cxstorage as chat history for context filtering
         await enrich_cxstorage_with_image_descriptions(cxstorage)
-        response_text = await sentience2.generate_text_gpt(message.content, gmodel=gmodel, chat_history=cxstorage, use_context_filter=True)
+        response_text = await sentience.generate_text(message.content, gmodel=gmodel, chat_history=cxstorage, use_context_filter=True)
         await asyncio.sleep(1)
         await message.reply(response_text)
 
@@ -362,7 +361,7 @@ async def on_message(message):
         print(cxstorage)
         print('---')
         await enrich_cxstorage_with_image_descriptions(cxstorage)
-        skeet = await sentience2.generate_text_openrouter(cxstorage)
+        skeet = await sentience.generate_text_openrouter(cxstorage)
         aritooter.tootcontrol(skeet)
         print('posted skeet')
 
@@ -417,7 +416,7 @@ async def on_message(message):
 
         # Chance to generate and react with an emoji
         if mememgr.chance(35):
-            emoji = await sentience.generate_text_gpt(
+            emoji = await sentience.generate_text(
                 flipper.zp_msg,
                 "respond to messages with a single emoji that fits the message. the response should be an emoji and nothing else."
             )
@@ -436,7 +435,7 @@ async def on_message(message):
             if mememgr.chance(8):
                 webhook = await get_or_create_webhook(barcochannel, 'barco')
                 async with barcochannel.typing():
-                    zoomerpost = await sentience.generate_text_gpt(flipper.zp_msg, zoomer_prompt)
+                    zoomerpost = await sentience.generate_text(flipper.zp_msg, zoomer_prompt)
                     await webhook.send(
                         zoomerpost,
                         username='lamelo ball',
@@ -445,7 +444,11 @@ async def on_message(message):
         else:
             if mememgr.chance(50):
                 async with gatochannel.typing():
-                    zoomerpost = await sentience.generate_text_gpt(flipper.zp_msg, zoomer_prompt, 'gpt-4o')
+                    zoomerpost = await sentience.generate_text(
+                        flipper.zp_msg,
+                        zoomer_prompt,
+                        sentience.DEFAULT_TEXT_MODEL,
+                    )
                     webhook = await get_or_create_webhook(gatochannel, 'ari')
                     await webhook.send(
                         zoomerpost,
