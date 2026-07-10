@@ -3,8 +3,9 @@ import base64
 import maricon
 import os
 import time
+import sentience
 
-VISION_MODEL = "google/gemini-2.0-flash-001"
+VISION_MODEL = sentience.GOOGLE_MODEL
 OPENROUTER_BASE = "https://openrouter.ai/api/v1"
 
 

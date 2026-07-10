@@ -4,7 +4,7 @@ import asyncio
 import sentience
 import ari_webhooks as wl
 
-TRANSLATION_MODEL = "google/gemini-2.5-flash-lite"
+TRANSLATION_MODEL = sentience.GOOGLE_MODEL
 
 class Translator:
     def __init__(self):

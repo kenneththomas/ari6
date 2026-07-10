@@ -125,7 +125,7 @@ make a short casual comment as ari talking to this person. keep it brief (1-2 se
             return await sentience.generate_text_openrouter(
                 self.cxstorage,
                 system_prompt=prompt,
-                model='anthropic/claude-sonnet-4-6'
+                model=sentience.DEEPSEEK_MODEL
             )
         except:
             return "let me cook..."

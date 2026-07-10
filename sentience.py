@@ -12,9 +12,13 @@ import requests
 import maricon
 
 
+# Project-defined model registry. Keep model selection here rather than in the
+# environment so upgrades are explicit and version-controlled.
 DEFAULT_OPENROUTER_MODEL = "moonshotai/kimi-k2.5"
-DEFAULT_TEXT_MODEL = "openai/gpt-5-mini"
-DEFAULT_FILTER_MODEL = "openai/gpt-5-mini"
+DEFAULT_TEXT_MODEL = "openai/gpt-5.4-mini"
+DEFAULT_FILTER_MODEL = "openai/gpt-5.4-mini"
+DEEPSEEK_MODEL = "deepseek/deepseek-v4-pro"
+GOOGLE_MODEL = "google/gemini-3.5-flash"
 OPENROUTER_BASE = "https://openrouter.ai/api/v1"
 DEFAULT_SYSTEM_PROMPT = (
     "you are Ari, you are posting in a discord channel. you will respond with "

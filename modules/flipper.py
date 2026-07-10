@@ -1,6 +1,9 @@
+import sentience
+
+
 zoomerposting = False
 translation_enabled = False
-current_model = "moonshotai/kimi-k2.5"
+current_model = sentience.DEFAULT_OPENROUTER_MODEL
 spotify_enable = True
 cheap = True
 precheck = False
@@ -8,12 +11,12 @@ auto_skeeter = 0
 zp_last_msg_author = ''
 zp_msg = ''
 
-MODEL_HELP = """
+MODEL_HELP = f"""
 Available models:
-  moonshotai/kimi-k2.5  (default, reasoning disabled)
-  anthropic/claude-sonnet-4-6
-  anthropic/claude-3-5-haiku-latest
-  openai/gpt-4o
+  {sentience.DEFAULT_OPENROUTER_MODEL}  (default, reasoning disabled)
+  {sentience.DEEPSEEK_MODEL}
+  {sentience.GOOGLE_MODEL}
+  {sentience.DEFAULT_TEXT_MODEL}
 """
 
 def togglemgr(user, message):

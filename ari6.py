@@ -444,7 +444,11 @@ async def on_message(message):
         else:
             if mememgr.chance(50):
                 async with gatochannel.typing():
-                    zoomerpost = await sentience.generate_text(flipper.zp_msg, zoomer_prompt, 'openai/gpt-4o')
+                    zoomerpost = await sentience.generate_text(
+                        flipper.zp_msg,
+                        zoomer_prompt,
+                        sentience.DEFAULT_TEXT_MODEL,
+                    )
                     webhook = await get_or_create_webhook(gatochannel, 'ari')
                     await webhook.send(
                         zoomerpost,
