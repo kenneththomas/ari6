@@ -22,6 +22,7 @@ GOOGLE_MODEL = "google/gemini-3.5-flash"
 OPENROUTER_BASE = "https://openrouter.ai/api/v1"
 OPENROUTER_MAX_ATTEMPTS = 3
 OPENROUTER_RETRYABLE_STATUS_CODES = {408, 429, 500, 502, 503, 504}
+MISSING_API_KEY_MESSAGE = "No API key found."
 # Log prompts and model output by default. Set this to False to retain only
 # model, token, and latency metadata for all calls.
 LOG_AI_CONTENT = True
@@ -93,6 +94,11 @@ def openrouter_chat(
 ):
     """Send a chat-completions request through OpenRouter."""
     model = _validate_model(model)
+    try:
+        api_key = _openrouter_key()
+    except ValueError:
+        return MISSING_API_KEY_MESSAGE
+
     payload = {
         "model": model,
         "messages": messages,
@@ -103,7 +109,7 @@ def openrouter_chat(
         payload["reasoning"] = {"enabled": False}
 
     headers = {
-        "Authorization": f"Bearer {_openrouter_key()}",
+        "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
     }
     start_time = time.time()

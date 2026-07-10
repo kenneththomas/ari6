@@ -1,0 +1,2 @@
+# Optional Bluesky posting support used by aritooter.py.
+atproto>=0.0.69

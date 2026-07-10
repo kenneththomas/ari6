@@ -45,6 +45,13 @@ Run the main bot:
 python ari6.py
 ```
 
+Bluesky posting is optional. To enable it, install its extra dependency and
+provide `bskyuser` and `bskypass` in the existing local credential module:
+
+```sh
+python -m pip install -r requirements_bluesky.txt
+```
+
 ## Features
 
 - **Custom Commands:** React to specific commands with custom text responses, memes, or actions.
