@@ -2,7 +2,7 @@ import discord
 import random
 import asyncio
 from discord.ui import Button, View
-import sentience2
+import sentience
 import lumberjack as l
 
 BLACKJACK = 21
@@ -122,7 +122,7 @@ recent chat context:
 make a short casual comment as ari talking to this person. keep it brief (1-2 sentences), roasty but not mean. no emojis."""
 
         try:
-            return await sentience2.generate_text_openrouter(
+            return await sentience.generate_text_openrouter(
                 self.cxstorage,
                 system_prompt=prompt,
                 model='anthropic/claude-sonnet-4-6'

@@ -1,7 +1,7 @@
 import re
 import random
 import asyncio
-import sentience2
+import sentience
 import ari_webhooks as wl
 
 TRANSLATION_MODEL = "google/gemini-2.5-flash-lite"
@@ -41,7 +41,7 @@ class Translator:
         try:
             translated = await asyncio.wait_for(
                 asyncio.to_thread(
-                    sentience2._openrouter_chat,
+                    sentience._openrouter_chat,
                     messages,
                     TRANSLATION_MODEL,
                     log_style="lite",
@@ -71,7 +71,7 @@ class Translator:
         try:
             return await asyncio.wait_for(
                 asyncio.to_thread(
-                    sentience2._openrouter_chat,
+                    sentience._openrouter_chat,
                     messages,
                     TRANSLATION_MODEL,
                     log_style="lite",

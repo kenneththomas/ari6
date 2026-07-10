@@ -16,13 +16,10 @@ discord bot key
 
 personality.py gitignored because it has personal information
 
-python modules needed (should i create a proper dependencies?)
-discord
-openai
-Mastodon.py
-atproto
-anthropic
-ptyz
+install Python dependencies with `python -m pip install -r requirements.txt`
+
+set `OPENROUTER_API_KEY` in the service environment, or set `openrouter_key` in
+the gitignored `maricon.py` file
 
 thats it, its running already!
 

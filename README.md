@@ -26,6 +26,19 @@ python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
 
+Set an OpenRouter API key before starting the bot:
+
+```powershell
+$env:OPENROUTER_API_KEY = "your-key"
+```
+
+```sh
+export OPENROUTER_API_KEY="your-key"
+```
+
+For the existing personal deployment, `openrouter_key` in the gitignored
+`maricon.py` file is also supported.
+
 Run the main bot:
 
 ```sh

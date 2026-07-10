@@ -1,5 +1,5 @@
 import discord
-import sentience2
+import sentience
 from modules.context_tools import enrich_cxstorage_with_image_descriptions, send_ai_response
 from discord.ui import Button, View
 
@@ -28,7 +28,7 @@ class ResponseView(View):
             await enrich_cxstorage_with_image_descriptions(self.cxstorage)
             responses = []
             for _ in range(2):
-                response = await sentience2.generate_text_openrouter(self.cxstorage)
+                response = await sentience.generate_text_openrouter(self.cxstorage)
                 responses.append(response)
 
             if self.cxstorage:
@@ -72,7 +72,7 @@ async def handle_bot_channel_message(message, cxstorage, gatochannel):
 
         responses = []
         for _ in range(2):
-            response = await sentience2.generate_text_openrouter(cxstorage)
+            response = await sentience.generate_text_openrouter(cxstorage)
             responses.append(response)
 
         if cxstorage:
