@@ -14,7 +14,6 @@ class Translator:
             'russian', 'german', 'korean', 'greek', 'japanese',
             'portuguese', 'hebrew'
         ]
-        self.teacher_avatar = 'https://res.cloudinary.com/dr2rzyu6p/image/upload/v1710891819/noidfrqtvvxxqkme94vg.jpg'
 
     async def translate(self, text, reverse=False):
         """
@@ -94,7 +93,11 @@ class Translator:
                 # Language teaching mode
                 cathelp = await self.teach(message.content)
                 spanish_webhook = await get_webhook(catchannel, 'spanish')
-                await spanish_webhook.send(cathelp, username='luis', avatar_url=self.teacher_avatar)
+                await spanish_webhook.send(
+                    cathelp,
+                    username=wl.webhook_library['luis'][0],
+                    avatar_url=wl.webhook_library['luis'][1],
+                )
         else:
             # Normal translation
             translated = await self.translate(message.content)
@@ -131,11 +134,3 @@ class Translator:
             self.current_language = new_language.lower()
             return True, f"Translation language changed to {new_language}"
         return False, f"{new_language} is not a supported language"
-
-    def get_current_language(self):
-        """Return the currently set language"""
-        return self.current_language
-
-    def is_supported_language(self, language):
-        """Check if a language is supported"""
-        return language.lower() in self.available_languages

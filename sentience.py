@@ -1,21 +1,8 @@
 from openai import OpenAI
 import maricon
 client = OpenAI(api_key=maricon.gptkey)
-import asyncio
 import csv
 import time
-
-
-translate_language = 'spanish'
-
-async def gpt_translation(prompt, reverse=False):
-    language_prompt = f'Translate chatroom message from english to {translate_language}, keep similar grammar/formality:'
-    if reverse:
-        language_prompt = f'Translate chatroom message from {translate_language} to english, keep similar grammar/formality:'
-    try:
-        return await asyncio.wait_for(generate_text_gpt_translation(language_prompt + '\n' +  prompt), timeout=15)
-    except asyncio.TimeoutError:
-        return "obama"
 
 async def generate_text_gpt(prompt, sysprompt='you are Ari, you are posting in a discord channel. you will respond with short informal messages. you will not refer to yourself as an AI.', gmodel='gpt-4o-mini'):
 
@@ -62,21 +49,6 @@ gato_slang = {
     'barinade' : 'bari',
     'as an ai language model' : '',
 }
-
-async def generate_text_gpt_translation(prompt):
-
-    full_prompt = [
-        {"role": "user", "content": f"{prompt}"}
-        ]
-
-    response = client.chat.completions.create(model="gpt-4o-mini",
-    max_tokens=1200,
-    temperature=.8,
-    messages = full_prompt)
-
-    generated_text = response.choices[0].message.content.strip().lower()
-
-    return generated_text
 
 async def ucantdothat(user, msg):
     prompt = f'{user} tried to run a bot command and they do not have permission to do so. "{msg}" and tell them to stop but in like a exaggerated funny karen kind of way. use text only.'
