@@ -17,27 +17,6 @@ async def gpt_translation(prompt, reverse=False):
     except asyncio.TimeoutError:
         return "obama"
 
-async def ask_trivia_question(question):
-    question_prompt = f'You are roleplaying as a funny and creative trivia host. Add some flavor to ask the following question: {question} in less than 4 sentences.'
-    try:
-        return await asyncio.wait_for(trivia_gpt(question_prompt), timeout=15)
-    except asyncio.TimeoutError:
-        return "obama"
-
-async def congratulate_trivia_winner(winner, question, answer):
-    congrats_prompt = f'You are roleplaying as a funny and creative trivia host. Add some flavor to succinctly congratulate {winner} for answering the question "{question}" with "{answer}"'
-    try:
-        return await asyncio.wait_for(trivia_gpt(congrats_prompt), timeout=15)
-    except asyncio.TimeoutError:
-        return "obama"
-
-async def trivia_hint(question, answer):
-    almost_prompt = f'give a humorous hint to to the question "{question}" without revealing the answer'
-    try:
-        return await asyncio.wait_for(trivia_gpt(almost_prompt), timeout=15)
-    except asyncio.TimeoutError:
-        return "obama"
-
 async def generate_text_gpt(prompt, sysprompt='you are Ari, you are posting in a discord channel. you will respond with short informal messages. you will not refer to yourself as an AI.', gmodel='gpt-4o-mini'):
 
     prompt = prompt.replace('!gpt4', '')
@@ -98,22 +77,6 @@ async def generate_text_gpt_translation(prompt):
     generated_text = response.choices[0].message.content.strip().lower()
 
     return generated_text
-
-async def trivia_gpt(prompt,trivia_model='gpt-4o'):
-
-    full_prompt = [
-        {"role": "user", "content": f"{prompt}"}
-        ]
-
-    response = client.chat.completions.create(model=trivia_model,
-    max_tokens=200,
-    temperature=.8,
-    messages = full_prompt)
-
-    generated_text = response.choices[0].message.content.strip().lower()
-
-    return generated_text
-
 
 async def ucantdothat(user, msg):
     prompt = f'{user} tried to run a bot command and they do not have permission to do so. "{msg}" and tell them to stop but in like a exaggerated funny karen kind of way. use text only.'

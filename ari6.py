@@ -26,7 +26,6 @@ import modules.flipper as flipper
 import modules.scheduled_messages as scheduled_messages
 from modules.context_tools import enrich_cxstorage_with_image_descriptions, send_ai_response
 import chat_clipper
-from modules.trivia_handler import TriviaHandler
 import modules.response_handler as response_handler
 import modules.blackjack as blackjack
 from modules.message_queue import MessageQueue
@@ -69,8 +68,6 @@ configchannel = None
 
 
 starttime = datetime.datetime.now()
-
-trivia_handler = TriviaHandler()
 
 summon_timeout = 120  # Default timeout in seconds
 
@@ -389,20 +386,6 @@ async def on_message(message):
     if message.content == '!top':
         top_users = l.get_top_10_xp_users()
         await message.channel.send(top_users)
-
-    # Trivia commands
-    if message.content == '!trivia':
-        await trivia_handler.handle_trivia_command(message)
-    elif message.content == '!hint':
-        await trivia_handler.handle_trivia_hint(message)
-    elif message.content.startswith('!addquestion'):
-        await trivia_handler.add_trivia_question(message)
-    elif message.content.startswith('!savequestion'):
-        await trivia_handler.save_trivia_question(message)
-    elif message.content == '!triviahelp':
-        await trivia_handler.show_help(message)
-    else:
-        await trivia_handler.check_trivia_answer(message)
 
     # Blackjack command
     if message.content.startswith('!blackjack') or message.content.startswith('!barijack'):
