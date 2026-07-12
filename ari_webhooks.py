@@ -6,10 +6,9 @@ language_personas = {
     "korean": ["asian-ariana"],
     "japanese": ["asian-ariana"],
     "german": ["musicsmusic"],
-    "russian": ["obama", "brandon"],
+    "russian": ["obama"],
     "french": ["obama"],
     "italian": ["obama"],
     "arabic": ["obama"],
     "greek": ["obama"],
-    "portuguese": ["james-harden"],
 }
