@@ -119,6 +119,35 @@ class ScheduledMessagesSchedulerTests(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(next_run, resumes_at + datetime.timedelta(hours=1))
 
+    async def test_resume_job_ends_snooze_and_runs_immediately(self):
+        self.write_jobs(
+            [
+                {
+                    "id": "smoke_alarm",
+                    "trigger": {"type": "interval", "seconds": 3600},
+                    "action": {
+                        "type": "discord_message",
+                        "channel": 123,
+                        "message": "*chirp*",
+                    },
+                }
+            ]
+        )
+        scheduler = self.scheduler()
+        changed_at = datetime.datetime(2026, 7, 13, 14, 37, tzinfo=UTC)
+        removed_at = changed_at + datetime.timedelta(hours=2)
+        scheduler.snooze_job(
+            "smoke_alarm",
+            datetime.timedelta(hours=24),
+            now=changed_at,
+        )
+
+        self.assertTrue(scheduler.resume_job("smoke_alarm", now=removed_at))
+        self.assertFalse(scheduler.resume_job("smoke_alarm", now=removed_at))
+        await scheduler.run_once(removed_at)
+
+        self.channel.send.assert_awaited_once_with("*chirp*")
+
     async def test_daily_job_uses_configured_timezone(self):
         self.write_jobs(
             [
@@ -166,6 +195,25 @@ class ScheduledMessagesSchedulerTests(unittest.IsolatedAsyncioTestCase):
             SimpleNamespace(content="!change battery", channel=self.channel)
         )
         self.assertFalse(ignored)
+
+    async def test_remove_battery_command_reenables_chirping_for_anyone(self):
+        message = SimpleNamespace(
+            content="!removebattery",
+            channel=self.channel,
+            author=SimpleNamespace(id=999),
+        )
+
+        with patch(
+            "modules.scheduled_messages.remove_smoke_alarm_battery",
+            return_value=True,
+        ) as remove_battery:
+            handled = await handle_scheduled_message_command(message)
+
+        self.assertTrue(handled)
+        remove_battery.assert_called_once_with()
+        self.channel.send.assert_awaited_once_with(
+            "battery removed. the smoke alarm is chirping again"
+        )
 
 
 if __name__ == "__main__":

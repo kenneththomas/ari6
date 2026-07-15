@@ -141,6 +141,20 @@ class ScheduledMessagesScheduler:
             raise RuntimeError("could not persist scheduled job state")
         return until
 
+    def resume_job(self, job_id, now=None):
+        if self._job(job_id) is None:
+            raise KeyError(f"unknown scheduled job: {job_id}")
+        job_state = self.state["jobs"].setdefault(job_id, {})
+        if "snoozed_until" not in job_state:
+            return False
+
+        now = _as_utc(now or self.now_factory())
+        job_state.pop("snoozed_until", None)
+        job_state["next_run_at"] = _serialize_datetime(now)
+        if not self._save_state():
+            raise RuntimeError("could not persist scheduled job state")
+        return True
+
     async def _send_discord_message(self, job):
         action = job["action"]
         channel = self.client.get_channel(int(action["channel"]))
@@ -290,17 +304,31 @@ def change_smoke_alarm_battery(now=None):
     )
 
 
+def remove_smoke_alarm_battery(now=None):
+    if scheduled_messages_scheduler is None:
+        raise RuntimeError("scheduled messages have not started")
+    return scheduled_messages_scheduler.resume_job("smoke_alarm", now=now)
+
+
 async def handle_scheduled_message_command(message):
     """Handle scheduler commands, returning whether the message was consumed."""
-    if message.content.strip().lower() != "!changebattery":
+    command = message.content.strip().lower()
+    if command not in ("!changebattery", "!removebattery"):
         return False
 
     try:
-        change_smoke_alarm_battery()
-        await message.channel.send(
-            "battery changed. the smoke alarm is good for 24 hours"
-        )
+        if command == "!changebattery":
+            change_smoke_alarm_battery()
+            await message.channel.send(
+                "battery changed. the smoke alarm is good for 24 hours"
+            )
+        elif remove_smoke_alarm_battery():
+            await message.channel.send(
+                "battery removed. the smoke alarm is chirping again"
+            )
+        else:
+            await message.channel.send("the battery is already out")
     except (KeyError, RuntimeError) as e:
-        print(f"Could not change smoke alarm battery: {e}")
+        print(f"Could not update smoke alarm battery: {e}")
         await message.channel.send("the smoke alarm is not awake yet")
     return True
