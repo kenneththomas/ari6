@@ -112,8 +112,8 @@ async def on_ready():
     start_duration = rdytime - starttime
     print(f'Bot started in {start_duration}')
 
-    # Initialize scheduled messages from CSV and start the scheduled messages loop.
-    scheduled_messages.start_scheduled_messages(client)
+    # Initialize configured jobs and start the scheduled messages loop.
+    scheduled_messages.start_scheduled_messages(client, get_or_create_webhook)
 
 
 
@@ -216,6 +216,9 @@ async def on_message(message):
             message,
             is_admin=ct.admincheck(str(message.author)),
         )
+        return
+
+    if await scheduled_messages.handle_scheduled_message_command(message):
         return
 
 #toggle main_enabled with !main

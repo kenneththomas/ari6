@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "jobs": [
+    {
+      "id": "daily_image",
+      "trigger": {
+        "type": "daily",
+        "time": "03:00",
+        "timezone": "America/New_York"
+      },
+      "action": {
+        "type": "discord_message",
+        "channel": 205903143471415296,
+        "message": "https://res.cloudinary.com/dr2rzyu6p/image/upload/v1742693214/image0_nbkooo.jpg"
+      }
+    },
+    {
+      "id": "smoke_alarm",
+      "trigger": {
+        "type": "interval",
+        "seconds": 3600,
+        "initial_delay_seconds": 300
+      },
+      "action": {
+        "type": "discord_message",
+        "channel": 205903143471415296,
+        "message": "*chirp*",
+        "webhook": {
+          "name": "smoke alarm",
+          "username": "smoke alarm",
+          "avatar_url": "https://res.cloudinary.com/dr2rzyu6p/image/upload/v1783979899/72491564-b4b9-48ba-b553-e1116f2d2dd2.png"
+        }
+      }
+    }
+  ]
+}

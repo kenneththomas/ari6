@@ -87,6 +87,18 @@ needed.
 - **Emoji Reactions:** Automatically react to certain messages with emojis to enhance interaction.
 - **Webhook Integration:** Use webhooks for advanced message handling and custom notifications.
 
+## Scheduled jobs
+
+Scheduled jobs are configured in `resources/scheduled_jobs.json`. The scheduler
+supports daily jobs in a named timezone, interval jobs, webhook identities, and
+registered action handlers for jobs that need to run code instead of sending a
+static message.
+
+The smoke alarm posts its first `*chirp*` to the main `gato` channel five
+minutes after its schedule is first initialized, then chirps every hour. Anyone
+can run `!changebattery` to silence it for exactly 24 hours. When the silence
+period expires, it chirps once and resumes its hourly schedule.
+
 ## Contributing
 
 This bot is meant for my personal use and not for other discords but feel free to repurpose it for yours.

@@ -5,6 +5,7 @@ logs/
 *.pyc
 personality.py
 resources/scheduled_messages_state.json
+resources/scheduled_messages_state.json.tmp
 resources/personas_state.json
 resources/personas_state.json.tmp
 .vscode/

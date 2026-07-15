@@ -1,136 +1,306 @@
 import asyncio
-import csv
 import datetime
-import hashlib
 import json
-import os
+from pathlib import Path
 from zoneinfo import ZoneInfo
 
 
-SCHEDULED_MESSAGES_STATE_PATH = os.path.join("resources", "scheduled_messages_state.json")
+RESOURCE_DIR = Path(__file__).resolve().parent.parent / "resources"
+SCHEDULED_JOBS_PATH = RESOURCE_DIR / "scheduled_jobs.json"
+SCHEDULED_MESSAGES_STATE_PATH = RESOURCE_DIR / "scheduled_messages_state.json"
+UTC = datetime.timezone.utc
 
-scheduled_messages_jobs = []
+scheduled_messages_scheduler = None
 scheduled_messages_task = None
 
 
-async def send_scheduled_message(client, job):
-    """Send the scheduled message to the appropriate channel."""
-    channel = client.get_channel(job["channel"])
-    if channel:
-        await channel.send(job["message"])
-    else:
-        print(f"Channel with ID {job['channel']} not found")
+def _as_utc(value: datetime.datetime) -> datetime.datetime:
+    if value.tzinfo is None:
+        raise ValueError("scheduler datetimes must include a timezone")
+    return value.astimezone(UTC)
 
 
-def _scheduled_job_key(job) -> str:
-    # Stable, deterministic key for state tracking across restarts.
-    base = f"{job.get('channel')}|{job.get('time')}|{job.get('message')}"
-    return hashlib.sha1(base.encode("utf-8")).hexdigest()
-
-
-def _load_scheduled_messages_state() -> dict:
+def _parse_datetime(value):
+    if not isinstance(value, str) or not value:
+        return None
     try:
-        with open(SCHEDULED_MESSAGES_STATE_PATH, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        return data if isinstance(data, dict) else {}
-    except FileNotFoundError:
-        return {}
-    except Exception as e:
-        print(f"Error reading scheduled messages state: {e}")
-        return {}
+        return _as_utc(datetime.datetime.fromisoformat(value))
+    except ValueError:
+        return None
 
 
-def _save_scheduled_messages_state(state: dict) -> None:
-    try:
-        os.makedirs(os.path.dirname(SCHEDULED_MESSAGES_STATE_PATH), exist_ok=True)
-        tmp_path = SCHEDULED_MESSAGES_STATE_PATH + ".tmp"
-        with open(tmp_path, "w", encoding="utf-8") as f:
-            json.dump(state, f, ensure_ascii=False, indent=2, sort_keys=True)
-        os.replace(tmp_path, SCHEDULED_MESSAGES_STATE_PATH)
-    except Exception as e:
-        print(f"Error saving scheduled messages state: {e}")
+def _serialize_datetime(value: datetime.datetime) -> str:
+    return _as_utc(value).isoformat()
 
 
-def load_scheduled_messages():
-    """Load scheduled messages from the CSV file."""
-    scheduled = []
-    state = _load_scheduled_messages_state()
-    try:
-        with open("resources/scheduled_messages.csv", newline='') as csvfile:
-            reader = csv.DictReader(csvfile)
-            for row in reader:
-                time_str = row["time"].strip()         # expects format HH:MM (24-hour)
-                message = row["message"].strip()
-                repeat = row["repeat"].strip().lower() in ["true", "1"]
-                channel = int(row["channel"].strip())
-                job = {
-                    "time": time_str,
-                    "message": message,
-                    "repeat": repeat,
-                    "channel": channel,
-                    "last_sent": None  # keeps track of the last day this message was sent
-                }
-                key = _scheduled_job_key(job)
-                last_sent = state.get(key, {}).get("last_sent")
-                if isinstance(last_sent, str) and last_sent:
-                    try:
-                        job["last_sent"] = datetime.date.fromisoformat(last_sent)
-                    except ValueError:
-                        job["last_sent"] = None
+class ScheduledMessagesScheduler:
+    """Run configured jobs and keep their timing state across bot restarts."""
 
-                # If this is a one-time job and it has ever been sent, don't schedule it again.
-                if not job["repeat"] and job.get("last_sent") is not None:
-                    continue
+    def __init__(
+        self,
+        client,
+        get_or_create_webhook,
+        jobs_path=SCHEDULED_JOBS_PATH,
+        state_path=SCHEDULED_MESSAGES_STATE_PATH,
+        now_factory=None,
+    ):
+        self.client = client
+        self.get_or_create_webhook = get_or_create_webhook
+        self.jobs_path = Path(jobs_path)
+        self.state_path = Path(state_path)
+        self.now_factory = now_factory or (lambda: datetime.datetime.now(UTC))
+        self.jobs = self._load_jobs()
+        self.state = self._load_state()
+        self.action_handlers = {
+            "discord_message": self._send_discord_message,
+        }
 
-                scheduled.append(job)
-    except Exception as e:
-        print(f"Error reading scheduled messages: {e}")
-    return scheduled
+    def _load_jobs(self):
+        try:
+            data = json.loads(self.jobs_path.read_text(encoding="utf-8"))
+            jobs = data.get("jobs", [])
+            if not isinstance(jobs, list):
+                raise ValueError("jobs must be a list")
+
+            seen_ids = set()
+            for job in jobs:
+                job_id = job.get("id")
+                if not isinstance(job_id, str) or not job_id:
+                    raise ValueError("every scheduled job must have an id")
+                if job_id in seen_ids:
+                    raise ValueError(f"duplicate scheduled job id: {job_id}")
+                seen_ids.add(job_id)
+                self._validate_trigger(job.get("trigger", {}))
+                if not isinstance(job.get("action"), dict):
+                    raise ValueError(f"scheduled job {job_id} must have an action")
+            return jobs
+        except FileNotFoundError:
+            print(f"Scheduled jobs file not found: {self.jobs_path}")
+        except Exception as e:
+            print(f"Error reading scheduled jobs: {e}")
+        return []
+
+    @staticmethod
+    def _validate_trigger(trigger):
+        trigger_type = trigger.get("type")
+        if trigger_type == "daily":
+            datetime.time.fromisoformat(trigger["time"])
+            ZoneInfo(trigger["timezone"])
+            return
+        if trigger_type == "interval":
+            if float(trigger["seconds"]) <= 0:
+                raise ValueError("interval seconds must be positive")
+            if float(trigger.get("initial_delay_seconds", 0)) < 0:
+                raise ValueError("interval initial delay must not be negative")
+            if trigger.get("align_to") not in (None, "hour"):
+                raise ValueError("interval align_to must be 'hour' when provided")
+            return
+        raise ValueError(f"unsupported trigger type: {trigger_type}")
+
+    def _load_state(self):
+        try:
+            data = json.loads(self.state_path.read_text(encoding="utf-8"))
+            jobs = data.get("jobs", {})
+            return {"jobs": jobs if isinstance(jobs, dict) else {}}
+        except FileNotFoundError:
+            return {"jobs": {}}
+        except Exception as e:
+            print(f"Error reading scheduled messages state: {e}")
+            return {"jobs": {}}
+
+    def _save_state(self):
+        try:
+            self.state_path.parent.mkdir(parents=True, exist_ok=True)
+            tmp_path = self.state_path.with_suffix(self.state_path.suffix + ".tmp")
+            tmp_path.write_text(
+                json.dumps(self.state, ensure_ascii=False, indent=2, sort_keys=True),
+                encoding="utf-8",
+            )
+            tmp_path.replace(self.state_path)
+            return True
+        except Exception as e:
+            print(f"Error saving scheduled messages state: {e}")
+            return False
+
+    def register_action(self, name, handler):
+        """Register an async action handler for future scheduler integrations."""
+        self.action_handlers[name] = handler
+
+    def _job(self, job_id):
+        return next((job for job in self.jobs if job["id"] == job_id), None)
+
+    def snooze_job(self, job_id, duration, now=None):
+        if self._job(job_id) is None:
+            raise KeyError(f"unknown scheduled job: {job_id}")
+        now = _as_utc(now or self.now_factory())
+        until = now + duration
+        job_state = self.state["jobs"].setdefault(job_id, {})
+        job_state["snoozed_until"] = _serialize_datetime(until)
+        job_state["next_run_at"] = _serialize_datetime(until)
+        if not self._save_state():
+            raise RuntimeError("could not persist scheduled job state")
+        return until
+
+    async def _send_discord_message(self, job):
+        action = job["action"]
+        channel = self.client.get_channel(int(action["channel"]))
+        if channel is None:
+            raise RuntimeError(f"Channel with ID {action['channel']} not found")
+
+        webhook_config = action.get("webhook")
+        if webhook_config:
+            webhook = await self.get_or_create_webhook(
+                channel,
+                webhook_config["name"],
+            )
+            await webhook.send(
+                action["message"],
+                username=webhook_config.get("username", webhook_config["name"]),
+                avatar_url=webhook_config.get("avatar_url"),
+            )
+            return
+
+        await channel.send(action["message"])
+
+    @staticmethod
+    def _next_daily_run(trigger, after):
+        timezone = ZoneInfo(trigger["timezone"])
+        local_after = after.astimezone(timezone)
+        scheduled_time = datetime.time.fromisoformat(trigger["time"])
+        candidate = datetime.datetime.combine(
+            local_after.date(),
+            scheduled_time,
+            tzinfo=timezone,
+        )
+        if candidate <= local_after:
+            candidate += datetime.timedelta(days=1)
+        return candidate.astimezone(UTC)
+
+    @staticmethod
+    def _next_interval_run(trigger, after):
+        if trigger.get("align_to") == "hour":
+            return after.replace(minute=0, second=0, microsecond=0) + datetime.timedelta(hours=1)
+        return after + datetime.timedelta(seconds=float(trigger["seconds"]))
+
+    def _initial_run(self, job, now):
+        trigger = job["trigger"]
+        if trigger["type"] == "daily":
+            return self._next_daily_run(trigger, now)
+        if "initial_delay_seconds" in trigger:
+            return now + datetime.timedelta(
+                seconds=float(trigger["initial_delay_seconds"])
+            )
+        return self._next_interval_run(trigger, now)
+
+    def _run_after_success(self, job, due_at, now):
+        trigger = job["trigger"]
+        if trigger["type"] == "daily":
+            return self._next_daily_run(trigger, now)
+
+        seconds = float(trigger["seconds"])
+        next_run = due_at + datetime.timedelta(seconds=seconds)
+        while next_run <= now:
+            next_run += datetime.timedelta(seconds=seconds)
+        return next_run
+
+    async def run_once(self, now=None):
+        now = _as_utc(now or self.now_factory())
+        state_changed = False
+
+        for job in self.jobs:
+            job_id = job["id"]
+            job_state = self.state["jobs"].setdefault(job_id, {})
+            due_at = _parse_datetime(job_state.get("next_run_at"))
+            if due_at is None:
+                due_at = self._initial_run(job, now)
+                job_state["next_run_at"] = _serialize_datetime(due_at)
+                state_changed = True
+
+            snoozed_until = _parse_datetime(job_state.get("snoozed_until"))
+            if snoozed_until is not None and snoozed_until > now:
+                if due_at != snoozed_until:
+                    job_state["next_run_at"] = _serialize_datetime(snoozed_until)
+                    state_changed = True
+                continue
+            if snoozed_until is not None:
+                job_state.pop("snoozed_until", None)
+                state_changed = True
+
+            if due_at > now:
+                continue
+
+            action_name = job["action"].get("type")
+            handler = self.action_handlers.get(action_name)
+            if handler is None:
+                print(f"No action handler registered for scheduled job {job_id}: {action_name}")
+                job_state["next_run_at"] = _serialize_datetime(
+                    now + datetime.timedelta(minutes=5)
+                )
+                state_changed = True
+                continue
+
+            try:
+                await handler(job)
+            except Exception as e:
+                print(f"Error running scheduled job {job_id}: {e}")
+                job_state["next_run_at"] = _serialize_datetime(
+                    now + datetime.timedelta(minutes=1)
+                )
+            else:
+                job_state["last_run_at"] = _serialize_datetime(now)
+                job_state["next_run_at"] = _serialize_datetime(
+                    self._run_after_success(job, due_at, now)
+                )
+            state_changed = True
+
+        if state_changed:
+            self._save_state()
+
+    async def run_forever(self):
+        while True:
+            await self.run_once()
+            await asyncio.sleep(20)
 
 
-async def scheduled_messages_loop(client):
-    """Loop that checks every 20 seconds to send scheduled messages at the correct EST time."""
-    global scheduled_messages_jobs
-    while True:
-        now = datetime.datetime.now(ZoneInfo("America/New_York"))
-        current_time_str = now.strftime("%H:%M")
-        current_date = now.date()
-        state = None  # lazy-load only if we need to write
-        for job in scheduled_messages_jobs[:]:  # iterate on a copy so we can remove non-repeat jobs
-            if job["time"] == current_time_str:
-                if not job["repeat"]:
-                    # non-repeating: send only once, then remove from the list
-                    if job.get("last_sent") is None:
-                        await send_scheduled_message(client, job)
-                        job["last_sent"] = current_date
-                        if state is None:
-                            state = _load_scheduled_messages_state()
-                        state[_scheduled_job_key(job)] = {"last_sent": current_date.isoformat()}
-                        _save_scheduled_messages_state(state)
-                        scheduled_messages_jobs.remove(job)
-                else:
-                    # repeating: check if we already sent today
-                    if job.get("last_sent") != current_date:
-                        await send_scheduled_message(client, job)
-                        job["last_sent"] = current_date
-                        if state is None:
-                            state = _load_scheduled_messages_state()
-                        state[_scheduled_job_key(job)] = {"last_sent": current_date.isoformat()}
-                        _save_scheduled_messages_state(state)
-        await asyncio.sleep(20)
-
-
-def start_scheduled_messages(client):
-    """Reload jobs and start a single scheduler loop for the current Discord client."""
-    global scheduled_messages_jobs
+def start_scheduled_messages(client, get_or_create_webhook):
+    """Start one scheduler loop for the current Discord client."""
+    global scheduled_messages_scheduler
     global scheduled_messages_task
 
     if scheduled_messages_task and not scheduled_messages_task.done():
-        try:
-            scheduled_messages_task.cancel()
-        except Exception:
-            pass
+        return scheduled_messages_task
 
-    scheduled_messages_jobs = load_scheduled_messages()
-    scheduled_messages_task = asyncio.create_task(scheduled_messages_loop(client))
+    scheduled_messages_scheduler = ScheduledMessagesScheduler(
+        client,
+        get_or_create_webhook,
+    )
+    scheduled_messages_task = asyncio.create_task(
+        scheduled_messages_scheduler.run_forever()
+    )
     return scheduled_messages_task
+
+
+def change_smoke_alarm_battery(now=None):
+    if scheduled_messages_scheduler is None:
+        raise RuntimeError("scheduled messages have not started")
+    return scheduled_messages_scheduler.snooze_job(
+        "smoke_alarm",
+        datetime.timedelta(hours=24),
+        now=now,
+    )
+
+
+async def handle_scheduled_message_command(message):
+    """Handle scheduler commands, returning whether the message was consumed."""
+    if message.content.strip().lower() != "!changebattery":
+        return False
+
+    try:
+        change_smoke_alarm_battery()
+        await message.channel.send(
+            "battery changed. the smoke alarm is good for 24 hours"
+        )
+    except (KeyError, RuntimeError) as e:
+        print(f"Could not change smoke alarm battery: {e}")
+        await message.channel.send("the smoke alarm is not awake yet")
+    return True
