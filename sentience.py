@@ -26,6 +26,25 @@ MISSING_API_KEY_MESSAGE = "No API key found."
 # Log prompts and model output by default. Set this to False to retain only
 # model, token, and latency metadata for all calls.
 LOG_AI_CONTENT = True
+AI_METADATA_LOGGER = None
+
+
+def set_ai_metadata_logger(logger):
+    """Configure a best-effort sink for metadata-only AI call records."""
+    global AI_METADATA_LOGGER
+    AI_METADATA_LOGGER = logger
+
+
+def _log_ai_metadata(**metadata):
+    if AI_METADATA_LOGGER is None:
+        return
+    try:
+        AI_METADATA_LOGGER(**metadata)
+    except Exception as error:
+        # Telemetry must never turn a successful AI request into a bot failure.
+        print(f"Could not persist AI call metadata: {error}")
+
+
 def _openrouter_key():
     key = getattr(maricon, "openrouter_key", None) or os.environ.get("OPENROUTER_API_KEY", "")
     if not key:
@@ -85,6 +104,7 @@ def openrouter_chat(
     temperature=0.0,
     timeout=120,
     log_content=None,
+    purpose=None,
 ):
     """Send a chat-completions request through OpenRouter."""
     model = _validate_model(model)
@@ -109,7 +129,27 @@ def openrouter_chat(
     start_time = time.time()
 
     response = None
+    attempt = 0
+
+    def record_metadata(success, usage=None, error_type=None):
+        usage = usage if isinstance(usage, dict) else {}
+        _log_ai_metadata(
+            provider="openrouter",
+            model=model,
+            purpose=purpose,
+            input_tokens=usage.get("prompt_tokens"),
+            output_tokens=usage.get("completion_tokens"),
+            total_tokens=usage.get("total_tokens"),
+            latency_ms=(time.time() - start_time) * 1000,
+            attempt_count=attempt,
+            success=success,
+            status_code=getattr(response, "status_code", None),
+            error_type=error_type,
+            cost=usage.get("cost"),
+        )
+
     for attempt in range(1, OPENROUTER_MAX_ATTEMPTS + 1):
+        response = None
         try:
             response = requests.post(
                 f"{OPENROUTER_BASE}/chat/completions",
@@ -117,8 +157,9 @@ def openrouter_chat(
                 json=payload,
                 timeout=timeout,
             )
-        except (requests.ConnectionError, requests.Timeout):
+        except (requests.ConnectionError, requests.Timeout) as error:
             if attempt == OPENROUTER_MAX_ATTEMPTS:
+                record_metadata(False, error_type=type(error).__name__)
                 raise
             delay = _retry_delay(None, attempt)
             print(f"OpenRouter request failed; retrying in {delay:.1f}s")
@@ -137,24 +178,31 @@ def openrouter_chat(
             time.sleep(delay)
             continue
 
-        response.raise_for_status()
+        try:
+            response.raise_for_status()
+        except requests.RequestException as error:
+            record_metadata(False, error_type=type(error).__name__)
+            raise
         break
 
     try:
         data = response.json()
         content = data["choices"][0]["message"]["content"]
     except (KeyError, IndexError, TypeError, ValueError) as error:
+        record_metadata(False, error_type="OpenRouterResponseError")
         raise OpenRouterResponseError(
             "OpenRouter returned a response without message content"
         ) from error
 
     if not isinstance(content, str):
+        record_metadata(False, error_type="OpenRouterResponseError")
         raise OpenRouterResponseError("OpenRouter message content was not text")
 
     latency_ms = (time.time() - start_time) * 1000
     usage = data.get("usage", {})
     if not isinstance(usage, dict):
         usage = {}
+    record_metadata(True, usage=usage)
     if log_content is None:
         log_content = LOG_AI_CONTENT
 
@@ -220,6 +268,7 @@ Return only a comma-separated list of numbers from 1-{len(numbered_history)}, or
             log_style="lite",
             max_tokens=50,
             temperature=0.0,
+            purpose="context_filter",
         )
         result = result.strip().lower()
         if result == "none":
@@ -283,6 +332,7 @@ async def generate_text(
         log_style="full",
         max_tokens=1200,
         temperature=0.8,
+        purpose="generate_text",
     )
 
 
@@ -307,6 +357,7 @@ async def generate_text_openrouter(cxstorage, model=None, system_prompt=None):
         messages=messages,
         model=model,
         reasoning_disabled="kimi" in model.lower(),
+        purpose="generate_text_openrouter",
     )
 
 
@@ -333,6 +384,7 @@ async def precheck(prompt):
             log_style="lite",
             max_tokens=20,
             temperature=0.0,
+            purpose="precheck",
         )
     ).strip().lower()
 

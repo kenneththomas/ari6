@@ -32,6 +32,8 @@ from modules.persona_output import send_persona_response
 from modules.personas import persona_store
 from modules.translator import Translator
 
+sentience.set_ai_metadata_logger(l.log_ai_call)
+
 ari_version = '8.9.2'
 
 message_queue = MessageQueue()
@@ -540,6 +542,21 @@ async def on_reaction_add(reaction, user):
     if reaction.emoji == '🇺':
         #TODO: i noticed here if people are spamming the u emoji it will try to do this multiple times and fail/rate limit
         await reaction.message.add_reaction('🇺')
+
+
+@client.event
+async def on_reaction_remove(reaction, user):
+    print(f'[{datetime.datetime.now()}] {user} removed {reaction.emoji} from {reaction.message.author.name}\'s message')
+
+
+@client.event
+async def on_raw_reaction_add(payload):
+    l.log_reaction_event(payload, "add")
+
+
+@client.event
+async def on_raw_reaction_remove(payload):
+    l.log_reaction_event(payload, "remove")
 
 @client.event
 async def on_message_delete(message):

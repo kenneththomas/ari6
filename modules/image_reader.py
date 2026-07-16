@@ -52,6 +52,7 @@ class ImageReader:
                 max_tokens=1024,
                 temperature=0.0,
                 timeout=60,
+                purpose="image_description",
             )
         except Exception as error:
             print(f"Vision model call failed: {error}")

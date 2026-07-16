@@ -11,6 +11,9 @@ TRANSPORT_TEST_MODEL = "deepseek/deepseek-v4-flash"
 
 
 class OpenRouterTransportTests(unittest.TestCase):
+    def tearDown(self):
+        sentience.set_ai_metadata_logger(None)
+
     @patch("sentience.requests.post")
     def test_missing_api_key_returns_user_facing_message(self, post):
         with (
@@ -52,6 +55,38 @@ class OpenRouterTransportTests(unittest.TestCase):
         )
         self.assertEqual(request.kwargs["json"]["model"], TRANSPORT_TEST_MODEL)
         self.assertEqual(request.kwargs["json"]["reasoning"], {"enabled": False})
+
+    @patch("sentience.requests.post")
+    def test_emits_metadata_without_prompt_or_output(self, post):
+        response = Mock(status_code=200)
+        response.json.return_value = {
+            "choices": [{"message": {"content": "secret output"}}],
+            "usage": {
+                "prompt_tokens": 2,
+                "completion_tokens": 3,
+                "total_tokens": 5,
+                "cost": 0.01,
+            },
+        }
+        post.return_value = response
+        logger = Mock()
+        sentience.set_ai_metadata_logger(logger)
+
+        sentience.openrouter_chat(
+            [{"role": "user", "content": "secret input"}],
+            TRANSPORT_TEST_MODEL,
+            log_style="none",
+            purpose="unit_test",
+        )
+
+        metadata = logger.call_args.kwargs
+        self.assertEqual(metadata["model"], TRANSPORT_TEST_MODEL)
+        self.assertEqual(metadata["purpose"], "unit_test")
+        self.assertEqual(metadata["total_tokens"], 5)
+        self.assertTrue(metadata["success"])
+        self.assertNotIn("messages", metadata)
+        self.assertNotIn("prompt", metadata)
+        self.assertNotIn("output", metadata)
 
     @patch("sentience.time.sleep")
     @patch("sentience.requests.post")

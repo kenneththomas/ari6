@@ -94,6 +94,19 @@ supports daily jobs in a named timezone, interval jobs, webhook identities, and
 registered action handlers for jobs that need to run code instead of sending a
 static message.
 
+## SQLite logging
+
+The main bot writes to `logs/gato.db`. Message timestamps continue to use the
+bot host's local time. New messages also store stable Discord message, author,
+channel, guild, thread, and reply identifiers, plus attachment/embed counts.
+Legacy rows remain readable and have `NULL` values for fields that were not
+available when they were recorded.
+
+Reaction additions and removals are stored in `reaction_events`. OpenRouter
+requests are summarized in `ai_calls` with model, purpose, token counts,
+latency, retries, status, cost (when supplied), and success/error metadata.
+AI prompts and generated output are not stored in `ai_calls`.
+
 ## Contributing
 
 This bot is meant for my personal use and not for other discords but feel free to repurpose it for yours.
