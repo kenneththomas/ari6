@@ -48,7 +48,6 @@ class ImageReader:
             return sentience.openrouter_chat(
                 messages=messages,
                 model=VISION_MODEL,
-                reasoning_disabled=True,
                 log_style="full",
                 max_tokens=1024,
                 temperature=0.0,

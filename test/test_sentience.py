@@ -126,7 +126,7 @@ class OpenRouterTransportTests(unittest.TestCase):
 
 class ImageReaderTests(unittest.IsolatedAsyncioTestCase):
     @patch("modules.image_reader.sentience.openrouter_chat")
-    def test_vision_uses_shared_transport_without_reasoning(self, chat):
+    def test_vision_uses_shared_transport_with_model_default_reasoning(self, chat):
         chat.return_value = "description"
 
         result = ImageReader()._call_vision_model("encoded-image", "image/png")
@@ -134,7 +134,7 @@ class ImageReaderTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result, "description")
         request = chat.call_args.kwargs
         self.assertEqual(request["model"], sentience.GOOGLE_MODEL)
-        self.assertTrue(request["reasoning_disabled"])
+        self.assertNotIn("reasoning_disabled", request)
         image_url = request["messages"][0]["content"][1]["image_url"]["url"]
         self.assertEqual(image_url, "data:image/png;base64,encoded-image")
 
