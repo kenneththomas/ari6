@@ -310,10 +310,13 @@ async def on_message(message):
         await enrich_cxstorage_with_image_descriptions(cxstorage)
         response_text = await sentience.generate_text(
             message.content,
-            sysprompt=persona_store.system_prompt(persona),
+            sysprompt=sentience.informative_system_prompt(
+                persona_store.system_prompt(persona)
+            ),
             gmodel=gmodel,
             chat_history=cxstorage,
             use_context_filter=True,
+            max_tokens=sentience.INFORMATIVE_MAX_TOKENS,
         )
         await asyncio.sleep(1)
         await send_persona_response(

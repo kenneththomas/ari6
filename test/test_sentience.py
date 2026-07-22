@@ -4,6 +4,7 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock, patch
 
 import sentience
+from modules.context_tools import split_discord_message
 from modules.image_reader import ImageReader
 
 
@@ -184,6 +185,45 @@ class ImageReaderTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(result, "description")
         self.assertEqual(to_thread.await_count, 2)
+
+
+class InformativeModeTests(unittest.IsolatedAsyncioTestCase):
+    def test_long_informative_answers_are_split_for_discord(self):
+        text = ("first paragraph " * 100) + "\n\n" + ("second paragraph " * 100)
+
+        chunks = split_discord_message(text)
+
+        self.assertGreater(len(chunks), 1)
+        self.assertTrue(all(len(chunk) <= 1900 for chunk in chunks))
+        self.assertEqual(" ".join(" ".join(chunks).split()), " ".join(text.split()))
+
+    def test_informative_prompt_keeps_persona_but_overrides_chat_brevity(self):
+        prompt = sentience.informative_system_prompt("Ari persona prompt")
+
+        self.assertIn("Ari persona prompt", prompt)
+        self.assertIn("Informative mode", prompt)
+        self.assertIn("do not apply the persona's usual sentence limit", prompt)
+        self.assertIn("clarity and instruction come first", prompt)
+
+    @patch("sentience.asyncio.to_thread", new_callable=AsyncMock)
+    async def test_generate_text_accepts_larger_informative_completion_budget(
+        self, to_thread
+    ):
+        to_thread.return_value = "longer instructional answer"
+
+        result = await sentience.generate_text(
+            "!gpt explain linked lists",
+            sysprompt=sentience.informative_system_prompt("Ari persona prompt"),
+            chat_history=[],
+            use_context_filter=False,
+            max_tokens=sentience.INFORMATIVE_MAX_TOKENS,
+        )
+
+        self.assertEqual(result, "longer instructional answer")
+        request = to_thread.call_args.kwargs
+        self.assertEqual(request["max_tokens"], sentience.INFORMATIVE_MAX_TOKENS)
+        self.assertEqual(request["messages"][-1]["content"], "explain linked lists")
+        self.assertIn("Informative mode", request["messages"][0]["content"])
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 import asyncio
 
-from modules.context_tools import send_ai_response
+from modules.context_tools import send_ai_response, split_discord_message
 from modules.personas import Persona, persona_store
 
 
@@ -28,11 +28,12 @@ async def send_persona_response(
         webhook_kwargs = persona.webhook_kwargs()
         if text.count("\n") < multiline_threshold:
             for line in text.split("\n"):
-                if line.strip():
+                for chunk in split_discord_message(line):
                     await asyncio.sleep(0.5)
-                    await webhook.send(line, **webhook_kwargs)
+                    await webhook.send(chunk, **webhook_kwargs)
         else:
-            await webhook.send(text, **webhook_kwargs)
+            for chunk in split_discord_message(text):
+                await webhook.send(chunk, **webhook_kwargs)
     except Exception as error:
         print(
             f"Could not post as persona {persona.key}; using bot identity: {error}"

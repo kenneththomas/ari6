@@ -19,6 +19,17 @@ DEFAULT_TEXT_MODEL = "openai/gpt-5.4-mini"
 DEFAULT_FILTER_MODEL = "openai/gpt-5.4-mini"
 DEEPSEEK_MODEL = "deepseek/deepseek-v4-pro"
 GOOGLE_MODEL = "google/gemini-3.5-flash"
+INFORMATIVE_MAX_TOKENS = 2400
+INFORMATIVE_MODE_PROMPT = """\
+Informative mode is active for this !gpt request. Prioritize a useful, accurate,
+and self-contained answer over group-chat brevity. Explain the subject clearly,
+include necessary context, and give step-by-step instructions, examples, caveats,
+or practical next actions when they help. Use paragraphs, bullets, headings, and
+code blocks when they improve readability. Adapt the length to the question and
+do not pad a simple answer, but do not apply the persona's usual sentence limit
+or preference for short chat messages. Keep only a light touch of Ari's casual
+voice; clarity and instruction come first.
+"""
 OPENROUTER_BASE = "https://openrouter.ai/api/v1"
 OPENROUTER_MAX_ATTEMPTS = 3
 OPENROUTER_RETRYABLE_STATUS_CODES = {408, 429, 500, 502, 503, 504}
@@ -296,6 +307,7 @@ async def generate_text(
     gmodel=DEFAULT_TEXT_MODEL,
     chat_history=None,
     use_context_filter=True,
+    max_tokens=1200,
 ):
     """Generate text through OpenRouter, optionally using relevant chat history."""
     clean_prompt = prompt.replace("!gpt5", "").replace("!gpt4", "").replace("!gpt", "").strip()
@@ -330,10 +342,15 @@ async def generate_text(
         model=gmodel,
         reasoning_disabled=True,
         log_style="full",
-        max_tokens=1200,
+        max_tokens=max_tokens,
         temperature=0.8,
         purpose="generate_text",
     )
+
+
+def informative_system_prompt(base_prompt):
+    """Extend a persona prompt with the more instructional !gpt response mode."""
+    return f"{base_prompt.rstrip()}\n\n{INFORMATIVE_MODE_PROMPT.strip()}"
 
 
 async def generate_text_openrouter(cxstorage, model=None, system_prompt=None):
