@@ -286,6 +286,20 @@ class ReplyRoutingTests(unittest.IsolatedAsyncioTestCase):
             to_thread.call_args.kwargs["messages"][0]["content"],
         )
 
+    @patch("sentience.asyncio.to_thread", new_callable=AsyncMock)
+    async def test_search_route_defaults_to_luna(self, to_thread):
+        to_thread.return_value = "grounded answer"
+
+        await sentience.generate_text_openrouter(
+            [{"role": "user", "content": "what happened today?"}],
+            enable_web_search=True,
+        )
+
+        self.assertEqual(
+            to_thread.call_args.kwargs["model"],
+            sentience.DEFAULT_SEARCH_MODEL,
+        )
+
 
 class ImageReaderTests(unittest.IsolatedAsyncioTestCase):
     @patch("modules.image_reader.sentience.openrouter_chat")

@@ -17,6 +17,7 @@ from modules.personas import persona_store
 DEFAULT_OPENROUTER_MODEL = "moonshotai/kimi-k2.5"
 DEFAULT_TEXT_MODEL = "openai/gpt-5.4-mini"
 DEFAULT_FILTER_MODEL = "openai/gpt-5.4-mini"
+DEFAULT_SEARCH_MODEL = "openai/gpt-5.6-luna"
 DEEPSEEK_MODEL = "deepseek/deepseek-v4-pro"
 GOOGLE_MODEL = "google/gemini-3.5-flash"
 INFORMATIVE_MAX_TOKENS = 2400
@@ -466,7 +467,8 @@ async def generate_text_openrouter(
     """Generate a response from chat history through OpenRouter."""
     import modules.flipper as flipper
 
-    model = model or flipper.current_model
+    if model is None:
+        model = DEFAULT_SEARCH_MODEL if enable_web_search else flipper.current_model
     if system_prompt is None:
         system_prompt = persona_store.system_prompt()
     if enable_web_search:

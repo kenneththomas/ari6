@@ -108,6 +108,8 @@ latency, retries, status, cost (when supplied), and success/error metadata.
 AI prompts and generated output are not stored in `ai_calls`.
 Search-enabled AI calls also record the number of web searches performed, the
 number of citations returned, and the cited source URLs.
+The lightweight reply classifier uses GPT-5.4 Mini, while search-routed replies
+use GPT-5.6 Luna; ordinary replies continue to use the active chat model.
 
 ## Contributing
 
