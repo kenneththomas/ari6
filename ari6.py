@@ -282,9 +282,14 @@ async def on_message(message):
         async with message.channel.typing():
             persona = persona_store.default()
             await enrich_cxstorage_with_image_descriptions(cxstorage)
+            reply_route = await sentience.classify_reply_route(
+                message.content,
+                chat_history=cxstorage,
+            )
             freemsg = await sentience.generate_text_openrouter(
                 cxstorage,
                 system_prompt=persona_store.system_prompt(persona),
+                enable_web_search=(reply_route == sentience.REPLY_ROUTE_SEARCH),
             )
             cxstorage.append({"role": "assistant", "content": freemsg})
 

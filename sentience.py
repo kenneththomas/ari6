@@ -20,6 +20,26 @@ DEFAULT_FILTER_MODEL = "openai/gpt-5.4-mini"
 DEEPSEEK_MODEL = "deepseek/deepseek-v4-pro"
 GOOGLE_MODEL = "google/gemini-3.5-flash"
 INFORMATIVE_MAX_TOKENS = 2400
+REPLY_ROUTE_CHAT = "chat"
+REPLY_ROUTE_SEARCH = "search"
+WEB_SEARCH_TOOL = {
+    "type": "openrouter:web_search",
+    "search_context_size": "low",
+    "max_total_results": 5,
+}
+REPLY_ROUTE_PROMPT = """\
+Classify whether replying to the latest message requires searching the public web.
+Return exactly one word: search or chat.
+
+Return search when the user explicitly asks to search, browse, look something up,
+verify a claim, or provide sources; or when a reliable answer depends on current,
+recent, live, changing, or externally verifiable information such as news, scores,
+weather, prices, schedules, office holders, laws, or current software versions.
+
+Return chat for casual conversation, creative requests, opinions, jokes, and
+timeless knowledge. A request being detailed or substantial does not by itself
+require search. Use the recent conversation only to resolve follow-up references.
+"""
 INFORMATIVE_MODE_PROMPT = """\
 Informative mode is active for this !gpt request. Prioritize a useful, accurate,
 and self-contained answer over group-chat brevity. Explain the subject clearly,
@@ -116,6 +136,7 @@ def openrouter_chat(
     timeout=120,
     log_content=None,
     purpose=None,
+    tools=None,
 ):
     """Send a chat-completions request through OpenRouter."""
     model = _validate_model(model)
@@ -132,6 +153,8 @@ def openrouter_chat(
     }
     if reasoning_disabled:
         payload["reasoning"] = {"enabled": False}
+    if tools:
+        payload["tools"] = tools
 
     headers = {
         "Authorization": f"Bearer {api_key}",
@@ -301,6 +324,41 @@ Return only a comma-separated list of numbers from 1-{len(numbered_history)}, or
         return []
 
 
+async def classify_reply_route(current_message, chat_history=None):
+    """Choose normal chat or web-grounded chat for a triggered reply."""
+    recent_history = (chat_history or [])[-5:]
+    transcript = "\n".join(
+        f"{message.get('role', 'user')}: {message.get('content', '')}"
+        for message in recent_history
+    )
+    route_request = (
+        f"Recent conversation:\n{transcript or '(none)'}\n\n"
+        f"Latest message:\n{current_message}\n\nRoute:"
+    )
+
+    try:
+        result = await asyncio.to_thread(
+            openrouter_chat,
+            messages=[
+                {"role": "system", "content": REPLY_ROUTE_PROMPT},
+                {"role": "user", "content": route_request},
+            ],
+            model=DEFAULT_FILTER_MODEL,
+            reasoning_disabled=True,
+            log_style="lite",
+            max_tokens=10,
+            temperature=0.0,
+            purpose="reply_route",
+        )
+    except Exception as error:
+        print(f"Error classifying reply route: {error}")
+        return REPLY_ROUTE_CHAT
+
+    if result.strip().lower() == REPLY_ROUTE_SEARCH:
+        return REPLY_ROUTE_SEARCH
+    return REPLY_ROUTE_CHAT
+
+
 async def generate_text(
     prompt,
     sysprompt=None,
@@ -353,7 +411,12 @@ def informative_system_prompt(base_prompt):
     return f"{base_prompt.rstrip()}\n\n{INFORMATIVE_MODE_PROMPT.strip()}"
 
 
-async def generate_text_openrouter(cxstorage, model=None, system_prompt=None):
+async def generate_text_openrouter(
+    cxstorage,
+    model=None,
+    system_prompt=None,
+    enable_web_search=False,
+):
     """Generate a response from chat history through OpenRouter."""
     import modules.flipper as flipper
 
@@ -374,7 +437,12 @@ async def generate_text_openrouter(cxstorage, model=None, system_prompt=None):
         messages=messages,
         model=model,
         reasoning_disabled="kimi" in model.lower(),
-        purpose="generate_text_openrouter",
+        tools=[WEB_SEARCH_TOOL] if enable_web_search else None,
+        purpose=(
+            "generate_text_openrouter_search"
+            if enable_web_search
+            else "generate_text_openrouter"
+        ),
     )
 
 

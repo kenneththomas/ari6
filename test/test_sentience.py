@@ -58,6 +58,28 @@ class OpenRouterTransportTests(unittest.TestCase):
         self.assertEqual(request.kwargs["json"]["reasoning"], {"enabled": False})
 
     @patch("sentience.requests.post")
+    def test_includes_web_search_tool_when_requested(self, post):
+        response = Mock(status_code=200)
+        response.json.return_value = {
+            "choices": [{"message": {"content": "grounded answer"}}],
+            "usage": {},
+        }
+        post.return_value = response
+
+        result = sentience.openrouter_chat(
+            [{"role": "user", "content": "what happened today?"}],
+            TRANSPORT_TEST_MODEL,
+            tools=[sentience.WEB_SEARCH_TOOL],
+            log_style="none",
+        )
+
+        self.assertEqual(result, "grounded answer")
+        self.assertEqual(
+            post.call_args.kwargs["json"]["tools"],
+            [sentience.WEB_SEARCH_TOOL],
+        )
+
+    @patch("sentience.requests.post")
     def test_emits_metadata_without_prompt_or_output(self, post):
         response = Mock(status_code=200)
         response.json.return_value = {
@@ -158,6 +180,51 @@ class OpenRouterTransportTests(unittest.TestCase):
         logged = " ".join(str(call) for call in print_mock.call_args_list)
         self.assertIn("secret input", logged)
         self.assertIn("secret output", logged)
+
+
+class ReplyRoutingTests(unittest.IsolatedAsyncioTestCase):
+    @patch("sentience.asyncio.to_thread", new_callable=AsyncMock)
+    async def test_classifier_selects_search(self, to_thread):
+        to_thread.return_value = "search"
+
+        route = await sentience.classify_reply_route(
+            "who won the game last night?",
+            chat_history=[{"role": "user", "content": "we were discussing the NBA"}],
+        )
+
+        self.assertEqual(route, sentience.REPLY_ROUTE_SEARCH)
+        request = to_thread.call_args.kwargs
+        self.assertEqual(request["purpose"], "reply_route")
+        self.assertEqual(request["max_tokens"], 10)
+        self.assertIn("NBA", request["messages"][-1]["content"])
+
+    @patch("sentience.asyncio.to_thread", new_callable=AsyncMock)
+    async def test_classifier_falls_back_to_chat_for_unexpected_output(self, to_thread):
+        to_thread.return_value = "probably chat"
+
+        route = await sentience.classify_reply_route("tell me a joke")
+
+        self.assertEqual(route, sentience.REPLY_ROUTE_CHAT)
+
+    @patch("sentience.asyncio.to_thread", new_callable=AsyncMock)
+    async def test_search_route_enables_openrouter_server_tool(self, to_thread):
+        to_thread.return_value = "answer with citations"
+
+        result = await sentience.generate_text_openrouter(
+            [{"role": "user", "content": "what is in the news?"}],
+            model=TRANSPORT_TEST_MODEL,
+            enable_web_search=True,
+        )
+
+        self.assertEqual(result, "answer with citations")
+        self.assertEqual(
+            to_thread.call_args.kwargs["tools"],
+            [sentience.WEB_SEARCH_TOOL],
+        )
+        self.assertEqual(
+            to_thread.call_args.kwargs["purpose"],
+            "generate_text_openrouter_search",
+        )
 
 
 class ImageReaderTests(unittest.IsolatedAsyncioTestCase):
