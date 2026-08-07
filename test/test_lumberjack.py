@@ -126,21 +126,40 @@ class LumberjackTelemetryTests(unittest.TestCase):
             success=True,
             status_code=200,
             cost=0.001,
+            web_search_requests=2,
+            citation_count=1,
+            citation_urls=["https://example.com/source"],
         )
 
         with closing(sqlite3.connect(lumberjack.dbfilename)) as conn:
             columns = [row[1] for row in conn.execute("PRAGMA table_info(ai_calls)")]
             row = conn.execute(
                 """SELECT provider, model, purpose, input_tokens,
-                          output_tokens, total_tokens, attempt_count, success
+                          output_tokens, total_tokens, attempt_count, success,
+                          web_search_requests, citation_count, citation_urls
                    FROM ai_calls"""
             ).fetchone()
 
         self.assertNotIn("prompt", columns)
         self.assertNotIn("output", columns)
+        self.assertIn("web_search_requests", columns)
+        self.assertIn("citation_count", columns)
+        self.assertIn("citation_urls", columns)
         self.assertEqual(
             row,
-            ("openrouter", "provider/model", "unit_test", 10, 4, 14, 2, 1),
+            (
+                "openrouter",
+                "provider/model",
+                "unit_test",
+                10,
+                4,
+                14,
+                2,
+                1,
+                2,
+                1,
+                '["https://example.com/source"]',
+            ),
         )
 
 

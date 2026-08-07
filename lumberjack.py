@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import json
 import mememgr
 import os
 import sqlite3
@@ -25,6 +26,12 @@ MESSAGE_IDENTITY_COLUMNS = {
     "reply_to_message_id": "TEXT",
     "attachment_count": "INTEGER",
     "embed_count": "INTEGER",
+}
+
+AI_CALL_METADATA_COLUMNS = {
+    "web_search_requests": "INTEGER",
+    "citation_count": "INTEGER",
+    "citation_urls": "TEXT",
 }
 
 # Ensure the selected database directory exists.
@@ -105,9 +112,18 @@ def _ensure_schema(conn):
             success INTEGER NOT NULL,
             status_code INTEGER,
             error_type TEXT,
-            cost REAL
+            cost REAL,
+            web_search_requests INTEGER,
+            citation_count INTEGER,
+            citation_urls TEXT
         )"""
     )
+    existing_ai_columns = {
+        row[1] for row in cur.execute("PRAGMA table_info(ai_calls)").fetchall()
+    }
+    for column, column_type in AI_CALL_METADATA_COLUMNS.items():
+        if column not in existing_ai_columns:
+            cur.execute(f"ALTER TABLE ai_calls ADD COLUMN {column} {column_type}")
     cur.execute("CREATE INDEX IF NOT EXISTS idx_logs_message_id ON logs(message_id)")
     cur.execute("CREATE INDEX IF NOT EXISTS idx_logs_author_id ON logs(author_id)")
     cur.execute("CREATE INDEX IF NOT EXISTS idx_logs_channel_id ON logs(channel_id)")
@@ -324,6 +340,9 @@ def log_ai_call(
     status_code=None,
     error_type=None,
     cost=None,
+    web_search_requests=None,
+    citation_count=0,
+    citation_urls=None,
 ):
     """Persist AI operational metadata. Prompts and outputs are never accepted."""
     conn = _connect()
@@ -332,8 +351,9 @@ def log_ai_call(
             """INSERT INTO ai_calls (
                 timestamp, provider, model, purpose, input_tokens,
                 output_tokens, total_tokens, latency_ms, attempt_count,
-                success, status_code, error_type, cost
-            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                success, status_code, error_type, cost, web_search_requests,
+                citation_count, citation_urls
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (
                 str(datetime.now()),
                 provider,
@@ -348,6 +368,9 @@ def log_ai_call(
                 status_code,
                 error_type,
                 cost,
+                web_search_requests,
+                citation_count,
+                json.dumps(citation_urls or []),
             ),
         )
         conn.commit()

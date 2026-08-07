@@ -76,7 +76,63 @@ class OpenRouterTransportTests(unittest.TestCase):
         self.assertEqual(result, "grounded answer")
         self.assertEqual(
             post.call_args.kwargs["json"]["tools"],
-            [sentience.WEB_SEARCH_TOOL],
+            [
+                {
+                    "type": "openrouter:web_search",
+                    "parameters": {
+                        "search_context_size": "low",
+                        "max_total_results": 5,
+                    },
+                }
+            ],
+        )
+
+    @patch("sentience.requests.post")
+    def test_logs_web_search_usage_and_citations(self, post):
+        response = Mock(status_code=200)
+        response.json.return_value = {
+            "choices": [
+                {
+                    "message": {
+                        "content": "grounded answer",
+                        "annotations": [
+                            {
+                                "type": "url_citation",
+                                "url_citation": {
+                                    "url": "https://example.com/source",
+                                    "title": "Example source",
+                                },
+                            }
+                        ],
+                    }
+                }
+            ],
+            "usage": {
+                "input_tokens": 20,
+                "output_tokens": 5,
+                "total_tokens": 25,
+                "server_tool_use": {"web_search_requests": 2},
+            },
+        }
+        post.return_value = response
+        logger = Mock()
+        sentience.set_ai_metadata_logger(logger)
+
+        sentience.openrouter_chat(
+            [{"role": "user", "content": "what happened today?"}],
+            TRANSPORT_TEST_MODEL,
+            tools=[sentience.WEB_SEARCH_TOOL],
+            log_style="none",
+        )
+
+        metadata = logger.call_args.kwargs
+        self.assertEqual(metadata["input_tokens"], 20)
+        self.assertEqual(metadata["output_tokens"], 5)
+        self.assertEqual(metadata["web_search_requests"], 2)
+        self.assertEqual(metadata["citation_count"], 1)
+        self.assertEqual(
+            metadata["citation_urls"],
+            ["https://example.com/source"],
         )
 
     @patch("sentience.requests.post")
@@ -224,6 +280,10 @@ class ReplyRoutingTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(
             to_thread.call_args.kwargs["purpose"],
             "generate_text_openrouter_search",
+        )
+        self.assertIn(
+            "must use the available web search tool",
+            to_thread.call_args.kwargs["messages"][0]["content"],
         )
 
 

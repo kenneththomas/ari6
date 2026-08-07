@@ -106,6 +106,8 @@ Reaction additions and removals are stored in `reaction_events`. OpenRouter
 requests are summarized in `ai_calls` with model, purpose, token counts,
 latency, retries, status, cost (when supplied), and success/error metadata.
 AI prompts and generated output are not stored in `ai_calls`.
+Search-enabled AI calls also record the number of web searches performed, the
+number of citations returned, and the cited source URLs.
 
 ## Contributing
 

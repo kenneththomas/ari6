@@ -24,9 +24,17 @@ REPLY_ROUTE_CHAT = "chat"
 REPLY_ROUTE_SEARCH = "search"
 WEB_SEARCH_TOOL = {
     "type": "openrouter:web_search",
-    "search_context_size": "low",
-    "max_total_results": 5,
+    "parameters": {
+        "search_context_size": "low",
+        "max_total_results": 5,
+    },
 }
+WEB_SEARCH_MODE_PROMPT = """\
+Web search mode is active. You must use the available web search tool before
+answering. Ground factual claims in the retrieved results and include source
+links. If the search results do not verify the requested information, say so
+instead of filling gaps from memory.
+"""
 REPLY_ROUTE_PROMPT = """\
 Classify whether replying to the latest message requires searching the public web.
 Return exactly one word: search or chat.
@@ -165,14 +173,21 @@ def openrouter_chat(
     response = None
     attempt = 0
 
-    def record_metadata(success, usage=None, error_type=None):
+    def record_metadata(
+        success,
+        usage=None,
+        error_type=None,
+        web_search_requests=None,
+        citation_urls=None,
+    ):
         usage = usage if isinstance(usage, dict) else {}
+        citation_urls = citation_urls or []
         _log_ai_metadata(
             provider="openrouter",
             model=model,
             purpose=purpose,
-            input_tokens=usage.get("prompt_tokens"),
-            output_tokens=usage.get("completion_tokens"),
+            input_tokens=usage.get("prompt_tokens", usage.get("input_tokens")),
+            output_tokens=usage.get("completion_tokens", usage.get("output_tokens")),
             total_tokens=usage.get("total_tokens"),
             latency_ms=(time.time() - start_time) * 1000,
             attempt_count=attempt,
@@ -180,6 +195,9 @@ def openrouter_chat(
             status_code=getattr(response, "status_code", None),
             error_type=error_type,
             cost=usage.get("cost"),
+            web_search_requests=web_search_requests,
+            citation_count=len(citation_urls),
+            citation_urls=citation_urls,
         )
 
     for attempt in range(1, OPENROUTER_MAX_ATTEMPTS + 1):
@@ -221,7 +239,8 @@ def openrouter_chat(
 
     try:
         data = response.json()
-        content = data["choices"][0]["message"]["content"]
+        response_message = data["choices"][0]["message"]
+        content = response_message["content"]
     except (KeyError, IndexError, TypeError, ValueError) as error:
         record_metadata(False, error_type="OpenRouterResponseError")
         raise OpenRouterResponseError(
@@ -236,7 +255,27 @@ def openrouter_chat(
     usage = data.get("usage", {})
     if not isinstance(usage, dict):
         usage = {}
-    record_metadata(True, usage=usage)
+    server_tool_use = usage.get("server_tool_use", {})
+    if not isinstance(server_tool_use, dict):
+        server_tool_use = {}
+    web_search_requests = server_tool_use.get("web_search_requests")
+    annotations = response_message.get("annotations", [])
+    if not isinstance(annotations, list):
+        annotations = []
+    citation_urls = []
+    for annotation in annotations:
+        if not isinstance(annotation, dict) or annotation.get("type") != "url_citation":
+            continue
+        citation = annotation.get("url_citation", {})
+        url = citation.get("url") if isinstance(citation, dict) else None
+        if isinstance(url, str) and url and url not in citation_urls:
+            citation_urls.append(url)
+    record_metadata(
+        True,
+        usage=usage,
+        web_search_requests=web_search_requests,
+        citation_urls=citation_urls,
+    )
     if log_content is None:
         log_content = LOG_AI_CONTENT
 
@@ -245,6 +284,11 @@ def openrouter_chat(
             f"AI CALL lite | model={model} | latency={latency_ms:.0f}ms | "
             f"tokens={usage.get('total_tokens', 'N/A')}"
         )
+        if web_search_requests is not None:
+            log_line += (
+                f" | web_searches={web_search_requests}"
+                f" | citations={len(citation_urls)}"
+            )
         if log_content:
             log_line += f" | output={content}"
         print(log_line)
@@ -263,6 +307,8 @@ Input tokens: {usage.get('prompt_tokens', 'N/A')}
 Output tokens: {usage.get('completion_tokens', 'N/A')}
 Total tokens: {usage.get('total_tokens', 'N/A')}
 Latency: {latency_ms:.0f}ms
+Web searches: {web_search_requests if web_search_requests is not None else 'N/A'}
+Citations: {len(citation_urls)}
 {content_log}==============
 """
         )
@@ -423,6 +469,10 @@ async def generate_text_openrouter(
     model = model or flipper.current_model
     if system_prompt is None:
         system_prompt = persona_store.system_prompt()
+    if enable_web_search:
+        system_prompt = (
+            f"{system_prompt.rstrip()}\n\n{WEB_SEARCH_MODE_PROMPT.strip()}"
+        )
 
     messages = [{"role": "system", "content": system_prompt}]
     messages.extend(
