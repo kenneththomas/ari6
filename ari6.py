@@ -302,10 +302,7 @@ async def on_message(message):
             )
 
         return
-    gmodel = sentience.DEFAULT_OPENROUTER_MODEL  # moonshotai/kimi-k2.5 with thinking disabled
-    if message.content.startswith('!gpt'):
-        if message.content.startswith('!gpt5'):
-            gmodel = sentience.DEFAULT_OPENROUTER_MODEL
+    if message.content.startswith(('!gpt', '!computa')):
         if flipper.precheck:
             if 'yes' in await sentience.precheck(message.content):
                 await message.reply('popsicle')
@@ -318,7 +315,6 @@ async def on_message(message):
             sysprompt=sentience.informative_system_prompt(
                 persona_store.system_prompt(persona)
             ),
-            gmodel=gmodel,
             chat_history=cxstorage,
             use_context_filter=True,
             max_tokens=sentience.INFORMATIVE_MAX_TOKENS,

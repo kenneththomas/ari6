@@ -366,6 +366,19 @@ class InformativeModeTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(request["messages"][-1]["content"], "explain linked lists")
         self.assertIn("Informative mode", request["messages"][0]["content"])
 
+    @patch("sentience.asyncio.to_thread", new_callable=AsyncMock)
+    async def test_computa_alias_strips_command_prefix(self, to_thread):
+        to_thread.return_value = "answer"
+
+        await sentience.generate_text(
+            "!computa explain linked lists",
+            chat_history=[],
+            use_context_filter=False,
+        )
+
+        request = to_thread.call_args.kwargs
+        self.assertEqual(request["messages"][-1]["content"], "explain linked lists")
+
 
 if __name__ == "__main__":
     unittest.main()

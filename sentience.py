@@ -415,7 +415,7 @@ async def generate_text(
     max_tokens=1200,
 ):
     """Generate text through OpenRouter, optionally using relevant chat history."""
-    clean_prompt = prompt.replace("!gpt5", "").replace("!gpt4", "").replace("!gpt", "").strip()
+    clean_prompt = prompt.removeprefix("!gpt").removeprefix("!computa").strip()
     if sysprompt is None:
         sysprompt = persona_store.system_prompt()
 
