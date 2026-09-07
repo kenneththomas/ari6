@@ -50,6 +50,7 @@ dev_mode = False
 intents = discord.Intents.default()
 intents.members = True
 intents.message_content = True
+intents.presences = True
 
 client = discord.Client(intents=intents)
 

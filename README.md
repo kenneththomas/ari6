@@ -45,6 +45,11 @@ Run the main bot:
 python ari6.py
 ```
 
+In the Discord Developer Portal, open the application's **Bot** page and enable
+the **Presence Intent**, **Server Members Intent**, and **Message Content
+Intent** under Privileged Gateway Intents. Presence Intent is required for the
+`!np` command and automatic Spotify now-playing posts to see member activities.
+
 Bluesky posting is optional. To enable it, install its extra dependency and
 provide `bskyuser` and `bskypass` in the existing local credential module:
 

@@ -6,6 +6,20 @@ from modules.personas import persona_store
 
 songlibrary = {}
 
+
+def _spotify_activity(activities):
+    """Return Discord's Spotify activity, if the member exposes one."""
+    for activity in activities or ():
+        if isinstance(activity, discord.Spotify):
+            return activity
+        # Keep compatibility with activity-like objects from older caches/tests.
+        if (
+            getattr(activity, 'type', None) == discord.ActivityType.listening
+            and getattr(activity, 'name', None) == 'Spotify'
+        ):
+            return activity
+    return None
+
 def nowplaying(user, songinfo, allowrepeat=False):
     features = None
 
@@ -58,45 +72,68 @@ def nowplaying(user, songinfo, allowrepeat=False):
 
 async def handle_spotify_activity(message, get_or_create_webhook, barcochannel):
     """Handle Spotify activity detection and posting"""
-    if not message.author.activities:
-        return False
-    
-    for activity in message.author.activities:
-        if activity.type == discord.ActivityType.listening and activity.name == 'Spotify':
-            barco_webhook = await get_or_create_webhook(barcochannel, 'barco')
-            npstring, albumart = nowplaying(str(message.author), activity)
-            
-            # Handle !np command with allowrepeat
-            if message.content == '!np':
-                npstring, albumart = nowplaying(str(message.author), activity, allowrepeat=True)
-            
-            if npstring:
-                l.add_xp_user(str(message.author), 1)
-                
-                # Send to channel or webhook based on command
-                if message.content == '!np':
-                    await message.channel.send(npstring)
-                    if albumart:
-                        await message.channel.send(albumart)
-                else:
-                    await barco_webhook.send(npstring, username=message.author.name, avatar_url=message.author.avatar)
-                    if albumart:
-                        await barco_webhook.send(albumart, username=message.author.name, avatar_url=message.author.avatar)
+    is_np_command = message.content.strip().lower() == '!np'
+    activity = _spotify_activity(getattr(message.author, 'activities', ()))
 
-                # Roast user's music taste with 40% chance
-                if mememgr.chance(40):
-                    roast_prompt = f'{message.author.display_name} is listening to {npstring}, roast them for it. you can comment negative things about the artist or make fun of particular lyrics from that song. end with a skull emoji.'
-                    roast = await sentience.generate_text(
-                        roast_prompt,
-                        gmodel=sentience.DEFAULT_TEXT_MODEL,
-                    )
-                    # Post as lamelo ball webhook
-                    persona = persona_store.get("lamelo-ball") or persona_store.default()
-                    await barco_webhook.send(
-                        roast,
-                        **persona.webhook_kwargs(),
-                    )
-                
-                return True
-    
-    return False
+    if activity is None:
+        if is_np_command:
+            await message.channel.send(
+                "I can't see a current Spotify song for you. Make sure Spotify "
+                "is connected to Discord and 'Display Spotify as your status' is enabled."
+            )
+            return True
+        return False
+
+    npstring, albumart = nowplaying(
+        str(message.author),
+        activity,
+        allowrepeat=is_np_command,
+    )
+    if not npstring:
+        if is_np_command:
+            await message.channel.send(
+                "I can see Spotify, but Discord isn't exposing track details. "
+                "This can happen with a local track or an ad."
+            )
+            return True
+        return False
+
+    l.add_xp_user(str(message.author), 1)
+    barco_webhook = None
+
+    if is_np_command:
+        await message.channel.send(npstring)
+        if albumart:
+            await message.channel.send(albumart)
+    else:
+        barco_webhook = await get_or_create_webhook(barcochannel, 'barco')
+        avatar_url = str(message.author.display_avatar.url)
+        await barco_webhook.send(
+            npstring,
+            username=message.author.display_name,
+            avatar_url=avatar_url,
+        )
+        if albumart:
+            await barco_webhook.send(
+                albumart,
+                username=message.author.display_name,
+                avatar_url=avatar_url,
+            )
+
+    # Roast user's music taste with 40% chance
+    if mememgr.chance(40):
+        if barco_webhook is None:
+            barco_webhook = await get_or_create_webhook(barcochannel, 'barco')
+        roast_prompt = f'{message.author.display_name} is listening to {npstring}, roast them for it. you can comment negative things about the artist or make fun of particular lyrics from that song. end with a skull emoji.'
+        roast = await sentience.generate_text(
+            roast_prompt,
+            gmodel=sentience.DEFAULT_TEXT_MODEL,
+        )
+        # Post as lamelo ball webhook
+        persona = persona_store.get("lamelo-ball") or persona_store.default()
+        await barco_webhook.send(
+            roast,
+            **persona.webhook_kwargs(),
+        )
+
+    return True
