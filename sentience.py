@@ -15,9 +15,9 @@ from modules.personas import persona_store
 # Project-defined model registry. Keep model selection here rather than in the
 # environment so upgrades are explicit and version-controlled.
 DEFAULT_OPENROUTER_MODEL = "moonshotai/kimi-k2.5"
-DEFAULT_TEXT_MODEL = "openai/gpt-5.4-mini"
-DEFAULT_FILTER_MODEL = "openai/gpt-5.4-mini"
-DEFAULT_SEARCH_MODEL = "openai/gpt-5.6-luna"
+DEFAULT_TEXT_MODEL = "openai/gpt-6-luna"
+DEFAULT_FILTER_MODEL = "openai/gpt-6-luna"
+DEFAULT_SEARCH_MODEL = "openai/gpt-6-luna"
 DEEPSEEK_MODEL = "deepseek/deepseek-v4-pro"
 GOOGLE_MODEL = "google/gemini-3.5-flash"
 INFORMATIVE_MAX_TOKENS = 2400
